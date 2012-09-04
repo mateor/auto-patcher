@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: beta v1.9.7, patches 2012.08.20.
+# version: beta v1.9.8, patches 2012.09.02.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -71,7 +71,7 @@ echo " "
 set -a
 
 # function for converting hex to binary- for testing
-function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
+#function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
 printtask () {
 	echo "" >> $LOG
@@ -643,12 +643,21 @@ else
 	done	
 
 # Patching boot.img
-	if [[ -n $BOOTIMG ]]; then
-		echo "... applying boot.img patch ..."
-		patch -Nls -p1 -d boot/ramdisk < patches/$P/$R/$B/boot.img.patch || printerror "failed patching boot.img"
+	for P in ${PID[@]}; do
+		if [[ -n $BOOTIMG ]]; then
+			echo "... applying boot.img patch ..."
+			patch -Nls -p1 -d boot/ramdisk < patches/$P/$R/$B/boot.img.patch || printerror "failed patching boot.img"
+		fi
 	
-		# Rebuilding boot.img
+# Special Instructions- married to boot.img patching by necessity, not design. When 
+# added to it's own section, it only runs for one mod. WIP.
 
+		if [ -f patches/$P/$R/special_instructions.sh ]; then
+             	   . patches/$P/$R/special_instructions.sh
+       	fi
+	done
+		# Rebuilding boot.img
+	if [[ -n $BOOTIMG ]]; then	
 		cd boot
 		printtask "...rebuilding ramdisk..."
 		./mkbootfs ./ramdisk | gzip > ramdisk-new.gz
@@ -667,13 +676,6 @@ else
 		printtask "### rebuilding boot.img ###"
 		cd ..
 	fi
-
-#  Special Instructions scripts
-	for FILE in ${PID[@]; do
-	        if [ -f patches/$P/$R/$B/special_instructions.sh ]; then
-                	. patches/$P/$R/special_instructions.sh
-        	fi
-	done
 
 	printtask "### create updater.zip ###"
 	jar -cfv tmp.zip ${BOOTIMG} ${JID[@]} ${AID[@]} ${CID[@]} META-INF >> $LOG 2>> $LOG
