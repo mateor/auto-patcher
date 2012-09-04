@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: beta v1.9.8, patches 2012.09.02.
+# version: beta v1.9.8, patches 2012.09.04.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -48,12 +48,16 @@
 # 2012.08.06. (v1.6.0) added aokp-jb patches for pdroid/v6supercharger, script update
 # 2012.08.17. (v1.9.5) Added support for pdroid_addon, by CollegeDev.
 #		       Added insecure boot.img mod
-#		       Added support for aosp-jb (This needs testing, and may not be #		              a wide patch due to large variation between AOSP roms. 
+#		       Added support for aosp-jb (This needs testing, and may not be
+#		              a wide patch due to large variation between AOSP roms. 
 #                      		          -Please report all experiences!
 #		       Updated all v6supercharger patches w/new edits to ProcessList
 #                      Major script overhaul in preparation for additional mods!
 # 2012.08.20. (1.9.6) Conditional support for Official cm10 and aokp-jb builds
 # 2012.08.23. (1.9.7) Final/confirmed pdroid support for Official CM10 and AOKP-JB
+# 2012.09.04  (1.9.8) Bundled cygwin-compatible tools (original was corrupt).
+#						 For Cygwin, replaced h2b function with simple bash math
+#						 conversion (req'd for compat w/ Cygwin tools).
 # 2012.08.26. (2.0.0) Added .apk patching
 #					  Added 3G Dongle support for Nexus 7
 #                     TabletUI support for Nexus 7 (maybe more)
@@ -344,6 +348,12 @@ PTCH=$ROOT/patch_patches.tgz
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
 
+if [[ $OSTYPE == "cygwin" ]]; then
+  EXE=".exe"
+else
+  EXE=""
+fi
+
 #DATE=`date +%s`
 DATE=`date +%Y%m%d%H%M%S`
 TEMP=tmp$DATE
@@ -542,7 +552,7 @@ else
 	if [[ -n $BOOTIMG ]]; then
 		echo "...Unpacking boot.img..."
 		cd boot
-		./unpackbootimg -i ../boot.img >> $LOG 2>> $LOG
+		./unpackbootimg$EXE -i ../boot.img >> "$LOG" 2>> "$LOG"
 
 		cd ramdisk
 		gzip -dc ../boot.img-ramdisk.gz | cpio -i >> $LOG 2>> $LOG
@@ -660,19 +670,26 @@ else
 	if [[ -n $BOOTIMG ]]; then	
 		cd boot
 		printtask "...rebuilding ramdisk..."
-		./mkbootfs ./ramdisk | gzip > ramdisk-new.gz
+		./mkbootfs$EXE ./ramdisk | gzip > ramdisk-new.gz
 
 		printtask "### composing boot.img ###"
 		BASE=$(cat boot.img-base)
 		PGSIZE=$(cat boot.img-pagesize)
 		#PGBIN=$(h2b $PGSIZE)               # Unused for now. Testing.
+		if [[ $OSTYPE == "cygwin" ]]; then
+			PGHEX=$(cat boot.img-pagesize)
+			PGSIZE=$((0x$PGHEX))
+		else
+			PGSIZE=$(cat boot.img-pagesize)
+		fi
+
 		CMDLINE=$(cat boot.img-cmdline)
 		echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> $LOG
 		echo "pagesize =" $PGSIZE >> $LOG
 		# echo $PGBIN # Testing >> $LOG
 		echo "base =" $BASE >> $LOG
 
-		./mkbootimg --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
+		./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
 		printtask "### rebuilding boot.img ###"
 		cd ..
 	fi
