@@ -349,9 +349,8 @@ ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
 
 if [[ $OSTYPE == "cygwin" ]]; then
-  EXE=".exe"
-else
-  EXE=""
+	EXE=".exe"
+	PGFORM="0x"
 fi
 
 #DATE=`date +%s`
@@ -677,15 +676,7 @@ else
 
 		printtask "### composing boot.img ###"
 		BASE=$(cat boot.img-base)
-		PGSIZE=$(cat boot.img-pagesize)
-		#PGBIN=$(h2b $PGSIZE)               # Unused for now. Testing.
-		if [[ $OSTYPE == "cygwin" ]]; then
-			PGHEX=$(cat boot.img-pagesize)
-			PGSIZE=$((0x$PGHEX))
-		else
-			PGSIZE=$(cat boot.img-pagesize)
-		fi
-
+		PGSIZE=${PGFORM}$(cat boot.img-pagesize)
 		CMDLINE=$(cat boot.img-cmdline)
 		echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> $LOG
 		echo "pagesize =" $PGSIZE >> $LOG
