@@ -370,30 +370,23 @@ else
 		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		for FILE in ${JARS[@]}; do
-			if [[ -n $FILE && ! -d tmp/${FILE}.out/smali ]]; then
-				mkdir -p tmp/${FILE}.out/smali
-				JID=(${JID[@]} $FILE)
-			fi
+			(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
 		done
 
 		APKS=
 		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		for FILE in ${APKS[@]}; do
-			if [[ -n $FILE && ! -d tmp/${FILE}.out/smali ]]; then
-				mkdir -p tmp/${FILE}.out/smali
-				AID=(${AID[@]} $FILE)
-			fi
+			(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
 		done
 
 		COPY=
 		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
 		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
 		for FILE in ${COPY[@]}; do
-			if [[ -n $FILE && ! -e tmp/${FILE} ]]; then
-				mkdir -p tmp/${FILE%/*} && touch tmp/${FILE}
-				CID=(${CID[@]} $FILE)
-			fi
+			(contains $FILE ${CID[@]}) && printerror "$FILE is already being copied"
+			echo "... add $FILE to copy list ..."
+			CID=(${CID[@]} $FILE)
 		done
 
 		[ -s patches/$P/boot_patch.txt ] && BOOTIMG="boot.img"
