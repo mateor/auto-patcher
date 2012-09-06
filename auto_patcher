@@ -441,10 +441,11 @@ else
 	\mv signed.zip restore.zip
 	\rm -f tmp.zip
 
+	printtask "### decompile system files ###"
 	# decompile system files
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
-		printtask "### decompile $JAR ###"
+		printtask "... decompile $JAR ..."
 		java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali ${FILE} >> $LOG 2>> $LOG
 		if [ $FILE == "system/framework/framework.jar" ]; then
 			printtask "... extract preloaded-classes ..."
@@ -453,7 +454,7 @@ else
 	done
 	for FILE in ${AID[@]}; do
 		APK=${FILE##*/}
-		printtask "### decompile $APK ###"
+		printtask "... decompile $APK ..."
 		if [ $FILE == "system/framework/framework-res.apk" ]; then
 			printtask "... installing framework files ..."
 			java -jar apktool.jar if $FILE
@@ -478,28 +479,28 @@ else
 		PRB=patches/$P/$R/$B
 	
 
-		echo "### copy patch $P/$R/$B ###"
+		printtask "### copy patch $P/$R/$B ###"
 		COPY=
 		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
 		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
 		for FILE in ${COPY[@]}; do 
-			echo "... copying $FILE ..."
+			printtask "... copying $FILE ..."
 			DEST=${FILE%/*}
 			mkdir -p $DEST
 			if [ -e patches/$P/common/$FILE ]; then
-				[ -e $FILE ] && echo "... overwriting $FILE from $P ..."
+				[ -e $FILE ] && printtask "... overwriting $FILE from $P ..."
 	 			\cp -a patches/$P/common/$FILE $DEST
 			fi
 		done
 
-		echo "### jar patch $P/$R/$B ###"
+		printtask "### jar patch $P/$R/$B ###"
 		JARS=
 		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		for FILE in ${JARS[@]}; do
 			JAR=${FILE##*/}
 			NAME=${JAR%.jar}
-			printtask "### apply $NAME.patch ###"
+			printtask "... apply $NAME.patch ..."
 			case "$NAME" in
 			framework)
 				patch -Nls -p1 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 > ${JAR}.log
@@ -538,14 +539,14 @@ else
 		done
 
 
-		echo "### apk patch $P/$R/$B ###"
+		printtask "### apk patch $P/$R/$B ###"
 		APKS=
 		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		for FILE in ${APKS[@]}; do
 			APK=${FILE##*/}
 			NAME=${APK%.apk}
-			printtask "### apply $NAME.patch ###"
+			printtask "... apply $NAME.patch ..."
 				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 >> $LOG 
 				#cat ${APK}.log | tee -a $LOG
 			[[ `grep FAILED*.apk $LOG` != "" ]] && printerror "failed $NAME.patch"
@@ -574,10 +575,10 @@ else
 		fi
 	done
 
-# Patching JAR
+	printtaks "### rebuild jar ###"
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
-		printtask "### rebuild $JAR ###"
+		printtask "... rebuild $JAR ..."
 		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o classes.dex >> $LOG 2>> $LOG
 		[ -f classes.dex ] || printerror "failed compiling $JAR !!!"
 		jar -ufv ${FILE} classes.dex >> $LOG 2>> $LOG
@@ -587,10 +588,10 @@ else
 		fi
 	done
 
-# Patching APK
+	printtaks "### rebuild apk ###"
 	for FILE in ${AID[@]}; do
 		APK=${FILE##*/}
-		printtask "### rebuild $APK ###"
+		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> $LOG 2>> $LOG
 		cd tmp/${FILE}.out/build/apk		
 		jar -ufv ${TEMP}/${FILE} * >> /dev/null
@@ -599,12 +600,13 @@ else
 	done	
 
 	if [[ -n $BOOTIMG ]]; then
+		printtask "### rebuild boot.img ###"
 		# Rebuilding boot.img
 		cd boot
 		printtask "... rebuilding ramdisk ..."
 		./mkbootfs$EXE ./ramdisk | gzip > ramdisk-new.gz
 
-		printtask "### composing boot.img ###"
+		printtask "... composing boot.img ..."
 		BASE=$(cat boot.img-base)
 		PGSIZE=${PGFORM}$(cat boot.img-pagesize)
 		CMDLINE=$(cat boot.img-cmdline)
@@ -612,7 +614,7 @@ else
 		echo "pagesize =" $PGSIZE >> $LOG
 		echo "base =" $BASE >> $LOG
 
-		printtask "### rebuilding boot.img ###"
+		printtask "... rebuilding boot.img ..."
 		./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
 		cd ..
 	fi
