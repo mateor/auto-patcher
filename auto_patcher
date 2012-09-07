@@ -547,9 +547,9 @@ else
 			APK=${FILE##*/}
 			NAME=${APK%.apk}
 			printtask "... apply $NAME.patch ..."
-				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 >> $LOG 
-				#cat ${APK}.log | tee -a $LOG
-			[[ `grep FAILED*.apk $LOG` != "" ]] && printerror "failed $NAME.patch"
+				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 >> ${APK}.log 
+				cat ${APK}.log | tee -a $LOG
+			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $NAME.patch"
 			GARBAGE=`find tmp/${FILE}.out -name "*.orig"` && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> $LOG
 			GARBAGE=`find tmp/${FILE}.out -name "*.rej"`  && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> $LOG
 		done
