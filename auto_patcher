@@ -422,6 +422,12 @@ else
 			[ -e $FILE ] || echo "delete(\"/$FILE\");" >> updater-script
 		done
 		echo "package_extract_dir(\"system\", \"/system\");" >> updater-script
+	# add permission management
+		if [ -s patches/$P/set_perm.txt ]; then
+			echo "...adding permissions..."
+			cat patches/$P/set_perm.txt >> updater-script
+		fi
+
 		cat META-INF/com/google/android/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
 		
 		[[ -n $BOOTIMG ]] && cat META-INF/com/google/android/updater-script | grep "boot.img" | head -n 1 >> updater-script
