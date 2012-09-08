@@ -370,23 +370,30 @@ else
 		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		for FILE in ${JARS[@]}; do
-			(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
+			if [[ ! "${JID[@]}" =~ $FILE ]]; then
+				JID=(${JID[@]} $FILE)
+			fi
 		done
 
 		APKS=
 		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		for FILE in ${APKS[@]}; do
-			(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
+			if [[ ! "${AID[@]}" =~ $FILE ]]; then
+				AID=(${AID[@]} $FILE)
+			fi
 		done
 
 		COPY=
 		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
 		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
 		for FILE in ${COPY[@]}; do
-			(contains $FILE ${CID[@]}) && printerror "$FILE is already being copied"
-			echo "... add $FILE to copy list ..."
-			CID=(${CID[@]} $FILE)
+			if [[ "${CID[@]}" =~ $FILE ]]; then
+				printerror "$FILE is already being copied"
+			else
+				echo "... add $FILE to copy list ..."
+				CID=(${CID[@]} $FILE)
+			fi
 		done
 
 		[ -s patches/$P/boot_patch.txt ] && BOOTIMG="boot.img"
@@ -622,7 +629,7 @@ else
 
 		printtask "... composing boot.img ..."
 		BASE=$(cat boot.img-base)
-		PGSIZE=${PGFORM}$(cat boot.img-pagesize)
+		PGSIZE=$((${PGFORM}$(cat boot.img-pagesize)))
 		CMDLINE=$(cat boot.img-cmdline)
 		echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> $LOG
 		echo "pagesize =" $PGSIZE >> $LOG
