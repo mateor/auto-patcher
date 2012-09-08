@@ -388,6 +388,7 @@ else
 		done
 	done
 	echo "### COPY FILES=" ${CID[@]} >> $LOG
+	#echo "### DELETE FILES=" ${EID[@]} >> $LOG
 	echo "### JAR FILES=" ${JID[@]} >> $LOG
 	echo "### APK FILES=" ${AID[@]} >> $LOG
 	echo "### IMG FILES=" ${IID[@]} >> $LOG
@@ -413,6 +414,10 @@ else
 		cat META-INF/com/google/android/updater-script | grep ^mount | grep "/system" | head -n 1 > updater-script
 		[ -s updater-script ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" > updater-script
 
+		for FILE in ${EID[@]}; do
+			# restore the original
+			jar -xvf "$ROMX" $FILE 2> /dev/null
+		done
 		for FILE in ${CID[@]}; do
 			# replace with the original or delete it
 			jar -xvf "$ROMX" $FILE 2> /dev/null || echo "delete(\"/$FILE\");" >> updater-script
@@ -489,6 +494,7 @@ else
 		PRB=patches/$P/$R/$B
 
 		COPY=
+		DELS=
 		JARS=
 		APKS=
 		IMGS=
@@ -497,7 +503,8 @@ else
 		for FILE in ${FILES[@]}; do
 			if [[ ${FILE:0:1} == "+" ]]; then
 				COPY=(${COPY[@]} $FILE)
-			#elif [[ ${FILE:0:1} == "-" ]]; then
+			elif [[ ${FILE:0:1} == "-" ]]; then
+				DELS=(${DELS[@]} $FILE)
 			else
 				case $FILE in
 				*.jar)
@@ -517,11 +524,17 @@ else
 		for FILE in ${COPY[@]}; do 
 			printtask "... copying $FILE ..."
 			DEST=${FILE%/*}
-			mkdir -p $DEST
+			mkdir -p ./$DEST
 			if [ -e patches/$P/common/$FILE ]; then
 				[ -e $FILE ] && printtask "... overwriting $FILE from $P ..."
-	 			\cp -a patches/$P/common/$FILE $DEST
+	 			\cp -a patches/$P/common/$FILE ./$DEST
 			fi
+		done
+
+		[[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$R/$B ###"
+		for FILE in ${DELS[@]}; do 
+			printtask "... deleting $FILE ..."
+	 		\rm -rf ./$FILE
 		done
 
 		[[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$R/$B ###"
