@@ -157,7 +157,7 @@ debug () {
 	printusage
 }
 
-contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
+#contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
 
 parse () {
 	echo ${1%%_*}
@@ -370,25 +370,21 @@ else
 		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		for FILE in ${JARS[@]}; do
-			if [[ ! "${JID[@]}" =~ $FILE ]]; then
-				JID=(${JID[@]} $FILE)
-			fi
+			[[ ${JID[@]} =~ $FILE ]] || JID=(${JID[@]} $FILE)
 		done
 
 		APKS=
 		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		for FILE in ${APKS[@]}; do
-			if [[ ! "${AID[@]}" =~ $FILE ]]; then
-				AID=(${AID[@]} $FILE)
-			fi
+			[[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
 		done
 
 		COPY=
 		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
 		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
 		for FILE in ${COPY[@]}; do
-			if [[ "${CID[@]}" =~ $FILE ]]; then
+			if [[ ${CID[@]} =~ $FILE ]]; then
 				printerror "$FILE is already being copied"
 			else
 				echo "... add $FILE to copy list ..."
@@ -547,7 +543,7 @@ else
 				echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 				#java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
 				for FAIL in ${FAILS[@]}; do
-					(contains $FAIL ${SID[@]}) && printerror "$FAIL was already replaced before"
+					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL}
 					\cp -a  patches/$PID/common/provisionals/$FILE.out/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
