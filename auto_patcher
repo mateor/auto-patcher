@@ -361,37 +361,29 @@ if [[ ( "$PID" == "-h"  || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 else
 	for P in ${PID[@]}; do
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
-		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
-		PRB=patches/$P/$R/$B
+		#[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
 
-		COPY=
-		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
-		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
-		for FILE in ${COPY[@]}; do
-			(contains $FILE ${CID[@]}) && printerror "$FILE is already being copied"
-			echo "... add $FILE to copy list ..."
-			CID=(${CID[@]} $FILE)
-		done
-
-		JARS=
-		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
-		for FILE in ${JARS[@]}; do
-			(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
-		done
-
-		APKS=
-		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
-		for FILE in ${APKS[@]}; do
-			(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
-		done
-
-		IMGS=
-		[ -f patches/$P/files.txt ] && IMGS=`grep .img patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && IMGS=`grep .img patches/$P/$R/files.txt`
-		for FILE in ${IMGS[@]}; do
-			(contains $FILE ${IID[@]}) || IID=(${IID[@]} $FILE)	# boot.img is only valid
+		[ -f patches/$P/files.txt ] && FILES=`cat patches/$P/files.txt`
+		[ -f patches/$P/$R/files.txt ] && FILES=`cat patches/$P/$R/files.txt`
+		for FILE in ${FILES[@]}; do
+			if [[ ${FILE:0:1} == "+" ]]; then
+				(contains $FILE ${CID[@]}) && printerror "$FILE is already being copied"
+				echo "... add $FILE to copy list ..."
+				CID=(${CID[@]} $FILE)
+			#elif [[ ${FILE:0:1} == "-" ]]; then
+			else
+				case $FILE in
+				*.jar)
+					(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
+					;;
+				*.apk)
+					(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
+					;;
+				*.img)
+					(contains $FILE ${IID[@]}) || IID=(${IID[@]} $FILE)
+					;;
+				esac
+			fi
 		done
 	done
 	echo "### COPY FILES=" ${CID[@]} >> $LOG
@@ -496,8 +488,30 @@ else
 		PRB=patches/$P/$R/$B
 
 		COPY=
-		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
-		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
+		JARS=
+		APKS=
+		IMGS=
+		[ -f patches/$P/files.txt ] && FILES=`cat patches/$P/files.txt`
+		[ -f patches/$P/$R/files.txt ] && FILES=`cat patches/$P/$R/files.txt`
+		for FILE in ${FILES[@]}; do
+			if [[ ${FILE:0:1} == "+" ]]; then
+				COPY=(${COPY[@]} $FILE)
+			#elif [[ ${FILE:0:1} == "-" ]]; then
+			else
+				case $FILE in
+				*.jar)
+					JARS=(${JARS[@]} $FILE)
+					;;
+				*.apk)
+					APKS=(${APKS[@]} $FILE)
+					;;
+				*.img)
+					IMGS=(${IMGS[@]} $FILE)
+					;;
+				esac
+			fi
+		done
+
 		[[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$R/$B ###"
 		for FILE in ${COPY[@]}; do 
 			printtask "... copying $FILE ..."
@@ -509,9 +523,6 @@ else
 			fi
 		done
 
-		JARS=
-		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		[[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$R/$B ###"
 		for FILE in ${JARS[@]}; do
 			JAR=${FILE##*/}
@@ -553,10 +564,6 @@ else
 			garbage tmp/${FILE}.out
 		done
 
-
-		APKS=
-		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		[[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$R/$B ###"
 		for FILE in ${APKS[@]}; do
 			APK=${FILE##*/}
@@ -569,8 +576,6 @@ else
 		done
 
 		IMGS=
-		[ -f patches/$P/files.txt ] && IMGS=`grep .img patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && IMGS=`grep .img patches/$P/$R/files.txt`
 		[[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$R/$B ###"
 		for FILE in ${IMGS[@]}; do
 			IMG=${FILE##*/}
@@ -614,7 +619,7 @@ else
 	[[ -n ${IID[@]} ]] && printtask "### rebuild img ###"
 	for FILE in ${IID[@]}; do
 		printtask "### rebuild $FILE ###"
-		case "$FILE" in
+		case $FILE in
 			boot.img)
 				# Rebuilding boot.img
 				cd boot
@@ -623,7 +628,7 @@ else
 
 				printtask "... composing boot.img ..."
 				BASE=$(cat boot.img-base)
-				PGSIZE=${PGFORM}$(cat boot.img-pagesize)
+				PGSIZE=$((${PGFORM}$(cat boot.img-pagesize)))
 				CMDLINE=$(cat boot.img-cmdline)
 				echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> $LOG
 				echo "pagesize =" $PGSIZE >> $LOG
