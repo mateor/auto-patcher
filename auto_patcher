@@ -81,11 +81,6 @@ set -a
 # function for converting hex to binary- for testing
 #function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
-printtask () {
-	echo "" >> $LOG
-	echo $@ | tee -a $LOG
-}
-
 printusage () {
 	echo "smali auto patcher v1.9.8"
 	echo "      pdroid 1.32 patches 2012.08.20."
@@ -101,6 +96,16 @@ printusage () {
 	exit
 }
 
+debug () {
+	echo "! please refer to" $LOG "for any debugging"
+	echo ""
+	echo "! patching failed."
+	echo "! it may be possible to patch" $ROM "using other patch version"
+	echo ""
+	[ -d $TEMP ] && \rm -rf $TEMP
+	printusage
+}
+
 printerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo "!!! error:" $@
@@ -109,7 +114,12 @@ printerror () {
 	debug
 }
 
-askconsent () {
+printtask () {
+	echo "" >> $LOG
+	echo $@ | tee -a $LOG
+}
+
+copyfailed () {
 	echo ""
 	echo "These are the files for which patching failed:"
 	echo "---------------------------------------------"
@@ -124,6 +134,10 @@ askconsent () {
 	echo "But IT MAY NOT WORK!!!"
 	echo ""
 	echo ""
+	askconsent && return 0 || return 1
+}
+
+askconsent () {
 	sleep 1
 	echo -n "Do you want to proceed ? (YES/no) "
 	read PROCEED
@@ -147,21 +161,9 @@ askconsent () {
 	esac
 }
 
-debug () {
-	echo "! please refer to" $LOG "for any debugging"
-	echo ""
-	echo "! patching failed."
-	echo "! it may be possible to patch" $ROM "using other patch version"
-	echo ""
-	[ -d $TEMP ] && \rm -rf $TEMP
-	printusage
-}
-
 contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
 
-parse () {
-	echo ${1%%_*}
-}
+parse () { echo "${1%%_*}"; }
 
 getbuildprop () {
 if [ -f system/build.prop ]; then
@@ -528,7 +530,7 @@ else
 			FAILS=(`grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'`)
 			if [[ -n ${FAILS[@]} ]]; then
 				printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
-				askconsent || printerror "failed $NAME.patch"
+				copyfailed || printerror "failed $NAME.patch"
 				echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 				#java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> $LOG 2>> $LOG || echo "FAILED to baksmali $FILE" >> ${JAR}.log
 				for FAIL in ${FAILS[@]}; do
