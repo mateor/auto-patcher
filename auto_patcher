@@ -363,32 +363,30 @@ else
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
 		#[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
 
-		[ -f patches/$P/files.txt ] && FILES=`cat patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && FILES=`cat patches/$P/$R/files.txt`
+		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
 		for FILE in ${FILES[@]}; do
-			if [[ ${FILE:0:1} == "+" ]]; then
-				(contains $FILE ${CID[@]}) && printerror "$FILE is already being copied"
-				echo "... add $FILE to copy list ..."
-				CID=(${CID[@]} $FILE)
-			elif [[ ${FILE:0:1} == "-" ]]; then
-				EID=(${EID[@]} $FILE)
-			else
-				case $FILE in
-				*.jar)
-					(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
-					;;
-				*.apk)
-					(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
-					;;
-				*.img)
-					(contains $FILE ${IID[@]}) || IID=(${IID[@]} $FILE)
-					;;
-				esac
-			fi
+			case "$FILE" in
+			+system/*)
+				(contains $FILE ${CID[@]}) && printerror "$FILE is already being copied" || CID=(${CID[@]} $FILE)
+				;;
+			-system/*)
+				(contains $FILE ${EID[@]}) || EID=(${EID[@]} $FILE)
+				;;
+			system/*.jar)
+				(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
+				;;
+			system/*.apk)
+				(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
+				;;
+			*.img)
+				(contains $FILE ${IID[@]}) || IID=(${IID[@]} $FILE)
+				;;
+			esac
 		done
 	done
+	echo "### DELETE FILES=" ${EID[@]} >> $LOG
 	echo "### COPY FILES=" ${CID[@]} >> $LOG
-	#echo "### DELETE FILES=" ${EID[@]} >> $LOG
 	echo "### JAR FILES=" ${JID[@]} >> $LOG
 	echo "### APK FILES=" ${AID[@]} >> $LOG
 	echo "### IMG FILES=" ${IID[@]} >> $LOG
@@ -416,14 +414,17 @@ else
 
 		for FILE in ${EID[@]}; do
 			# restore the original
-			jar -xvf "$ROMX" $FILE 2> /dev/null
+			jar -xvf "$ROMX" $FILE 2> /dev/null || printtask "!!! warning $FILE cannot be restored !!!"
 		done
 		for FILE in ${CID[@]}; do
 			# replace with the original or delete it
 			jar -xvf "$ROMX" $FILE 2> /dev/null || echo "delete(\"/$FILE\");" >> updater-script
 		done
+
 		echo "package_extract_dir(\"system\", \"/system\");" >> updater-script
 		# add permission management
+		cat META-INF/com/google/android/updater-script | grep set_perm >> updater-script
+		# TODO: remove if we don't need it any more
 		if [ -s patches/$P/set_perm.txt ]; then
 			echo "...adding permissions..."
 			cat patches/$P/set_perm.txt >> updater-script
@@ -444,7 +445,7 @@ else
 
 	printtask "### create restore.zip ###"
 	#\rm -f system/build.prop	# user may have modified it
-	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${CID[@]} ${IID[@]} META-INF >> $LOG 2>> $LOG
+	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF >> $LOG 2>> $LOG
 	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
 	\mv signed.zip restore.zip
 	\rm -f tmp.zip
@@ -498,26 +499,26 @@ else
 		JARS=
 		APKS=
 		IMGS=
-		[ -f patches/$P/files.txt ] && FILES=`cat patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && FILES=`cat patches/$P/$R/files.txt`
+		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
 		for FILE in ${FILES[@]}; do
-			if [[ ${FILE:0:1} == "+" ]]; then
+			case $FILE in
+			+system/*)
 				COPY=(${COPY[@]} $FILE)
-			elif [[ ${FILE:0:1} == "-" ]]; then
+				;;
+			-system/*)
 				DELS=(${DELS[@]} $FILE)
-			else
-				case $FILE in
-				*.jar)
-					JARS=(${JARS[@]} $FILE)
-					;;
-				*.apk)
-					APKS=(${APKS[@]} $FILE)
-					;;
-				*.img)
-					IMGS=(${IMGS[@]} $FILE)
-					;;
-				esac
-			fi
+				;;
+			system/*.jar)
+				JARS=(${JARS[@]} $FILE)
+				;;
+			system/*.apk)
+				APKS=(${APKS[@]} $FILE)
+				;;
+			*.img)
+				IMGS=(${IMGS[@]} $FILE)
+				;;
+			esac
 		done
 
 		[[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$R/$B ###"
