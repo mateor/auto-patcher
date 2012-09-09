@@ -213,7 +213,7 @@ proberom () {
 	VID=$(getbuildprop ro.build.version.release)
 
 	if [ "${VID%.*}" == "2.3" ]; then
-		RID=cm7; echo "### Result of ROM check Gingerbread. Trying cm7 patches ###"
+		RID=cm7;
 	elif [ "${VID%.*}" == "4.0" ]; then
 		MID=$(getbuildprop ro.rommanager.developerid)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
@@ -222,16 +222,17 @@ proberom () {
 
 		case "$MID" in
 		cm9|cm|cyanogenmod*)
-			RID=cm9; echo "### Result of ROM check CM9 ###" 
+			RID=cm9;
 			;;
 		aokp|teamkang)
-			RID=aokp; echo "### Result of ROM check ICS AOKP ###"
+			RID=aokp;
 			;;
-		aosp|AOSP)	# AOSP probing does not work yet
-			RID=aosp; echo "### Result of ROM check ICS AOSP ###"
-			;;
+#		aosp|AOSP)	# AOSP probing does not work yet
+#			RID=aosp;
+#			;;
 		*)
-			RID=generic; echo "!!! $MID is not supported yet, trying generic latest !!!"
+			RID=aosp; 
+			echo "!!! $MID is not supported yet, trying generic latest !!!"
 			;;
 		esac
 	elif [ "${VID%.*}" == "4.1" ]; then
@@ -242,21 +243,23 @@ proberom () {
 
 		case "$MID" in
 		cm10|cm*|cyanogenmod*)
-			RID=cm10; echo "### Result of ROM check cm10 ###"
+			RID=cm10;
 			;;
 		aokp*|teamkang)
-			RID=aokp-jb; echo "### Result of ROM check aokp-jb ###"
+			RID=aokp-jb;
 			;;
 #		aosp|AOSP)	# AOSP probing does not work yet
 #			RID=aosp
 #			;;
 		*)
-			RID=aosp-jb; echo "!!! $MID may not be supported yet, trying aosp-jb latest !!!"
+			RID=aosp-jb;
+			echo "!!! $MID may not be supported yet, trying aosp-jb latest !!!"
 			;;
 		esac
 	else
 		printerror "unknown ROM version $VID"
 	fi
+	printtask "... result of ROM check: version= $VID rom= $RID ..."
 }
 
 garbage () {
