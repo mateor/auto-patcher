@@ -374,19 +374,19 @@ else
 		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		for FILE in ${JARS[@]}; do
-			[[ ${JID[@]} =~ $FILE ]] || JID=(${JID[@]} $FILE)
+			[[ ${JID[@]} =~ "\t$FILE" ]] || JID=(${JID[@]} $FILE)
 		done
 
 		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		for FILE in ${APKS[@]}; do
-			[[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
+			[[ ${AID[@]} =~ "\t$FILE" ]] || AID=(${AID[@]} $FILE)
 		done
 
 		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
 		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
 		for FILE in ${COPY[@]}; do
-			if [[ ${CID[@]} =~ $FILE ]]; then
+			if [[ ${CID[@]} =~ "\t$FILE" ]]; then
 				printerror "$FILE is already being copied"
 			else
 				echo "... add $FILE to copy list ..."
@@ -547,7 +547,7 @@ else
 				echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 				#java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
 				for FAIL in ${FAILS[@]}; do
-					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
+					[[ ${SID[@]} =~ "\t$FAIL" ]] && printerror "$FAIL was already replaced before"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL}
 					\cp -a  patches/$P/common/provisionals/$FILE.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
