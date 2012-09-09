@@ -196,7 +196,7 @@ extpath () {
 	esac
 }
 
-contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
+#contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
 
 parse () { echo "${1%%_*}"; }
 
@@ -374,19 +374,19 @@ else
 		for FILE in ${FILES[@]}; do
 			case "$FILE" in
 			+system/*)
-				(contains ${FILE:1} ${CID[@]}) && printerror "${FILE:1} is already being copied" || CID=(${CID[@]} ${FILE:1})
+				[[ ${CID[@]} =~ ${FILE:1} ]] && printerror "${FILE:1} is already being copied" || CID=(${CID[@]} ${FILE:1})
 				;;
 			-system/*)
-				(contains ${FILE:1} ${EID[@]}) || EID=(${EID[@]} ${FILE:1})
+				[[ ${EID[@]} =~ ${FILE:1} ]] || EID=(${EID[@]} ${FILE:1})
 				;;
 			system/*.jar)
-				(contains $FILE ${JID[@]}) || JID=(${JID[@]} $FILE)
+				[[ ${JID[@]} =~ $FILE ]] || JID=(${JID[@]} $FILE)
 				;;
 			system/*.apk)
-				(contains $FILE ${AID[@]}) || AID=(${AID[@]} $FILE)
+				[[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
 				;;
 			*.img)
-				(contains $FILE ${IID[@]}) || IID=(${IID[@]} $FILE)
+				[[ ${IID[@]} =~ $FILE ]] || IID=(${IID[@]} $FILE)
 				;;
 			esac
 		done
@@ -438,7 +438,7 @@ else
 
 		cat META-INF/com/google/android/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
 
-		(contains boot.img ${IID[@]}) && cat META-INF/com/google/android/updater-script | grep "boot.img" >> updater-script
+		[[ ${IID[@]} =~ boot.img ]] && cat META-INF/com/google/android/updater-script | grep "boot.img" >> updater-script
 
 		cat updater-script > META-INF/com/google/android/updater-script
 
@@ -575,7 +575,7 @@ else
 			if [[ -n ${FAILS[@]} ]]; then
 				printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
 				for FAIL in ${FAILS[@]}; do
-					(contains $FAIL ${SID[@]}) && printerror "$FAIL was already replaced before"
+					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
 					copyfailed || printerror "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL}
