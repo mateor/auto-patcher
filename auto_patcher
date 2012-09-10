@@ -425,7 +425,7 @@ else
 			[ -e $FILE ] || echo "delete(\"/$FILE\");" >> updater-script
 		done
 		echo "package_extract_dir(\"system\", \"/system\");" >> updater-script
-	# add permission management
+		# add permission management
 		if [ -s patches/$P/set_perm.txt ]; then
 			echo "...adding permissions..."
 			cat patches/$P/set_perm.txt >> updater-script
@@ -541,6 +541,7 @@ else
 				;;
 			esac
 			# substitute failed smali with premade jar
+			unset FAILS
 			FAILS=(`grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'`)
 			if [[ -n ${FAILS[@]} ]]; then
 				printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
@@ -556,6 +557,7 @@ else
 				done
 			fi
 			[[ `grep FAILED ${JAR}.log` != "" ]] &&  printerror "failed $NAME.patch"
+			unset GARBAGE
 			GARBAGE=`find tmp/${FILE}.out -name "*.orig"` && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
 			GARBAGE=`find tmp/${FILE}.out -name "*.rej"`  && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
 		done
@@ -571,6 +573,7 @@ else
 				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 >> ${APK}.log 
 				cat ${APK}.log | tee -a "$LOG"
 			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $NAME.patch"
+			unset GARBAGE
 			GARBAGE=`find tmp/${FILE}.out -name "*.orig"` && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
 			GARBAGE=`find tmp/${FILE}.out -name "*.rej"`  && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
 		done
