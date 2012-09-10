@@ -495,10 +495,9 @@ else
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
 		PRB=patches/$P/$R/$B
-	
+		unset COPY JARS APKS IMGS
 
 		printtask "### copy patch $P/$R/$B ###"
-		COPY=
 		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
 		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
 		for FILE in ${COPY[@]}; do 
@@ -514,7 +513,6 @@ else
 		done
 
 		printtask "### jar patch $P/$R/$B ###"
-		JARS=
 		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
 		for FILE in ${JARS[@]}; do
@@ -560,7 +558,6 @@ else
 
 
 		printtask "### apk patch $P/$R/$B ###"
-		APKS=
 		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
 		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
 		for FILE in ${APKS[@]}; do
@@ -576,11 +573,10 @@ else
 
 		if [[ -n $BOOTIMG ]]; then
 			printtask "### applying boot.img patch ###"
-			RDFS=
-			[ -f patches/$P/boot_patch.txt ] && RDFS=$(cat patches/$P/boot_patch.txt)
-			[ -f patches/$P/$R/boot_patch.txt ] && RDFS=$(cat patches/$P/$R/boot_patch.txt)
-			echo "RDFS=" ${RDFS[@]} >> "$LOG"
-			for FILE in ${RDFS[@]}; do
+			[ -f patches/$P/boot_patch.txt ] && IMGS=$(cat patches/$P/boot_patch.txt)
+			[ -f patches/$P/$R/boot_patch.txt ] && IMGS=$(cat patches/$P/$R/boot_patch.txt)
+			echo "IMGS=" ${IMGS[@]} >> "$LOG"
+			for FILE in ${IMGS[@]}; do
 				echo "... applying $FILE patch ..."
 				patch -Nls -p1 -d boot/ramdisk < $PRB/$FILE.patch || printerror "failed patching $FILE"
 			done
