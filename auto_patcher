@@ -102,7 +102,7 @@ debug () {
 	echo "! patching failed."
 	echo "! it may be possible to patch $ROM using other patch version"
 	echo ""
-	[ -d $TEMP ] && \rm -rf $TEMP
+	[ -d "$TEMP" ] && \rm -rf "$TEMP"
 	printusage
 }
 
@@ -273,8 +273,8 @@ garbage () {
 ROOT=$(abspath `dirname "$0"`)
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
-ROM="$(abspath "$1")"
-ROMX="$(extpath "$1")"
+ROM=$(abspath "$1")
+ROMX=$(extpath "$1")
 
 if [[ $OSTYPE == "cygwin" ]]; then
 	EXE=".exe"
@@ -312,12 +312,12 @@ which cpio >> "$LOG" || printerror "Missing \"cpio (JRE)\""
 printtask "### verify ROM ###"
 [ -f "$ROM" ] || printerror "Cannot find $ROM"
 echo "# running" $0 $@ >> "$LOG"
-mkdir $TEMP
-cd $TEMP
+mkdir "$TEMP"
+cd "$TEMP"
 
-PATH=$TEMP:$PATH
+PATH="$TEMP:$PATH"
 export PATH
-echo $PATH >> "$LOG"
+echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
 tar xvzf "$TOOL" >> "$LOG" 2>> "$LOG" || printerror "failed extracting tools !!!"
@@ -640,9 +640,10 @@ else
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		cd tmp/${FILE}.out/build/apk		
-		jar -ufv ${TEMP}/${FILE} * 1> /dev/null
-		cd ${TEMP}
+		cd tmp/${FILE}.out/build/apk
+		TFX=$(extpath "${TEMP}/${FILE}")
+		jar -ufv "$TFX" * 1> /dev/null
+		cd "$TEMP"
 		#\rm -r tmp/${FILE}.out
 	done	
 
@@ -698,4 +699,4 @@ else
 	done
 fi
 cd ..
-\rm -rf $TEMP
+\rm -rf "$TEMP"
