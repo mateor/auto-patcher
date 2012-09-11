@@ -613,11 +613,11 @@ else
 			patch -Nls -p1 -d boot/ramdisk < $PRB/${IMG}.patch || printerror "failed patching $FILE"
 			# Special Instructions- married to boot.img patching by necessity, not design. When 
 			# added to it's own section, it only runs for one mod. WIP.
-			if [ -f patches/$P/$R/special_instructions.sh ]; then
-				. patches/$P/$R/special_instructions.sh
-			elif [ -f patches/$P/special_instruction.sh ]; then
-				. patches/$P/special_instructions.sh
-			fi
+			#if [ -f patches/$P/$R/special_instructions.sh ]; then
+			#	. patches/$P/$R/special_instructions.sh
+			#elif [ -f patches/$P/special_instruction.sh ]; then
+			#	. patches/$P/special_instructions.sh
+			#fi
 		done
 	done
 
@@ -685,6 +685,16 @@ else
 	echo "### finished ###"
 	echo "flash update.zip to install the modified"
 	echo "flash restore.zip to restore the original"
+
+	# add announcement
+	for P in ${PID[@]}; do
+		[ -d patches/$P/$RID ] && R=$RID || R=generic
+		if [ -f patches/$P/$R/README.txt ]; then
+			cat patches/$P/$R/README.txt
+		elif [ -f patches/$P/README.txt ]; then
+			cat patches/$P/README.txt
+		fi
+	done
 fi
 cd ..
 \rm -rf $TEMP
