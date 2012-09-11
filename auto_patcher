@@ -438,10 +438,12 @@ else
 		# add permission management
 		cat META-INF/com/google/android/updater-script | grep set_perm | grep "/system" >> updater-script
 		# TODO: remove if we don't need it any more
-		if [ -s patches/$P/set_perm.txt ]; then
-			echo "...adding permissions..."
-			cat patches/$P/set_perm.txt >> updater-script
-		fi
+		for P in ${PID[@]}; do
+			if [ -s patches/$P/set_perm.txt ]; then
+				echo "...adding permissions..."
+				cat patches/$P/set_perm.txt >> updater-script
+			fi
+		done
 
 		cat META-INF/com/google/android/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
 
