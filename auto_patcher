@@ -479,6 +479,7 @@ else
 		if [ $FILE == "system/framework/framework.jar" ]; then
 			printtask "... extract preloaded-classes ..."
 			jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
+			\mv preloaded-classes tmp/${FILE}.out/
 		fi
 	done
 	for FILE in ${AID[@]}; do
@@ -570,7 +571,7 @@ else
 				# patch preloaded-classes only if a patch exists
 				if [ -f $PRB/preloaded.patch ]; then
 					printtask "... apply preloaded.patch ..."
-					patch -Nls -p1 < $PRB/preloaded.patch 2>&1 > preloaded.log
+					patch -Nls -p1 -d tmp/${FILE}.out < $PRB/preloaded.patch 2>&1 > preloaded.log
 					cat preloaded.log | tee -a "$LOG"
 					[[ `grep FAILED preloaded.log` != "" ]] && printerror "failed preloaded.patch"
 				fi
@@ -630,12 +631,11 @@ else
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
 		printtask "... rebuild $JAR ..."
-		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o classes.dex >> "$LOG" 2>> "$LOG"
-		[ -f classes.dex ] || printerror "failed compiling $JAR !!!"
-		jar -ufv ${FILE} classes.dex >> "$LOG" 2>> "$LOG"
-		\rm -f classes.dex
+		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+		[ -f tmp/${FILE}.out/classes.dex ] || printerror "failed compiling $JAR !!!"
+		jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
-			jar -ufv ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
+			jar -ufv ${FILE} -C tmp/${FILE}.out/ preloaded-classes >> "$LOG" 2>> "$LOG"
 		fi
 	done
 
@@ -644,10 +644,7 @@ else
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		cd tmp/${FILE}.out/build/apk
-		TFX=$(extpath "${TEMP}/${FILE}")
-		jar -ufv "$TFX" * 1> /dev/null
-		cd "$TEMP"
+		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . >> "$LOG" 2>> "$LOG"
 		#\rm -r tmp/${FILE}.out
 	done	
 
