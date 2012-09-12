@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: v2.0.0, patches 2012.09.08.
+# version: v2.0.1, patches 2012.09.07.
 
 # The Auto-Patcher created by pastime1971 and mateorod
 # Thread and support for the Auto-Patcher can be found at
@@ -62,13 +62,14 @@
 #		      Added provisional file copy menu to widen patching base
 #		      Solid Cygwin support for Windows (Thanks kobik77 and wbedard)
 #		      Significant improvements/bugfixes/refactors etc.
+# 2012.09.11. (2.0.1) Cygwin support fixes
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ] 
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
 echo " "
-echo "The Auto-Patcher v2.0.0"
+echo "The Auto-Patcher v2.0.1"
 echo " "
 # by pastime1971 and mateorod
     	
@@ -85,7 +86,7 @@ printtask () {
 }
 
 printusage () {
-	echo "smali auto patcher v2.0.0"
+	echo "smali auto patcher v2.0.1"
 	echo "      pdroid 1.32 patches 2012.09.0.7"
 	echo "      v6supercharger patches 2012.08.17."
 	echo ""
@@ -101,7 +102,7 @@ printusage () {
 
 printerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error:" $1
+	echo "!!! error: $@"
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
 	debug
@@ -151,7 +152,7 @@ debug () {
 	echo "! patching failed."
 	echo "! it may be possible to patch $ROM using other patch version"
 	echo ""
-	[ -d $TEMP ] && \rm -rf $TEMP
+	[ -d "$TEMP" ] && \rm -rf "$TEMP"
 	printusage
 }
 
@@ -265,7 +266,7 @@ extpath () {
 
 [[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
 
-ROOT=$(abspath "`dirname $0`")
+ROOT=$(abspath `dirname "$0"`)
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
 ROM=$(abspath "$1")
@@ -308,12 +309,13 @@ which cpio >> "$LOG" || printerror "Missing \"cpio (JRE)\""
 printtask "### verify ROM ###"
 [ -f "$ROM" ] || printerror "Cannot find $ROM"
 echo "# running" $0 $@ >> "$LOG"
-mkdir $TEMP
-cd $TEMP
+mkdir "$TEMP"
+cd "$TEMP"
 TEMP=`pwd`
 
-PATH=$TEMP:$PATH
+PATH="$TEMP:$PATH"
 export PATH
+echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
 tar xvzf "$TOOL" >> "$LOG" 2>> "$LOG" || printerror "failed extracting tools !!!"
@@ -431,10 +433,12 @@ else
 		done
 		echo "package_extract_dir(\"system\", \"/system\");" >> updater-script
 		# add permission management
-		if [ -s patches/$P/set_perm.txt ]; then
-			echo "...adding permissions..."
-			cat patches/$P/set_perm.txt >> updater-script
-		fi
+		for P in ${PID[@]}; do
+			if [ -s patches/$P/set_perm.txt ]; then
+				echo "...adding permissions..."
+				cat patches/$P/set_perm.txt >> updater-script
+			fi
+		done
 
 		cat META-INF/com/google/android/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
 		
@@ -621,9 +625,10 @@ else
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		cd tmp/${FILE}.out/build/apk		
-		jar -ufv ${TEMP}/${FILE} * >> /dev/null
-		cd ${TEMP}
+		cd tmp/${FILE}.out/build/apk
+		TFX=$(extpath "${TEMP}/${FILE}")
+		jar -ufv "$TFX" * 1> /dev/null
+		cd "$TEMP"
 		#\rm -r tmp/${FILE}.out
 	done	
 
@@ -662,4 +667,4 @@ else
 	echo "flash restore.zip to restore the original"
 fi
 cd ..
-\rm -rf $TEMP
+\rm -rf "$TEMP"
