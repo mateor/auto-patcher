@@ -487,13 +487,16 @@ else
 			printtask "... extract preloaded-classes ..."
 			jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
 			\mv preloaded-classes tmp/${FILE}.out/
+			# a hack to skim down
+			unset GARBAGE
 			if [[ -n $RIL ]]; then
-				unset GARBAGE
 				GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
-				printtask "... remove unnecessary ${#GARBAGE[@]} files to avoid methods cap ..."
-				echo "DELETE RILS= ${GARBAGE[@]}" >> "$LOG"
-				\rm -rf ${GARBAGE[@]} >> "$LOG"
+			else
+				GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*"))
 			fi
+			printtask "... remove unnecessary ${#GARBAGE[@]} files to avoid methods cap ..."
+			echo "DELETE RILS= ${GARBAGE[@]}" >> "$LOG"
+			\rm -rf ${GARBAGE[@]} >> "$LOG"
 		fi
 	done
 	for FILE in ${AID[@]}; do
