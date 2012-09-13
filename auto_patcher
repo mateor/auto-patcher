@@ -487,18 +487,6 @@ else
 			printtask "... extract preloaded-classes ..."
 			jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
 			\mv preloaded-classes tmp/${FILE}.out/
-			# a hack to skim down
-			unset GARBAGE
-			if [[ -n $RIL ]]; then
-				GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
-			elif [[ $RID == "cm10" ]]; then
-				GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*"))
-			fi
-			if [[ -n ${GARBAGE[@]} ]]; then
-				printtask "... remove unnecessary ${#GARBAGE[@]} files to avoid methods cap ..."
-				echo "DELETE RILS= ${GARBAGE[@]}" >> "$LOG"
-				\rm -rf ${GARBAGE[@]} >> "$LOG"
-			fi
 		fi
 	done
 	for FILE in ${AID[@]}; do
@@ -617,6 +605,11 @@ else
 			fi
 			[[ `grep FAILED ${JAR}.log` != "" ]] &&  printerror "failed $NAME.patch"
 			garbage tmp/${FILE}.out
+			if [ -f patches/$P/$R/${JAR}.sh ]; then
+				printtask "... apply $JAR.sh ..."
+				. patches/$P/$R/${JAR}.sh 2>&1 > ${JAR}.log
+				cat ${JAR}.log | tee -a "$LOG"
+			fi
 		done
 
 		[[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$R/$B ###"
