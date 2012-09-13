@@ -260,7 +260,9 @@ proberom () {
 		printerror "unknown ROM version $VID"
 	fi
 	printtask "... result of ROM check: version= $VID rom= $RID ..."
+}
 
+proberil () {
 	RIL=$(getbuildprop ro.telephony.ril_class)
 	[[ -n $RIL ]] && printtask "... result of ROM check: RIL= $RIL"
 }
@@ -345,6 +347,8 @@ else
 	jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
 	proberom
 fi
+# ril type
+proberil
 # patch type
 if [ $# -gt 1 ]; then
 	PIL=${2//,/ }
