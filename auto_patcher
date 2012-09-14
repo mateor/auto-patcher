@@ -407,6 +407,9 @@ else
 			*.img)
 				[[ ${IID[@]} =~ $FILE ]] || IID=(${IID[@]} $FILE)
 				;;
+			system/*)
+				[[ ${TID[@]} =~ $FILE ]] || TID=(${TID[@]} $FILE)
+				;;
 			esac
 		done
 	done
@@ -415,10 +418,11 @@ else
 	echo "### JAR FILES=" ${JID[@]} >> "$LOG"
 	echo "### APK FILES=" ${AID[@]} >> "$LOG"
 	echo "### IMG FILES=" ${IID[@]} >> "$LOG"
+	echo "### TXT FILES=" ${TID[@]} >> "$LOG"
 
 	printtask "### unzip rom ###"
 	# extract system files
-	jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} 2>> "$LOG" || printerror "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
+	jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} @{TID[@]} 2>> "$LOG" || printerror "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
 	#\cp -a system/ backup	# only for debugging purpose
 
 	printtask "### create updater script ###"
@@ -471,7 +475,7 @@ else
 	fi
 
 	printtask "### create restore.zip ###"
-	#\rm -f system/build.prop	# user may have modified it
+	#\rm -f system/build.prop	# user may have modified it	# now we handle build.prop as well
 	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF >> "$LOG" 2>> "$LOG"
 	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
 	\mv signed.zip restore.zip
@@ -524,7 +528,7 @@ else
 		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
 		PRB=patches/$P/$R/$B
 
-		unset FILES COPY DELS JARS APKS IMGS
+		unset FILES COPY DELS JARS APKS IMGS TXTS
 		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
 		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
 		for FILE in ${FILES[@]}; do
@@ -543,6 +547,9 @@ else
 				;;
 			*.img)
 				IMGS=(${IMGS[@]} $FILE)
+				;;
+			system/*)
+				TXTS=(${TXTS[@]} $FILE)
 				;;
 			esac
 		done
@@ -637,6 +644,16 @@ else
 			#	. patches/$P/special_instructions.sh
 			#fi
 		done
+
+		[[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$R/$B ###"
+		for FILE in ${TXTS[@]}; do
+			TXT=${FILE##*/}
+			printtask "... apply $TXT.patch ..."
+				patch -Nls -p2 -d system/ < $PRB/${TXT}.patch 2>&1 >> ${TXT}.log 
+				cat ${TXT}.log | tee -a "$LOG"
+			[[ `grep FAILED ${TXT}.log` != "" ]] && printerror "failed $TXT.patch"
+			garbage system/
+		done
 	done
 
 	[[ -n ${JID[@]} ]] && printtask "### rebuild jar ###"
@@ -690,7 +707,7 @@ else
 	done
 
 	printtask "### create update.zip ###"
-	jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} META-INF >> "$LOG" 2>> "$LOG"
+	jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
 	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip
 	\rm -f tmp.zip
 
