@@ -526,6 +526,7 @@ else
 	for P in ${PID[@]}; do
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
+		PR=patches/$P/$R
 		PRB=patches/$P/$R/$B
 
 		unset FILES COPY DELS JARS APKS IMGS TXTS
@@ -648,10 +649,24 @@ else
 		[[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$R/$B ###"
 		for FILE in ${TXTS[@]}; do
 			TXT=${FILE##*/}
-			printtask "... apply $TXT.patch ..."
-				patch -Nls -p2 -d system/ < $PRB/${TXT}.patch 2>&1 >> ${TXT}.log 
-				cat ${TXT}.log | tee -a "$LOG"
-			[[ `grep FAILED ${TXT}.log` != "" ]] && printerror "failed $TXT.patch"
+			if [[ -f $PRB/${TXT}.patch ]]; then
+				printtask "... apply $TXT.patch ..."
+				patch -Nls -p2 -d system/ < $PRB/${TXT}.patch 2>&1 > ${TXT}.log 
+				#cat ${TXT}.log | tee -a "$LOG"
+				[[ `grep FAILED ${TXT}.log` != "" ]] && printerror "failed $TXT.patch"
+			fi
+			if [[ -f $PR/${TXT}.awk ]]; then
+				printtask "... apply $TXT.awk ..."
+				awk -f $PR/${TXT}.awk $FILE > $FILE || printerror "failed $TXT.awk"
+			fi
+			if [[ -f $PR/${TXT}.sed ]]; then
+				printtask "... apply $TXT.sed ..."
+				sed -f $PR/${TXT}.awk $FILE > $FILE || printerror "failed $TXT.sed"
+			fi
+			if [[ -f $PR/${TXT}.sh ]]; then
+				printtask "... apply $TXT.sh ..."
+				. $PR/${TXT}.sh 2>&1 >> ${TXT}.log || printerror "failed $TXT.sh"
+			fi
 			garbage system/
 		done
 	done
