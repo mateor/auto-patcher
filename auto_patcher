@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# version: v2.0.2, patches 2012.09.07.
+# version: beta v2.1.0, patches 2012.09.13.
+
+# PDroid created by svyat. Official PDroid thread is 
+# http://forum.xda-developers.com/showthread.php?t=1357056
 
 # The Auto-Patcher created by pastime1971 and mateorod
 # Thread and support for the Auto-Patcher can be found at
@@ -53,24 +56,26 @@
 # 2012.08.20. (1.9.6) Conditional support for Official cm10 and aokp-jb builds
 # 2012.08.23. (1.9.7) Final/confirmed pdroid support for Official CM10 and AOKP-JB
 # 2012.09.04  (1.9.8) Bundled cygwin-compatible tools (original was corrupt).
-# 2012.09.04  (1.9.85) Updated aokp-jb patches
-# 2012.09.09. (2.0.0) Added .apk patching
-#		      Added 3G Dongle support 
+#						 For Cygwin, replaced h2b function with simple bash math
+#						 conversion (req'd for compat w/ Cygwin tools).
+# 2012.08.26. (2.0.0) Added .apk patching
+#					  Added 3G Dongle support for Nexus 7
 #                     TabletUI support for Nexus 7 (maybe more)
-#		      Google Voice support for wifi-only devices
-#			mods are 3gdongle, tabletUI, voice, or Nexus7 (for all)
-#		      Added provisional file copy menu to widen patching base
-#		      Solid Cygwin support for Windows (Thanks kobik77 and wbedard)
-#		      Significant improvements/bugfixes/refactors etc.
+#					  Google Voice support for Nexus 7
+#						mods are 3gdongle, tabletUI, voice, or nexus7suite (for all)
+#					  Added provisional file copy menu to widen patching base
+#
 # 2012.09.11. (2.0.1) Cygwin support fixes
 # 2012.09.11. (2.0.2) Bugfix for 3gdongle (all)
+# 2012.09.16. (2.1.0) Significant restructuring of core operations; added edit text file
+#		          fix for "method-cap" errors in pdroid.
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ] 
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
 echo " "
-echo "The Auto-Patcher v2.0.2"
+echo "The Auto-Patcher v2.1.0"
 echo " "
 # by pastime1971 and mateorod
     	
@@ -81,35 +86,45 @@ set -a
 # function for converting hex to binary- for testing
 #function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
-printtask () {
-	echo "" >> "$LOG"
-	echo $1 | tee -a "$LOG"
-}
-
 printusage () {
-	echo "smali auto patcher v2.0.2"
-	echo "      pdroid 1.32 patches 2012.09.0.7"
+	echo "smali auto patcher v2.1.0"
+	echo "      pdroid 1.32 patches 2012.09.13."
 	echo "      v6supercharger patches 2012.08.17."
 	echo ""
 	echo "usage: $0 ROM.ZIP MODS [ROMTYPE] [PATCHDATE]"
 	echo ""
-	echo "MODS e.g: pdroid,v6supercharger or pdroid or v6supercharger"
-	echo "optional [ROMTYPE] can be cm9, aokp-jb, cm10, etc."
+	echo "MODS can be pdroid,v6supercharger or pdroid or v6supercharger"
+	echo "optional [ROMTYPE] can be cm9, aokp, etc."
 	echo "optional [PATCHDATE] can be specified to use older patch versions."
 	echo "try \"$0 ROM.ZIP -h\" to see what is available"
 	echo ""
 	exit
 }
 
+debug () {
+	echo "! please refer to $LOG for any debugging"
+	echo ""
+	echo "! patching failed."
+	echo "! it may be possible to patch $ROM using other patch version"
+	echo ""
+	[ -d "$TEMP" ] && \rm -rf "$TEMP"
+	printusage
+}
+
 printerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error: $@"
+	echo "!!! error:" $@
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
 	debug
 }
 
-askconsent () {
+printtask () {
+	echo "" >> "$LOG"
+	echo $@ | tee -a "$LOG"
+}
+
+copyfailed () {
 	echo ""
 	echo "These are the files for which patching failed:"
 	echo "---------------------------------------------"
@@ -124,6 +139,10 @@ askconsent () {
 	echo "But IT MAY NOT WORK!!!"
 	echo ""
 	echo ""
+	askconsent && return 0 || return 1
+}
+
+askconsent () {
 	sleep 1
 	echo -n "Do you want to proceed ? (YES/no) "
 	read PROCEED
@@ -145,89 +164,6 @@ askconsent () {
 			return 1;	# error
 			;;
 	esac
-}
-
-debug () {
-	echo "! please refer to $LOG for any debugging"
-	echo ""
-	echo "! patching failed."
-	echo "! it may be possible to patch $ROM using other patch version"
-	echo ""
-	[ -d "$TEMP" ] && \rm -rf "$TEMP"
-	printusage
-}
-
-#contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
-
-parse () {
-	echo ${1%%_*}
-}
-
-getbuildprop () {
-if [ -f system/build.prop ]; then
-	result=(`grep $1 system/build.prop | tr '=' ' '`)
-	echo ${result[1]}
-else
-	echo ""
-fi
-}
-
-proberom () {
-	VID=$(getbuildprop ro.build.version.release)
-
-	#if [ "${VID%%.*}" == "2" ]; then
-	if [ "${VID%.*}" == "2.3" ]; then
-		RID=cm7
-		echo "### Result of ROM check Gingerbread. Trying cm7 patches ###"
-	elif [ "${VID%.*}" == "4.0" ]; then
-		MID=$(getbuildprop ro.rommanager.developerid)
-		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
-		DID=$(getbuildprop ro.product.device)
-		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
-
-		case "$MID" in
-		cm9|cm|cyanogenmod*)
-			RID=cm9
-			echo "### Result of ROM check CM9 ###" 
-			;;
-		aokp|teamkang)
-			RID=aokp
-			echo "### Result of ROM check ICS AOKP ###"
-			;;
-		aosp|AOSP)	# AOSP probing does not work yet
-			RID=aosp
-			;;
-		*)
-			echo "!!! $MID is not supported yet, trying generic latest !!!"
-			RID=generic
-			;;
-		esac
-	elif [ "${VID%.*}" == "4.1" ]; then
-		MID=$(getbuildprop ro.build.display.id)
-		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
-		DID=$(getbuildprop ro.product.device)
-		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
-
-		case "$MID" in
-		cm10|cm*|cyanogenmod*)
-			RID=cm10
-		echo "### Result of ROM check cm10 ###"
-			;;
-		aokp*|teamkang)
-			RID=aokp-jb
-		echo "### Result of ROM check aokp-jb ###"
-			;;
-#		aosp|AOSP)	# AOSP probing does not work yet
-#			RID=aosp
-#			;;
-		*)
-			echo "!!! $MID may not be supported yet, trying aosp-jb latest !!!"
-			RID=aosp-jb
-			;;
-		esac
-	else
-		printerror "unknown ROM version $VID"
-	fi
 }
 
 abspath () {
@@ -265,6 +201,83 @@ extpath () {
 	esac
 }
 
+#contains () { for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1; }
+
+parse () { echo "${1%%_*}"; }
+
+getbuildprop () {
+if [ -f system/build.prop ]; then
+	result=(`grep $1 system/build.prop | tr '=' ' '`)
+	echo ${result[1]}
+else
+	echo ""
+fi
+}
+
+proberom () {
+	VID=$(getbuildprop ro.build.version.release)
+
+	if [ "${VID%.*}" == "2.3" ]; then
+		RID=cm7;
+	elif [ "${VID%.*}" == "4.0" ]; then
+		MID=$(getbuildprop ro.rommanager.developerid)
+		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
+		DID=$(getbuildprop ro.product.device)
+		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+
+		case "$MID" in
+		cm9|cm|cyanogenmod*)
+			RID=cm9;
+			;;
+		aokp|teamkang)
+			RID=aokp;
+			;;
+#		aosp|AOSP)	# AOSP probing does not work yet
+#			RID=aosp;
+#			;;
+		*)
+			RID=aosp; 
+			echo "!!! $MID is not supported yet, trying generic latest !!!"
+			;;
+		esac
+	elif [ "${VID%.*}" == "4.1" ]; then
+		MID=$(getbuildprop ro.build.display.id)
+		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
+		DID=$(getbuildprop ro.product.device)
+		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+
+		case "$MID" in
+		pa*|cm10|cm*|cyanogenmod*)
+			RID=cm10;
+			;;
+		aokp*|teamkang)
+			RID=aokp-jb;
+			;;
+#		aosp|AOSP)	# AOSP probing does not work yet
+#			RID=aosp
+#			;;
+		*)
+			RID=aosp-jb;
+			echo "!!! $MID may not be supported yet, trying aosp-jb latest !!!"
+			;;
+		esac
+	else
+		printerror "unknown ROM version $VID"
+	fi
+	printtask "... result of ROM check: version= $VID rom= $RID ..."
+}
+
+proberil () {
+	RIL=$(getbuildprop ro.telephony.ril_class)
+	[[ -n $RIL ]] && printtask "... result of ROM check: RIL= $RIL"
+}
+
+garbage () {
+	unset GARBAGE
+	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
+	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
+}
+
 [[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
 
 ROOT=$(abspath `dirname "$0"`)
@@ -278,10 +291,9 @@ if [[ $OSTYPE == "cygwin" ]]; then
 	PGFORM="0x"
 fi
 
-#DATE=`date +%s`
 DATE=`date +%Y%m%d%H%M%S`
-TEMP=tmp$DATE
-LOG=$(abspath log$DATE)
+TEMP=$(abspath ./tmp$DATE)
+LOG=$(abspath ./log$DATE)
 #echo $ROOT $TOOL $ROM $TEMP "$LOG"
 echo "ROOT= $ROOT" >> "$LOG"
 echo "TOOL= $TOOL" >> "$LOG"
@@ -312,7 +324,6 @@ printtask "### verify ROM ###"
 echo "# running" $0 $@ >> "$LOG"
 mkdir "$TEMP"
 cd "$TEMP"
-TEMP=`pwd`
 
 PATH="$TEMP:$PATH"
 export PATH
@@ -320,6 +331,10 @@ echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
 tar xvzf "$TOOL" >> "$LOG" 2>> "$LOG" || printerror "failed extracting tools !!!"
+# workaround for the recent cygwin filename issue
+\mv cygwin/aapt.exe .
+\mv cygwin/*.exe boot/
+\rm -rf cygwin
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
@@ -337,6 +352,8 @@ else
 	jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
 	proberom
 fi
+# ril type
+proberil
 # patch type
 if [ $# -gt 1 ]; then
 	PIL=${2//,/ }
@@ -356,7 +373,7 @@ echo "# RID=" $RID >> "$LOG"
 echo "# DID=" $DID >> "$LOG"
 echo "# BID=" $BID >> "$LOG"
 echo "# PID=" ${PID[@]} >> "$LOG"
-#[[ -f $PID$DID/*.patch ]] && PID=$PID$DID	# untested yet
+
 if [[ ( "$PID" == "-h"  || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 	echo "### supported patch candidates ###"
 	[ "$PID" != "-h" ] && PL=${PID[@]} || PL=`ls patches/`
@@ -373,43 +390,44 @@ else
 		[ -d patches/$P ] || printerror "$P is not available"
 
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
-		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
-		PRB=patches/$P/$R/$B
+		#[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
 
-		unset JARS APKS COPY
-		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
-		for FILE in ${JARS[@]}; do
-			[[ ${JID[@]} =~ $FILE ]] || JID=(${JID[@]} $FILE)
+		unset FILES
+		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
+		for FILE in ${FILES[@]}; do
+			case "$FILE" in
+			+system/*)
+				[[ ${CID[@]} =~ ${FILE:1} ]] && printerror "${FILE:1} is already being copied" || CID=(${CID[@]} ${FILE:1})
+				;;
+			-system/*)
+				[[ ${EID[@]} =~ ${FILE:1} ]] || EID=(${EID[@]} ${FILE:1})
+				;;
+			system/*.jar)
+				[[ ${JID[@]} =~ $FILE ]] || JID=(${JID[@]} $FILE)
+				;;
+			system/*.apk)
+				[[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
+				;;
+			*.img)
+				[[ ${IID[@]} =~ $FILE ]] || IID=(${IID[@]} $FILE)
+				;;
+			system/*)
+				[[ ${TID[@]} =~ $FILE ]] || TID=(${TID[@]} $FILE)
+				;;
+			esac
 		done
-
-		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
-		for FILE in ${APKS[@]}; do
-			[[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
-		done
-
-		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
-		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
-		for FILE in ${COPY[@]}; do
-			if [[ ${CID[@]} =~ $FILE ]]; then
-				printerror "$FILE is already being copied"
-			else
-				echo "... add $FILE to copy list ..."
-				CID=(${CID[@]} $FILE)
-			fi
-		done
-
-		[ -s patches/$P/boot_patch.txt ] && BOOTIMG="boot.img"
-		[ -s patches/$P/$R/boot_patch.txt ] && BOOTIMG="boot.img"
 	done
+	echo "### DELETE FILES=" ${EID[@]} >> "$LOG"
+	echo "### COPY FILES=" ${CID[@]} >> "$LOG"
 	echo "### JAR FILES=" ${JID[@]} >> "$LOG"
 	echo "### APK FILES=" ${AID[@]} >> "$LOG"
-	echo "### COPY FILES=" ${CID[@]} >> "$LOG"
-	echo "### BOOTIMG=" $BOOTIMG >> "$LOG"
+	echo "### IMG FILES=" ${IID[@]} >> "$LOG"
+	echo "### TXT FILES=" ${TID[@]} >> "$LOG"
 
 	printtask "### unzip rom ###"
-	jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${BOOTIMG} 2>> "$LOG" || printerror "failed extracting ${JID[@]} ${AID[@]} $BOOTIMG from $ROMX !!!"
+	# extract system files
+	jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || printerror "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
 	#\cp -a system/ backup	# only for debugging purpose
 
 	printtask "### create updater script ###"
@@ -427,13 +445,20 @@ else
 
 		cat META-INF/com/google/android/updater-script | grep ^mount | grep "/system" | head -n 1 > updater-script
 		[ -s updater-script ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" > updater-script
+
+		for FILE in ${EID[@]}; do
+			# restore the original
+			jar -xvf "$ROMX" $FILE 2> /dev/null || printtask "!!! warning $FILE cannot be restored !!!"
+		done
 		for FILE in ${CID[@]}; do
 			# replace with the original or delete it
-			jar -xvf "$ROMX" $FILE 
-			[ -e $FILE ] || echo "delete(\"/$FILE\");" >> updater-script
+			jar -xvf "$ROMX" $FILE 2> /dev/null || echo "delete(\"/$FILE\");" >> updater-script
 		done
+
 		echo "package_extract_dir(\"system\", \"/system\");" >> updater-script
 		# add permission management
+		cat META-INF/com/google/android/updater-script | grep set_perm | grep "/system" >> updater-script
+		# TODO: remove if we don't need it any more
 		for P in ${PID[@]}; do
 			if [ -s patches/$P/set_perm.txt ]; then
 				echo "...adding permissions..."
@@ -442,20 +467,21 @@ else
 		done
 
 		cat META-INF/com/google/android/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
-		
-		[[ -n $BOOTIMG ]] && cat META-INF/com/google/android/updater-script | grep "boot.img" >> updater-script
+
+		[[ ${IID[@]} =~ boot.img ]] && cat META-INF/com/google/android/updater-script | grep "boot.img" >> updater-script
+
 		cat updater-script > META-INF/com/google/android/updater-script
 
 		echo "# generated updater-script" >> "$LOG"
 		cat updater-script >> "$LOG"
 	else
+		# this is not enough any more
 		jar -xvf update-template.zip META-INF/com/google/android/update-binary META-INF/com/google/android/updater-script
 	fi
 
 	printtask "### create restore.zip ###"
-	# extract system files
-	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${CID[@]} ${BOOTIMG} META-INF >> "$LOG" 2>> "$LOG"
-	#\rm -f system/build.prop	# user may have modified it
+	#\rm -f system/build.prop	# user may have modified it	# now we handle build.prop as well
+	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF >> "$LOG" 2>> "$LOG"
 	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
 	\mv signed.zip restore.zip
 	\rm -f tmp.zip
@@ -469,6 +495,7 @@ else
 		if [ $FILE == "system/framework/framework.jar" ]; then
 			printtask "... extract preloaded-classes ..."
 			jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
+			\mv preloaded-classes tmp/${FILE}.out/
 		fi
 	done
 	for FILE in ${AID[@]}; do
@@ -481,26 +508,22 @@ else
 		java -jar apktool.jar d -f $FILE tmp/$FILE.out
 		
 	done
-	if [[ -n $BOOTIMG ]]; then
-		printtask "### unpacking boot.img ###"
-		cd boot
-		mkdir ramdisk
-		./unpackbootimg$EXE -i ../boot.img >> "$LOG" 2>> "$LOG"
+	for FILE in ${IID[@]}; do
+		printtask "### unpacking $FILE ###"
+		case "$FILE" in
+			boot.img)
+				cd boot
+				./unpackbootimg$EXE -i ../boot.img >> "$LOG" 2>> "$LOG"
 
-		cd ramdisk
-		gzip -dc ../boot.img-ramdisk.gz | cpio -i >> "$LOG" 2>> "$LOG"
-		cd ../../
-	fi
-
-	# Create combo patches
-	for P in ${PID[@]}; do
-		[ -d patches/$P/$RID ] && R=$RID || R=generic
-
-		if [ -s patches/$P/$R/create_patch.sh ]; then
-             		. patches/$P/$R/create_patch.sh
-		elif [ -s patches/$P/create_patch.sh ]; then
-        		. patches/$P/create_patch.sh
-       		fi
+				mkdir ramdisk
+				cd ramdisk
+				gzip -dc ../boot.img-ramdisk.gz | cpio -i >> "$LOG" 2>> "$LOG"
+				cd ../../
+				;;
+			*)
+				printerror "cannot process $FILE"
+				;;
+		esac
 	done
 
 
@@ -508,12 +531,36 @@ else
 	for P in ${PID[@]}; do
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
+		PR=patches/$P/$R
 		PRB=patches/$P/$R/$B
-		unset COPY JARS APKS IMGS
 
-		printtask "### copy patch $P/$R/$B ###"
-		[ -f patches/$P/copies.txt ] && COPY=`cat patches/$P/copies.txt`
-		[ -f patches/$P/$R/copies.txt ] && COPY=`cat patches/$P/$R/copies.txt`
+		unset FILES COPY DELS JARS APKS IMGS TXTS
+		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
+		for FILE in ${FILES[@]}; do
+			case $FILE in
+			+system/*)
+				COPY=(${COPY[@]} ${FILE:1})
+				;;
+			-system/*)
+				DELS=(${DELS[@]} ${FILE:1})
+				;;
+			system/*.jar)
+				JARS=(${JARS[@]} $FILE)
+				;;
+			system/*.apk)
+				APKS=(${APKS[@]} $FILE)
+				;;
+			*.img)
+				IMGS=(${IMGS[@]} $FILE)
+				;;
+			system/*)
+				TXTS=(${TXTS[@]} $FILE)
+				;;
+			esac
+		done
+
+		[[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$R/$B ###"
 		for FILE in ${COPY[@]}; do 
 			printtask "... copying $FILE ..."
 			DEST=${FILE%/*}
@@ -526,138 +573,165 @@ else
 			fi
 		done
 
-		printtask "### jar patch $P/$R/$B ###"
-		[ -f patches/$P/files.txt ] && JARS=`grep .jar patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && JARS=`grep .jar patches/$P/$R/files.txt`
+		[[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$R/$B ###"
+		for FILE in ${DELS[@]}; do 
+			printtask "... deleting $FILE ..."
+	 		\rm -rf ./$FILE
+		done
+
+		[[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$R/$B ###"
 		for FILE in ${JARS[@]}; do
 			JAR=${FILE##*/}
 			NAME=${JAR%.jar}
 			printtask "... apply $NAME.patch ..."
+			patch -Nls -p1 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 > ${JAR}.log
+			cat ${JAR}.log | tee -a "$LOG"
 			case "$NAME" in
 			framework)
-				patch -Nls -p1 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 > ${JAR}.log
-				cat ${JAR}.log | tee -a "$LOG"
 				# patch preloaded-classes only if a patch exists
 				if [ -f $PRB/preloaded.patch ]; then
 					printtask "... apply preloaded.patch ..."
-					patch -Nls -p1 < $PRB/preloaded.patch 2>&1 > preloaded.log
+					patch -Nls -p1 -d tmp/${FILE}.out < $PRB/preloaded.patch 2>&1 > preloaded.log
 					cat preloaded.log | tee -a "$LOG"
 					[[ `grep FAILED preloaded.log` != "" ]] && printerror "failed preloaded.patch"
 				fi
 				;;
 			*)
-				patch -Nls -p1 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 > ${JAR}.log
-				cat ${JAR}.log | tee -a "$LOG"
+				echo -n ""	# do nothing else
 				;;
 			esac
 			# substitute failed smali with premade jar
-			unset FAILS
 			FAILS=(`grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'`)
 			if [[ -n ${FAILS[@]} ]]; then
 				printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
-				askconsent || printerror "failed $NAME.patch"
-				echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
-				#java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
+				echo "### replace ${FAILS[@]} ###" > ${JAR}.log
 				for FAIL in ${FAILS[@]}; do
 					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
+					copyfailed || printerror "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL}
-					\cp -a  patches/$P/common/provisionals/$FILE.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
+					\cp -a  patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
+					#echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
+					#java -jar baksmali.jar -b -a 15 -o pmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
+					#\cp -a  pmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					SID=(${SID[@]} $FAIL)
 				done
 			fi
 			[[ `grep FAILED ${JAR}.log` != "" ]] &&  printerror "failed $NAME.patch"
-			unset GARBAGE
-			GARBAGE=`find tmp/${FILE}.out -name "*.orig"` && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
-			GARBAGE=`find tmp/${FILE}.out -name "*.rej"`  && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
+			garbage tmp/${FILE}.out
+			if [ -f patches/$P/$R/${JAR}.sh ]; then
+				printtask "... apply $JAR.sh ..."
+				. patches/$P/$R/${JAR}.sh 2>&1 > ${JAR}.log
+				cat ${JAR}.log | tee -a "$LOG"
+			fi
 		done
 
-
-		printtask "### apk patch $P/$R/$B ###"
-		[ -f patches/$P/files.txt ] && APKS=`grep .apk patches/$P/files.txt`
-		[ -f patches/$P/$R/files.txt ] && APKS=`grep .apk patches/$P/$R/files.txt`
+		[[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$R/$B ###"
 		for FILE in ${APKS[@]}; do
 			APK=${FILE##*/}
-			NAME=${APK%.apk}
-			printtask "... apply $NAME.patch ..."
-				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 >> ${APK}.log 
+			#NAME=${APK%.apk}
+			printtask "... apply $APK.patch ..."
+				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${APK}.patch 2>&1 >> ${APK}.log 
 				cat ${APK}.log | tee -a "$LOG"
-			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $NAME.patch"
-			unset GARBAGE
-			GARBAGE=`find tmp/${FILE}.out -name "*.orig"` && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
-			GARBAGE=`find tmp/${FILE}.out -name "*.rej"`  && rm -rf $GARBAGE && echo "GARBAGE=" $GARBAGE >> "$LOG"
+			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $APK.patch"
+			garbage tmp/${FILE}.out
 		done
 
-		if [[ -n $BOOTIMG ]]; then
-			printtask "### applying boot.img patch ###"
-			[ -f patches/$P/boot_patch.txt ] && IMGS=$(cat patches/$P/boot_patch.txt)
-			[ -f patches/$P/$R/boot_patch.txt ] && IMGS=$(cat patches/$P/$R/boot_patch.txt)
-			echo "IMGS=" ${IMGS[@]} >> "$LOG"
-			for FILE in ${IMGS[@]}; do
-				echo "... applying $FILE patch ..."
-				patch -Nls -p1 -d boot/ramdisk < $PRB/$FILE.patch || printerror "failed patching $FILE"
-			done
-
+		[[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$R/$B ###"
+		for FILE in ${IMGS[@]}; do
+			IMG=${FILE##*/}
+			#NAME=${IMG%.img}
+			echo "... applying $IMG.patch ..."
+			patch -Nls -p1 -d boot/ramdisk < $PRB/${IMG}.patch || printerror "failed patching $FILE"
 			# Special Instructions- married to boot.img patching by necessity, not design. When 
 			# added to it's own section, it only runs for one mod. WIP.
-			if [ -f patches/$P/$R/special_instructions.sh ]; then
-             	   		. patches/$P/$R/special_instructions.sh
-			elif [ -f patches/$P/special_instruction.sh ]; then
-             	   		. patches/$P/special_instructions.sh
-       			fi
-		fi
+			#if [ -f patches/$P/$R/special_instructions.sh ]; then
+			#	. patches/$P/$R/special_instructions.sh
+			#elif [ -f patches/$P/special_instruction.sh ]; then
+			#	. patches/$P/special_instructions.sh
+			#fi
+		done
+
+		[[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$R/$B ###"
+		for FILE in ${TXTS[@]}; do
+			TXT=${FILE##*/}
+			if [[ -f $PRB/${TXT}.patch ]]; then
+				printtask "... apply $TXT.patch ..."
+				patch -Nls -p2 -d system/ < $PRB/${TXT}.patch 2>&1 > ${TXT}.log 
+				#cat ${TXT}.log | tee -a "$LOG"
+				[[ `grep FAILED ${TXT}.log` != "" ]] && printerror "failed $TXT.patch"
+			fi
+			if [[ -f $PR/${TXT}.awk ]]; then
+				printtask "... apply $TXT.awk ..."
+				awk -f $PR/${TXT}.awk $FILE > text || printerror "failed $TXT.awk"
+				mv text $FILE
+			fi
+			if [[ -f $PR/${TXT}.sed ]]; then
+				printtask "... apply $TXT.sed ..."
+				sed -f $PR/${TXT}.sed $FILE > text || printerror "failed $TXT.sed"
+				mv text $FILE
+			fi
+			if [[ -f $PR/${TXT}.sh ]]; then
+				printtask "... apply $TXT.sh ..."
+				. $PR/${TXT}.sh 2>&1 >> ${TXT}.log || printerror "failed $TXT.sh"
+			fi
+			garbage system/
+		done
 	done
 
-	printtask "### rebuild jar ###"
+	[[ -n ${JID[@]} ]] && printtask "### rebuild jar ###"
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
 		printtask "... rebuild $JAR ..."
-		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o classes.dex >> "$LOG" 2>> "$LOG"
-		[ -f classes.dex ] || printerror "failed compiling $JAR !!!"
-		jar -ufv ${FILE} classes.dex >> "$LOG" 2>> "$LOG"
-		\rm -f classes.dex
+		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+		[ -f tmp/${FILE}.out/classes.dex ] || printerror "failed compiling $JAR !!!"
+		jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
-			jar -ufv ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
+			jar -ufv ${FILE} -C tmp/${FILE}.out/ preloaded-classes >> "$LOG" 2>> "$LOG"
 		fi
 	done
 
-	printtask "### rebuild apk ###"
+	[[ -n ${AID[@]} ]] && printtask "### rebuild apk ###"
 	for FILE in ${AID[@]}; do
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		cd tmp/${FILE}.out/build/apk
-		TFX=$(extpath "${TEMP}/${FILE}")
-		jar -ufv "$TFX" * 1> /dev/null
-		cd "$TEMP"
+		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . >> "$LOG" 2>> "$LOG"
 		#\rm -r tmp/${FILE}.out
 	done	
 
-	if [[ -n $BOOTIMG ]]; then
-		printtask "### rebuild boot.img ###"
-		# Rebuilding boot.img
-		cd boot
-		printtask "... rebuilding ramdisk ..."
-		./mkbootfs$EXE ./ramdisk | gzip > ramdisk-new.gz
+	[[ -n ${IID[@]} ]] && printtask "### rebuild img ###"
+	for FILE in ${IID[@]}; do
+		printtask "### rebuild $FILE ###"
+		case $FILE in
+			boot.img)
+				# Rebuilding boot.img
+				cd boot
+				printtask "... rebuilding ramdisk ..."
+				./mkbootfs$EXE ./ramdisk | gzip > ramdisk-new.gz
 
-		printtask "... composing boot.img ..."
-		BASE=$(cat boot.img-base)
-		# convert hex to decimal in cygwin by prefixing "0x" and C-style arithmetic
-		PGSIZE=$((${PGFORM}$(cat boot.img-pagesize)))
-		CMDLINE=$(cat boot.img-cmdline)
-		echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> "$LOG"
-		echo "pagesize =" $PGSIZE >> "$LOG"
-		echo "base =" $BASE >> "$LOG"
+				printtask "... composing boot.img ..."
+				BASE=$(cat boot.img-base)
+				# convert hex to decimal in cygwin by prefixing "0x" and C-style arithmetic
+				PGSIZE=$((${PGFORM}$(cat boot.img-pagesize)))
+				CMDLINE=$(cat boot.img-cmdline)
+				echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> "$LOG"
+				echo "pagesize =" $PGSIZE >> "$LOG"
+				echo "base =" $BASE >> "$LOG"
 
-		printtask "... rebuilding boot.img ..."
-		./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
-		cd ..
-	fi
+				printtask "... rebuilding boot.img ..."
+				./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
+				cd ..
+				;;
+			*)
+				printerror "cannot process $FILE"
+				;;
+		esac
+	done
 
 	printtask "### create update.zip ###"
-	jar -cfv tmp.zip ${BOOTIMG} ${JID[@]} ${AID[@]} ${CID[@]} META-INF >> "$LOG" 2>> "$LOG"
-	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
-	\mv signed.zip update.zip
+	jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
+	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip
 	\rm -f tmp.zip
 
 	#echo "# miscellaneous log" >> "$LOG"
@@ -666,6 +740,16 @@ else
 	echo "### finished ###"
 	echo "flash update.zip to install the modified"
 	echo "flash restore.zip to restore the original"
+
+	# add announcement
+	for P in ${PID[@]}; do
+		[ -d patches/$P/$RID ] && R=$RID || R=generic
+		if [ -f patches/$P/$R/README.txt ]; then
+			cat patches/$P/$R/README.txt
+		elif [ -f patches/$P/README.txt ]; then
+			cat patches/$P/README.txt
+		fi
+	done
 fi
 cd ..
 \rm -rf "$TEMP"
