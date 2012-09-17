@@ -330,7 +330,7 @@ export PATH
 echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
-tar xvzf "$TOOL" >> "$LOG" 2>> "$LOG" || printerror "failed extracting tools !!!"
+tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 # workaround for the recent cygwin filename issue
 \mv cygwin/aapt.exe .
 \mv cygwin/*.exe boot/
@@ -483,8 +483,8 @@ else
 	fi
 
 	printtask "### create restore.zip ###"
-	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF >> "$LOG" 2>> "$LOG"
-	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
+	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
+	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
 	\mv signed.zip restore.zip
 	\rm -f tmp.zip
 
@@ -681,6 +681,8 @@ else
 		done
 	done
 
+# Rebuilding system files
+
 	[[ -n ${JID[@]} ]] && printtask "### rebuild jar ###"
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
@@ -698,7 +700,7 @@ else
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . >> "$LOG" 2>> "$LOG"
+		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
 		#\rm -r tmp/${FILE}.out
 	done	
 
@@ -733,7 +735,7 @@ else
 
 	printtask "### create update.zip ###"
 	jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
-	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip
+	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip 2>> "$LOG"
 	\rm -f tmp.zip
 
 	#echo "# miscellaneous log" >> "$LOG"
