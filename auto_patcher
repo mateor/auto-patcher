@@ -339,6 +339,8 @@ tar xvzf "$TOOL" >> "$LOG" 2>> "$LOG" || printerror "failed extracting tools !!!
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
+# we need build.prop for both RIL probing and ROM probing
+jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
 # build date
 if [ $# -gt 3 ]; then
 	BID=$4
@@ -350,11 +352,11 @@ if [ $# -gt 2 ]; then
 	RID=$3
 else
 	printtask "### probe rom type ###"
-	jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
 	proberom
 fi
 # ril type
 proberil
+\rm -f system/build.prop
 # patch type
 if [ $# -gt 1 ]; then
 	PIL=${2//,/ }
@@ -481,7 +483,6 @@ else
 	fi
 
 	printtask "### create restore.zip ###"
-	#\rm -f system/build.prop	# user may have modified it	# now we handle build.prop as well
 	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF >> "$LOG" 2>> "$LOG"
 	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
 	\mv signed.zip restore.zip
