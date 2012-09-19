@@ -4,7 +4,15 @@
 # a hack to skim down : remove vendor-specific RIL
 unset GARBAGE
 if [[ -n $RIL ]]; then
-	GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
+	if [[ $RIL == SamsungQualcommD2RIL ]]; then
+		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*" -a -not -name "SamsungQualcommUiccRIL*" -a -not -name "QualcommSharedRIL*" ))
+	elif [[ $RIL == SonyQualcommRIL ]]; then
+		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
+	elif [[ $RIL == *Qualcomm*RIL ]]; then
+		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*" -a -not -name "QualcommSharedRIL*" ))
+	else
+		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
+	fi
 else
 	GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*"))
 fi
