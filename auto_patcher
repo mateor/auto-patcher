@@ -333,10 +333,25 @@ echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
 tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
-# workaround for the recent cygwin filename issue
-\mv cygwin/aapt.exe .
-\mv cygwin/*.exe boot/
-\rm -rf cygwin
+
+# Get OS specific tools
+	case `uname -s` in
+		CYGWIN*)
+			\mv cygwin/aapt.exe .
+			\mv cygwin/*.exe boot/
+			\rm -rf cygwin # why? If you want to we can keep/add it to mac/linux, though.
+			;;
+		[Dd]arwin)
+			\mv mac/aapt .
+			;;
+		[Ll]inux)
+			\mv linux/aapt .
+			;;
+		*)
+			\mv linux/aapt .
+			;;	
+	esac
+		
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
