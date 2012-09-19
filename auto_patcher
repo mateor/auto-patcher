@@ -282,6 +282,17 @@ garbage () {
 	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
 }
 
+rominfo () {
+echo "# VERS=" $VERSION >> "$LOG"
+echo "# OS =" $OSTYPE $BIT"bit" >> "$LOG"
+echo "# VID=" $VID >> "$LOG"
+echo "# MID=" $MID >> "$LOG"
+echo "# RID=" $RID >> "$LOG"
+echo "# DID=" $DID >> "$LOG"
+echo "# BID=" $BID >> "$LOG"
+echo "# PID=" ${PID[@]} >> "$LOG"
+}
+
 [[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
 
 ROOT=$(abspath `dirname "$0"`)
@@ -358,6 +369,11 @@ tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
 # we need build.prop for both RIL probing and ROM probing
 jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
+# ril type
+proberil
+printtask "### probe rom type ###"
+proberom
+\rm -f system/build.prop
 # build date
 if [ $# -gt 3 ]; then
 	BID=$4
@@ -367,13 +383,11 @@ fi
 # rom type
 if [ $# -gt 2 ]; then
 	RID=$3
+	echo "... Using" $RID "patches ..."
 else
-	printtask "### probe rom type ###"
-	proberom
+	echo "... Using results of ROM check ..."	
 fi
-# ril type
-proberil
-\rm -f system/build.prop
+
 # patch type
 if [ $# -gt 1 ]; then
 	PIL=${2//,/ }
@@ -387,14 +401,8 @@ for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
 
-echo "# VERS=" $VERSION >> "$LOG"
-echo "# OS =" $OSTYPE $BIT"bit" >> "$LOG"
-echo "# VID=" $VID >> "$LOG"
-echo "# MID=" $MID >> "$LOG"
-echo "# RID=" $RID >> "$LOG"
-echo "# DID=" $DID >> "$LOG"
-echo "# BID=" $BID >> "$LOG"
-echo "# PID=" ${PID[@]} >> "$LOG"
+# echo ROM info
+rominfo
 
 if [[ ( "$PID" == "-h"  || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 	echo "### supported patch candidates ###"
