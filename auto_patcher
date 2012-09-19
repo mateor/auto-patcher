@@ -115,10 +115,9 @@ debug () {
 
 printerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error:" $@
+	echo "!!! error: $@"
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
-	cat tmp/$FILE.out/smali/$FAIL.rej >> "$LOG"
 	debug
 }
 
@@ -132,7 +131,7 @@ copyfailed () {
 	echo "These are the files for which patching failed:"
 	echo "---------------------------------------------"
 	echo ""
-	echo $FAILS | sed -e "s/.*.\///"
+	echo ${FAIL##*/}
 	echo ""
 	echo "---------------------------------------------"
 	echo ""
@@ -626,10 +625,12 @@ else
 				printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
 				echo "### replace ${FAILS[@]} ###" > ${JAR}.log
 				for FAIL in ${FAILS[@]}; do
+					echo "!!! patch error for $FAIL !!!" >> "$LOG"
+					cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG"
 					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
 					copyfailed || printerror "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
-					\rm -rf tmp/${FILE}.out/smali/${FAIL}
+					\rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
 					\cp -a  patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					#echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 					#java -jar baksmali.jar -b -a 15 -o pmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
