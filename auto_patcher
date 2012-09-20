@@ -602,6 +602,17 @@ else
 			fi
 		done
 
+		# unconditional smali copying
+		[ -f patches/$P/smali.txt ] && SMALI=$(cat patches/$P/smali.txt)
+		[ -f patches/$P/$R/smali.txt ] && SMALI=$(cat patches/$P/$R/smali.txt)
+		[ -f patches/$P/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$R/$B/smali.txt)
+		MOVE=${SMALI##*/}
+		for SMALI in ${SMALI[@]}; do
+			printtask "... overwriting $MOVE ..."
+				\cp -av patches/$P/common/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+		done
+
+
 		[[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$R/$B ###"
 		for FILE in ${DELS[@]}; do 
 			printtask "... deleting $FILE ..."
