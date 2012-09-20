@@ -18,6 +18,6 @@ else
 fi
 if [[ -n ${GARBAGE[@]} ]]; then
 	echo "... remove unnecessary ${#GARBAGE[@]} files to avoid methods cap ..."
-	echo "DELETE RILS= ${GARBAGE[@]}"
+	echo "DELETE RILS= ${GARBAGE[@]}" >> "$LOG"
 	\rm -rf ${GARBAGE[@]}
 fi
