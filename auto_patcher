@@ -571,9 +571,6 @@ else
 			+system/*)
 				COPY=(${COPY[@]} ${FILE:1})
 				;;
-			+*smali)
-				COPY=(${COPY[@]} ${FILE:1})
-				;;
 			-system/*)
 				DELS=(${DELS[@]} ${FILE:1})
 				;;
@@ -596,10 +593,10 @@ else
 		for FILE in ${COPY[@]}; do 
 			printtask "... copying $FILE ..."
 			DEST=${FILE%/*}
-			mkdir -vp ./$DEST >> "$LOG"
+			mkdir -p ./$DEST
 			if [ -e patches/$P/common/$FILE ]; then
 				[ -e $FILE ] && printtask "... overwriting $FILE from $P ..."
-	 			\cp -av patches/$P/common/$FILE ./$DEST >> "$LOG"
+	 			\cp -a patches/$P/common/$FILE ./$DEST
 			else
 				printerror "$FILE is missing in the patch"
 			fi
@@ -642,11 +639,11 @@ else
 					echo "!!! patch error for $FAIL !!!" >> "$LOG"
 					# cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG"
 					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
-					[ -f patches/$P/common/tmp/${FILE}.out/smali/${FAIL} ] || printerror "failed $FAIL in $JAR cannot be remedied"
+					[ -f patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} ] || printerror "failed $FAIL in $JAR cannot be remedied"
 					copyfailed || printerror "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
-					\cp -av  patches/$P/common/tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
+					\cp -av  patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					#echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 					#java -jar baksmali.jar -b -a 15 -o pmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
 					#\cp -a  pmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
