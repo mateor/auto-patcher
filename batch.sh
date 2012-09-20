@@ -3,7 +3,7 @@
 ROOT=$(readlink -f "`dirname $0`")
 
 cd "$ROOT/patch_tools"
-tar cvzf ../patch_tools.tgz aapt *.jar updatecert.pem updatekey.pk8 update-template.zip boot cygwin
+tar cvzf ../patch_tools.tgz *.jar updatecert.pem updatekey.pk8 update-template.zip boot cygwin mac linux
 cd "$ROOT"
 
 tar cvzf patch_patches.tgz patches

@@ -74,9 +74,11 @@
 # [ -s FILE ] 
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
-echo " "
-echo "The Auto-Patcher v2.1.0"
-echo " "
+VERSION="Auto-Patcher v2.1.0"
+
+echo ""
+echo "The $VERSION"
+echo ""
 # by pastime1971 and mateorod
     	
 
@@ -87,7 +89,7 @@ set -a
 #function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
 printusage () {
-	echo "smali auto patcher v2.1.0"
+	echo "      The $VERSION"
 	echo "      pdroid 1.32 patches 2012.09.13."
 	echo "      v6supercharger patches 2012.08.17."
 	echo ""
@@ -113,7 +115,7 @@ debug () {
 
 printerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error:" $@
+	echo "!!! error: $@"
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
 	debug
@@ -126,10 +128,10 @@ printtask () {
 
 copyfailed () {
 	echo ""
-	echo "These are the files for which patching failed:"
+	echo "File for which patching failed:"
 	echo "---------------------------------------------"
 	echo ""
-	grep FAILED ${JAR}.log | sed -e "s/.*.\///"
+	echo "${FAIL##*/}"
 	echo ""
 	echo "---------------------------------------------"
 	echo ""
@@ -146,6 +148,7 @@ askconsent () {
 	sleep 1
 	echo -n "Do you want to proceed ? (YES/no) "
 	read PROCEED
+	echo "askconsent intial = ${PROCEED}" >> "$LOG" 
 	case $PROCEED in
 		[Yy] | [Yy][Ee][Ss])
 			echo ""
@@ -156,6 +159,7 @@ askconsent () {
 	esac
 	echo -n "Are you sure ? (YES/no) "
 	read PROCEED
+	echo "askconsent final = ${PROCEED}: for $FAIL" >> "$LOG"
 	case $PROCEED in
 		[Yy] | [Yy][Ee][Ss])
 			return 0;	# successful
@@ -208,7 +212,7 @@ parse () { echo "${1%%_*}"; }
 getbuildprop () {
 if [ -f system/build.prop ]; then
 	result=(`grep $1 system/build.prop | tr '=' ' '`)
-	echo ${result[1]}
+	echo "${result[1]}"
 else
 	echo ""
 fi
@@ -226,7 +230,7 @@ proberom () {
 		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
 
 		case "$MID" in
-		cm9|cm|cyanogenmod*)
+		pa|cm9|cm|cyanogenmod*)
 			RID=cm9;
 			;;
 		aokp|teamkang)
@@ -264,7 +268,7 @@ proberom () {
 	else
 		printerror "unknown ROM version $VID"
 	fi
-	printtask "... result of ROM check: version= $VID rom= $RID ..."
+	echo "... result of ROM check: version= $VID rom= $RID ..."
 }
 
 proberil () {
@@ -274,8 +278,19 @@ proberil () {
 
 garbage () {
 	unset GARBAGE
-	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
-	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
+	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
+	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
+}
+
+rominfo () {
+echo "# VER= $VERSION" >> "$LOG"
+echo "# OS=  $OSTYPE ${BIT}bit" >> "$LOG"
+echo "# VID= $VID" >> "$LOG"
+echo "# MID= $MID" >> "$LOG"
+echo "# RID= $RID" >> "$LOG"
+echo "# DID= $DID" >> "$LOG"
+echo "# BID= $BID" >> "$LOG"
+echo "# PID= ${PID[@]}" >> "$LOG"
 }
 
 [[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
@@ -302,26 +317,25 @@ echo "ROMX= $ROMX" >> "$LOG"
 
 \rm -f restore.zip update.zip
 
-#CHK=$(getconf LONG_BIT) 
-#if [[ $CHK = "64" ]]; then
-#	BIT=64
-#else [[ $BIT = "32" ]];
-#	BIT=32
-#fi
-#echo "*** You are using a $BIT bit OS   ***" >> "$LOG"
-#echo "### You are using $BIT bit OS ###"
+CHK=$(getconf LONG_BIT) 
+if [[ $CHK = "64" ]]; then
+	BIT=64
+else [[ $BIT = "32" ]];
+	BIT=32
+fi
+
 
 printtask "### verify tools ###"
-which patch >> "$LOG" || printerror "Missing \"patch diff tools\""
-which tar >> "$LOG" || printerror "Missing \"tar zip tools\""
+which patch >> "$LOG" || printerror "Missing \"patch diff command\""
+which tar >> "$LOG" || printerror "Missing \"tar archive command\""
 which jar >> "$LOG" || printerror "Missing \"jar (JDK)\""
 which java >> "$LOG" || printerror "Missing \"java (JRE)\""
-which cpio >> "$LOG" || printerror "Missing \"cpio (JRE)\""
+which cpio >> "$LOG" || printerror "Missing \"cpio archive command\""
 [ -f "$TOOL" ] || printerror "patch tool is missing"
 [ -f "$PTCH" ] || printerror "patch patches are missing"
 printtask "### verify ROM ###"
 [ -f "$ROM" ] || printerror "Cannot find $ROM"
-echo "# running" $0 $@ >> "$LOG"
+echo "### running $0 $@" >> "$LOG"
 mkdir "$TEMP"
 cd "$TEMP"
 
@@ -330,14 +344,36 @@ export PATH
 echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
-tar xvzf "$TOOL" >> "$LOG" 2>> "$LOG" || printerror "failed extracting tools !!!"
-# workaround for the recent cygwin filename issue
-\mv cygwin/aapt.exe .
-\mv cygwin/*.exe boot/
-\rm -rf cygwin
+tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
+
+# Get OS specific tools
+	case `uname -s` in
+		CYGWIN*)
+			\mv cygwin/aapt.exe .
+			\mv cygwin/*.exe boot/
+			\rm -rf cygwin # why? If you want to we can keep/add it to mac/linux, though.
+			;;
+		[Dd]arwin)
+			\mv mac/aapt .
+			;;
+		[Ll]inux)
+			\mv linux/aapt .
+			;;
+		*)
+			\mv linux/aapt .
+			;;	
+	esac
+		
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
+# we need build.prop for both RIL probing and ROM probing
+jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
+# ril type
+proberil
+printtask "### probe rom type ###"
+proberom
+\rm -f system/build.prop
 # build date
 if [ $# -gt 3 ]; then
 	BID=$4
@@ -347,13 +383,11 @@ fi
 # rom type
 if [ $# -gt 2 ]; then
 	RID=$3
+	echo "... Using $RID patches ..."
 else
-	printtask "### probe rom type ###"
-	jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
-	proberom
+	echo "... Using results of ROM check ..."	
 fi
-# ril type
-proberil
+
 # patch type
 if [ $# -gt 1 ]; then
 	PIL=${2//,/ }
@@ -367,12 +401,8 @@ for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
 
-echo "# VID=" $VID >> "$LOG"
-echo "# MID=" $MID >> "$LOG"
-echo "# RID=" $RID >> "$LOG"
-echo "# DID=" $DID >> "$LOG"
-echo "# BID=" $BID >> "$LOG"
-echo "# PID=" ${PID[@]} >> "$LOG"
+# echo ROM info
+rominfo
 
 if [[ ( "$PID" == "-h"  || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 	echo "### supported patch candidates ###"
@@ -418,12 +448,12 @@ else
 			esac
 		done
 	done
-	echo "### DELETE FILES=" ${EID[@]} >> "$LOG"
-	echo "### COPY FILES=" ${CID[@]} >> "$LOG"
-	echo "### JAR FILES=" ${JID[@]} >> "$LOG"
-	echo "### APK FILES=" ${AID[@]} >> "$LOG"
-	echo "### IMG FILES=" ${IID[@]} >> "$LOG"
-	echo "### TXT FILES=" ${TID[@]} >> "$LOG"
+	echo "### DELETE FILES= ${EID[@]}" >> "$LOG"
+	echo "### COPY FILES= ${CID[@]}" >> "$LOG"
+	echo "### JAR FILES= ${JID[@]}" >> "$LOG"
+	echo "### APK FILES= ${AID[@]}" >> "$LOG"
+	echo "### IMG FILES= ${IID[@]}" >> "$LOG"
+	echo "### TXT FILES= ${TID[@]}" >> "$LOG"
 
 	printtask "### unzip rom ###"
 	# extract system files
@@ -480,9 +510,8 @@ else
 	fi
 
 	printtask "### create restore.zip ###"
-	#\rm -f system/build.prop	# user may have modified it	# now we handle build.prop as well
-	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF >> "$LOG" 2>> "$LOG"
-	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip
+	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
+	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
 	\mv signed.zip restore.zip
 	\rm -f tmp.zip
 
@@ -573,6 +602,17 @@ else
 			fi
 		done
 
+		# unconditional smali copying
+		[ -f patches/$P/smali.txt ] && SMALI=$(cat patches/$P/smali.txt)
+		[ -f patches/$P/$R/smali.txt ] && SMALI=$(cat patches/$P/$R/smali.txt)
+		[ -f patches/$P/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$R/$B/smali.txt)
+		MOVE=${SMALI##*/}
+		for SMALI in ${SMALI[@]}; do
+			printtask "... overwriting $MOVE ..."
+				\cp -av patches/$P/common/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+		done
+
+
 		[[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$R/$B ###"
 		for FILE in ${DELS[@]}; do 
 			printtask "... deleting $FILE ..."
@@ -601,16 +641,20 @@ else
 				;;
 			esac
 			# substitute failed smali with premade jar
+			unset FAILS
 			FAILS=(`grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'`)
 			if [[ -n ${FAILS[@]} ]]; then
 				printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
 				echo "### replace ${FAILS[@]} ###" > ${JAR}.log
 				for FAIL in ${FAILS[@]}; do
+					echo "!!! patch error for $FAIL !!!" >> "$LOG"
+					# cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG"
 					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
+					[ -f patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} ] || printerror "failed $FAIL in $JAR cannot be remedied"
 					copyfailed || printerror "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
-					\rm -rf tmp/${FILE}.out/smali/${FAIL}
-					\cp -a  patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
+					\rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
+					\cp -av  patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					#echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 					#java -jar baksmali.jar -b -a 15 -o pmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
 					#\cp -a  pmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
@@ -679,6 +723,8 @@ else
 		done
 	done
 
+# Rebuilding system files
+
 	[[ -n ${JID[@]} ]] && printtask "### rebuild jar ###"
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
@@ -696,7 +742,7 @@ else
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . >> "$LOG" 2>> "$LOG"
+		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
 		#\rm -r tmp/${FILE}.out
 	done	
 
@@ -715,9 +761,9 @@ else
 				# convert hex to decimal in cygwin by prefixing "0x" and C-style arithmetic
 				PGSIZE=$((${PGFORM}$(cat boot.img-pagesize)))
 				CMDLINE=$(cat boot.img-cmdline)
-				echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> "$LOG"
-				echo "pagesize =" $PGSIZE >> "$LOG"
-				echo "base =" $BASE >> "$LOG"
+				echo "cmdline = no_console_suspend=1 console=null $CMDLINE" >> "$LOG"
+				echo "pagesize = $PGSIZE" >> "$LOG"
+				echo "base = $BASE" >> "$LOG"
 
 				printtask "... rebuilding boot.img ..."
 				./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
@@ -731,7 +777,7 @@ else
 
 	printtask "### create update.zip ###"
 	jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
-	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip
+	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip 2>> "$LOG"
 	\rm -f tmp.zip
 
 	#echo "# miscellaneous log" >> "$LOG"
