@@ -3,21 +3,20 @@
 
 # a hack to skim down : remove vendor-specific RIL
 unset GARBAGE
-if [[ -n $RIL ]]; then
-	if [[ $RIL == SamsungQualcommD2RIL ]]; then
-		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*" -a -not -name "SamsungQualcommUiccRIL*" -a -not -name "QualcommSharedRIL*" ))
-	elif [[ $RIL == SonyQualcommRIL ]]; then
-		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
-	elif [[ $RIL == *Qualcomm*RIL ]]; then
-		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*" -a -not -name "QualcommSharedRIL*" ))
-	else
-		GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
-	fi
+TELEPHONY="tmp/${FILE}.out/smali/com/android/internal/telephony/"
+if [[ -z $RIL ]]; then
+	GARBAGE=($(find "$TELEPHONY" -name "*RIL*" -a -not -name "RIL*"))
+elif [[ $RIL == SonyQualcommRIL ]]; then # needs to be before *Qualcomm*RIL
+	GARBAGE=($(find "$TELEPHONY" -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
+elif [[ $RIL == SamsungQualcommD2RIL ]]; then
+	GARBAGE=($(find "$TELEPHONY" -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*" -a -not -name "SamsungQualcommUiccRIL*" -a -not -name "QualcommSharedRIL*" ))
+elif [[ $RIL == *Qualcomm*RIL ]]; then
+	GARBAGE=($(find "$TELEPHONY" -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*" -a -not -name "QualcommSharedRIL*" ))
 else
-	GARBAGE=($(find tmp/${FILE}.out/smali/com/android/internal/telephony/ -name "*RIL*" -a -not -name "RIL*"))
+	GARBAGE=($(find "$TELEPHONY" -name "*RIL*" -a -not -name "RIL*" -a -not -name "${RIL}*"))
 fi
 if [[ -n ${GARBAGE[@]} ]]; then
-	echo "... remove unnecessary ${#GARBAGE[@]} files to avoid methods cap ..."
+	printtask "... remove unnecessary ${#GARBAGE[@]} files to avoid methods cap ..."
 	echo "DELETE RILS= ${GARBAGE[@]}" >> "$LOG"
 	\rm -rf ${GARBAGE[@]}
 fi
