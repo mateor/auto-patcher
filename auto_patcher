@@ -76,9 +76,9 @@
 
 VERSION="Auto-Patcher v2.1.0"
 
-echo " "
-echo "The "$VERSION
-echo " "
+echo ""
+echo "The $VERSION"
+echo ""
 # by pastime1971 and mateorod
     	
 
@@ -89,7 +89,7 @@ set -a
 #function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
 printusage () {
-	echo "      The" $VERSION
+	echo "      The $VERSION"
 	echo "      pdroid 1.32 patches 2012.09.13."
 	echo "      v6supercharger patches 2012.08.17."
 	echo ""
@@ -131,7 +131,7 @@ copyfailed () {
 	echo "File for which patching failed:"
 	echo "---------------------------------------------"
 	echo ""
-	echo ${FAIL##*/}
+	echo "${FAIL##*/}"
 	echo ""
 	echo "---------------------------------------------"
 	echo ""
@@ -148,7 +148,7 @@ askconsent () {
 	sleep 1
 	echo -n "Do you want to proceed ? (YES/no) "
 	read PROCEED
-	echo "askconsent intial =" $PROCEED >> "$LOG" 
+	echo "askconsent intial = ${PROCEED}" >> "$LOG" 
 	case $PROCEED in
 		[Yy] | [Yy][Ee][Ss])
 			echo ""
@@ -159,7 +159,7 @@ askconsent () {
 	esac
 	echo -n "Are you sure ? (YES/no) "
 	read PROCEED
-	echo "askconsent final =" $PROCEED": for" $FAIL >> "$LOG"
+	echo "askconsent final = ${PROCEED}: for $FAIL" >> "$LOG"
 	case $PROCEED in
 		[Yy] | [Yy][Ee][Ss])
 			return 0;	# successful
@@ -212,7 +212,7 @@ parse () { echo "${1%%_*}"; }
 getbuildprop () {
 if [ -f system/build.prop ]; then
 	result=(`grep $1 system/build.prop | tr '=' ' '`)
-	echo ${result[1]}
+	echo "${result[1]}"
 else
 	echo ""
 fi
@@ -278,19 +278,19 @@ proberil () {
 
 garbage () {
 	unset GARBAGE
-	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
-	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE=" ${GARBAGE[@]} >> "$LOG"
+	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
+	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
 }
 
 rominfo () {
-echo "# VERS=" $VERSION >> "$LOG"
-echo "# OS =" $OSTYPE $BIT"bit" >> "$LOG"
-echo "# VID=" $VID >> "$LOG"
-echo "# MID=" $MID >> "$LOG"
-echo "# RID=" $RID >> "$LOG"
-echo "# DID=" $DID >> "$LOG"
-echo "# BID=" $BID >> "$LOG"
-echo "# PID=" ${PID[@]} >> "$LOG"
+echo "# VER= $VERSION" >> "$LOG"
+echo "# OS=  $OSTYPE ${BIT}bit" >> "$LOG"
+echo "# VID= $VID" >> "$LOG"
+echo "# MID= $MID" >> "$LOG"
+echo "# RID= $RID" >> "$LOG"
+echo "# DID= $DID" >> "$LOG"
+echo "# BID= $BID" >> "$LOG"
+echo "# PID= ${PID[@]}" >> "$LOG"
 }
 
 [[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
@@ -335,7 +335,7 @@ which cpio >> "$LOG" || printerror "Missing \"cpio archive command\""
 [ -f "$PTCH" ] || printerror "patch patches are missing"
 printtask "### verify ROM ###"
 [ -f "$ROM" ] || printerror "Cannot find $ROM"
-echo "# running" $0 $@ >> "$LOG"
+echo "### running $0 $@" >> "$LOG"
 mkdir "$TEMP"
 cd "$TEMP"
 
@@ -383,7 +383,7 @@ fi
 # rom type
 if [ $# -gt 2 ]; then
 	RID=$3
-	echo "... Using" $RID "patches ..."
+	echo "... Using $RID patches ..."
 else
 	echo "... Using results of ROM check ..."	
 fi
@@ -448,12 +448,12 @@ else
 			esac
 		done
 	done
-	echo "### DELETE FILES=" ${EID[@]} >> "$LOG"
-	echo "### COPY FILES=" ${CID[@]} >> "$LOG"
-	echo "### JAR FILES=" ${JID[@]} >> "$LOG"
-	echo "### APK FILES=" ${AID[@]} >> "$LOG"
-	echo "### IMG FILES=" ${IID[@]} >> "$LOG"
-	echo "### TXT FILES=" ${TID[@]} >> "$LOG"
+	echo "### DELETE FILES= ${EID[@]}" >> "$LOG"
+	echo "### COPY FILES= ${CID[@]}" >> "$LOG"
+	echo "### JAR FILES= ${JID[@]}" >> "$LOG"
+	echo "### APK FILES= ${AID[@]}" >> "$LOG"
+	echo "### IMG FILES= ${IID[@]}" >> "$LOG"
+	echo "### TXT FILES= ${TID[@]}" >> "$LOG"
 
 	printtask "### unzip rom ###"
 	# extract system files
@@ -750,9 +750,9 @@ else
 				# convert hex to decimal in cygwin by prefixing "0x" and C-style arithmetic
 				PGSIZE=$((${PGFORM}$(cat boot.img-pagesize)))
 				CMDLINE=$(cat boot.img-cmdline)
-				echo "cmdline = no_console_suspend=1 console=null" $CMDLINE >> "$LOG"
-				echo "pagesize =" $PGSIZE >> "$LOG"
-				echo "base =" $BASE >> "$LOG"
+				echo "cmdline = no_console_suspend=1 console=null $CMDLINE" >> "$LOG"
+				echo "pagesize = $PGSIZE" >> "$LOG"
+				echo "base = $BASE" >> "$LOG"
 
 				printtask "... rebuilding boot.img ..."
 				./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
