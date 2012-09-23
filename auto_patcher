@@ -270,6 +270,10 @@ proberom () {
 		printerror "unknown ROM version $VID"
 	fi
 	echo "... result of ROM check: version= $VID rom= $RID ..."
+
+# Adding build date query
+	UTC=$(getbuildprop ro.build.date.utc)
+	BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y-%m-%d"`
 }
 
 proberil () {
@@ -289,6 +293,7 @@ echo "# OS=  $OSTYPE ${BIT}bit" >> "$LOG"
 echo "# VID= $VID" >> "$LOG"
 echo "# MID= $MID" >> "$LOG"
 echo "# RID= $RID" >> "$LOG"
+echo "# BDID= $BDID" >> "$LOG"
 echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
 echo "# PID= ${PID[@]}" >> "$LOG"
@@ -374,6 +379,9 @@ jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting b
 proberil
 printtask "### probe rom type ###"
 proberom
+
+# Build date functions
+
 \rm -f system/build.prop
 # build date
 if [ $# -gt 3 ]; then
