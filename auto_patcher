@@ -224,8 +224,10 @@ proberom () {
 	VID=$(getbuildprop ro.build.version.release)
 
 	if [ "${VID%.*}" == "2.3" ]; then
+		ANDR=gingerbread
 		RID=cm7;
 	elif [ "${VID%.*}" == "4.0" ]; then
+		ANDR=ics
 		MID=$(getbuildprop ro.rommanager.developerid)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
 		DID=$(getbuildprop ro.product.device)
@@ -247,6 +249,7 @@ proberom () {
 			;;
 		esac
 	elif [ "${VID%.*}" == "4.1" ]; then
+		ANDR=jellybean
 		MID=$(getbuildprop ro.build.display.id)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
 		DID=$(getbuildprop ro.product.device)
@@ -616,7 +619,7 @@ else
 		MOVE=${SMALI##*/}
 		for SMALI in ${SMALI[@]}; do
 			printtask "... overwriting $MOVE ..."
-				\cp -av patches/$P/common/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+				\cp -av patches/$P/$ANDR/provisionals/$SMALI tmp/$SMALI >> "$LOG"
 		done
 
 
@@ -657,11 +660,11 @@ else
 					echo "!!! patch error for $FAIL !!!" >> "$LOG"
 					# cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG"
 					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
-					[ -f patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} ] || printerror "failed $FAIL in $JAR cannot be remedied"
+					[ -f patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL} ] || printerror "failed $FAIL in $JAR cannot be remedied"
 					copyfailed || printerror "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
-					\cp -av  patches/$P/common/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
+					\cp -av  patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					#echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
 					#java -jar baksmali.jar -b -a 15 -o pmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
 					#\cp -a  pmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
