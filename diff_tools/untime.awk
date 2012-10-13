@@ -4,7 +4,7 @@
 
 # convert obsolete form
 /^diff -Npru /  { sub(/diff -Npru /, "diff -NpruEbB "); }
-/stock-/  { sub(/stock-/, "stock_"); sub(/moded-/, "moded_"); print; next; }
+/stock-/  { sub(/stock-/, "stock_"); sub(/modded-/, "modded_"); print; next; }
 
 # keep rest of file as is:
 { print; }
