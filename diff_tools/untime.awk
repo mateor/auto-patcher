@@ -1,6 +1,6 @@
 # remove time stamp
 /^--- stock_/  { print $1 " " $2; next; }
-/^+++ moded_/ { print $1 " " $2; next; }
+/^+++ modded_/ { print $1 " " $2; next; }
 
 # convert obsolete form
 /^diff -Npru /  { sub(/diff -Npru /, "diff -NpruEbB "); }
