@@ -230,9 +230,11 @@ proberom () {
 
 	if [ "${VID%.*}" == "2.3" ]; then
 		ANDR=gingerbread
-		RID=cm7;
+		API=9
+                RID=cm7;
 	elif [ "${VID%.*}" == "4.0" ]; then
 		ANDR=ics
+                API=15
 		MID=$(getbuildprop ro.rommanager.developerid)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
 		DID=$(getbuildprop ro.product.device)
@@ -255,6 +257,7 @@ proberom () {
 		esac
 	elif [ "${VID%.*}" == "4.1" ]; then
 		ANDR=jellybean
+                API=16
 		MID=$(getbuildprop ro.build.display.id)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
 		DID=$(getbuildprop ro.product.device)
@@ -535,7 +538,7 @@ else
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
 		printtask "... decompile $JAR ..."
-		java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+		java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
 			printtask "... extract preloaded-classes ..."
 			jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
@@ -744,7 +747,7 @@ else
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
 		printtask "... rebuild $JAR ..."
-		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+		java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
 		[ -f tmp/${FILE}.out/classes.dex ] || printerror "failed compiling $JAR !!!"
 		jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
