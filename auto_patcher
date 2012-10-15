@@ -218,7 +218,7 @@ parse () { echo "${1%%_*}"; }
 
 getbuildprop () {
 if [ -f system/build.prop ]; then
-	result=(`grep $1 system/build.prop | tr '=' ' '`)
+	result=(`grep $1 system/build.prop | tr -d '\r' | tr '=' ' '`)
 	echo "${result[1]}"
 else
 	echo ""
@@ -678,9 +678,9 @@ else
 			fi
 			[[ `grep FAILED ${JAR}.log` != "" ]] &&  printerror "failed $NAME.patch"
 			garbage tmp/${FILE}.out
-			if [ -f patches/$P/$R/${JAR}.sh ]; then
+			if [ -f patches/$P/$R/$B/{JAR}.sh ]; then
 				printtask "... apply $JAR.sh ..."
-				. patches/$P/$R/${JAR}.sh 2>&1 > ${JAR}.log
+				. patches/$P/$R/$B/{JAR}.sh 2>&1 > ${JAR}.log
 				cat ${JAR}.log | tee -a "$LOG"
 			fi
 		done
