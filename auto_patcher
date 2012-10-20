@@ -322,6 +322,7 @@ else
                   fi
              done
         echo "$PID patch date has been set to: $BID"
+        B=$BID
 done
 fi
 }
@@ -341,12 +342,13 @@ rominfo () {
 echo "# VER= $VERSION" >> "$LOG"
 echo "# OS=  $OSTYPE ${BIT}bit" >> "$LOG"
 echo "# VID= $VID" >> "$LOG"
+echo "# PID= ${PID[@]}" >> "$LOG"
 echo "# MID= $MID" >> "$LOG"
 echo "# RID= $RID" >> "$LOG"
 echo "# BDID= $BDID" >> "$LOG"
 echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
-echo "# PID= ${PID[@]}" >> "$LOG"
+
 }
 
 [[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
@@ -423,19 +425,7 @@ tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
-# we need build.prop for both RIL probing and ROM probing
-jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
-# ril type
-proberil
-printtask "### probe rom type ###"
-proberom
-\rm -f system/build.prop
-# build date
-if [ $# -gt 3 ]; then
-	BID=$4
-else
-	buildquery
-fi
+
 # rom type
 if [ $# -gt 2 ]; then
 	RID=$3
@@ -456,6 +446,16 @@ fi
 for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
+
+# we need build.prop for both RIL probing and ROM probing
+jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
+# ril type
+proberil
+printtask "### probe rom type ###"
+proberom
+buildquery
+
+# build date
 
 # echo ROM info
 rominfo
@@ -572,6 +572,7 @@ else
 	\rm -f tmp.zip
 
 	printtask "### decompile system files ###"
+
 	# decompile system files
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
@@ -613,7 +614,8 @@ else
 
 
 	# apply system modification
-	for P in ${PID[@]}; do
+
+        for P in ${PID[@]}; do
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
 		PR=patches/$P/$R
@@ -711,9 +713,6 @@ else
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
 					\cp -av  patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
-					#echo "### replacing ${FAILS[@]} from patches/$P/common/${FILE} ###" > ${JAR}.log
-					#java -jar baksmali.jar -b -a 15 -o pmp/${FILE}.out/smali patches/$P/common/provisionals/${FAIL} >> "$LOG" 2>> "$LOG" || echo "FAILED to baksmali $FILE" >> ${JAR}.log
-					#\cp -a  pmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					SID=(${SID[@]} $FAIL)
 				done
 			fi
@@ -742,7 +741,7 @@ else
 			IMG=${FILE##*/}
 			#NAME=${IMG%.img}
 			echo "... applying $IMG.patch ..."
-			patch -Nls -p1 -d boot/ramdisk < $PRB/${IMG}.patch || printerror "failed patching $FILE"
+			patch -Nls -p1 -d boot/ramdisk < $PRB/${IMG}.patch >> "$LOG" || printerror "failed patching $FILE"
 			# Special Instructions- married to boot.img patching by necessity, not design. When 
 			# added to it's own section, it only runs for one mod. WIP.
 			#if [ -f patches/$P/$R/special_instructions.sh ]; then
