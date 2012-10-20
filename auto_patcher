@@ -285,10 +285,45 @@ proberom () {
 		printerror "unknown ROM version $VID"
 	fi
 	echo "... result of ROM check: version= $VID rom= $RID ..."
+}
 
-# Adding build date query
+# NEW # Advanced build date query
+# This should set the patch date automatically.
+
+buildquery() {
+
+if [ $# -gt 3 ]; then
+	BID=$4
+else
+   for P in ${PID[@]}; do
+		[ -d patches/$P/$RID ] && R=$RID || R=generic
+		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
+		PR=patches/$P/$R
+		PRB=patches/$P/$R/$B
 	UTC=$(getbuildprop ro.build.date.utc)
-	BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y-%m-%d"`
+	BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d"`
+        DATES=`ls patches/$P/$R/ | grep '201*'`
+        # attempt to set builds before extant patches to earliest
+             for i in $DATES; do
+                  if [[ $i -lt $BID ]]; then
+                         BID=$i
+                  fi
+                  if [[ $(($BID-$BDID)) -lt 0 ]]; then
+                         BID=$i
+                  else
+                       for g in $DATES; do
+                           if [[ $(($BDID-$g)) -eq 0 ]]; then
+                               BID=$g
+                               break
+                           elif [[ $(($BDID-$g)) -gt 0 ]] && [[ $g -gt $BID ]]; then
+                                BID=$g
+                           fi
+                       done
+                  fi
+             done
+        echo "$PID patch date has been set to: $BID"
+done
+fi
 }
 
 proberil () {
@@ -399,7 +434,7 @@ proberom
 if [ $# -gt 3 ]; then
 	BID=$4
 else
-	BID=latest
+	buildquery
 fi
 # rom type
 if [ $# -gt 2 ]; then
