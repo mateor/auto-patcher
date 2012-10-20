@@ -323,7 +323,7 @@ else
              done
         echo "$PID patch date has been set to: $BID"
         B=$BID
-done
+   done
 fi
 }
 
@@ -425,6 +425,13 @@ tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
+# we need build.prop for both RIL probing and ROM probing
+jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
+
+# rom + ril type
+proberil
+printtask "### probe rom type ###"
+proberom
 
 # rom type
 if [ $# -gt 2 ]; then
@@ -440,6 +447,7 @@ if [ $# -gt 1 ]; then
 else
 	#PIL=`ls patches/`
 	PIL="pdroid v6supercharger"
+        echo "No mods selected. Defaulting to the v6 and Pdroid, just because we can."
 fi
 # a hack to make sure pdroid is the first mod
 [[ ${PIL[@]} =~ pdroid ]] && PID=(pdroid)
@@ -447,15 +455,16 @@ for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
 
-# we need build.prop for both RIL probing and ROM probing
-jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
-# ril type
-proberil
-printtask "### probe rom type ###"
-proberom
-buildquery
-
-# build date
+# Build date
+if [ $# -gt 3 ]; then
+	BID=$4
+        echo "$PID patch date set manually to $BID"
+        # Somewhere the below idea isn't exporting...
+                #PID/RID/BID= P/R/B
+else
+        buildquery
+        echo $P/$R/$B
+fi
 
 # echo ROM info
 rominfo
@@ -618,6 +627,7 @@ else
         for P in ${PID[@]}; do
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
+                #$PID/$RID/$BID=$P/$R/$B
 		PR=patches/$P/$R
 		PRB=patches/$P/$R/$B
 
