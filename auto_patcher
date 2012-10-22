@@ -273,7 +273,7 @@ proberom () {
 		aokp*|teamkang)
 			RID=aokp-jb;
 			;;
-		*)
+                *)
 			aosp_mod_check;
 			;;
 		esac
@@ -698,15 +698,17 @@ else
 
 		[[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$R/$B ###"
 		for FILE in ${APKS[@]}; do
-			APK=${FILE##*/}
-			#NAME=${APK%.apk}
+                    APK=${FILE##*/}
+                    if [ -s $APK ] ; then
 			printtask "... apply $APK.patch ..."
 				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${APK}.patch 2>&1 >> ${APK}.log 
 				cat ${APK}.log | tee -a "$LOG"
 			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $APK.patch"
 			garbage tmp/${FILE}.out
+                    else
+                        echo "No $APK in your ROM. Not able to patch this file."
+                    fi
 		done
-
 		[[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$R/$B ###"
 		for FILE in ${IMGS[@]}; do
 			IMG=${FILE##*/}
