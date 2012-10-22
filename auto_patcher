@@ -292,7 +292,11 @@ proberom () {
 buildquery() {
 
 if [ $# -gt 3 ]; then
-	BID=$4
+	BID=${4//,/ };
+elif 
+[[ ${#PID[@]} -gt 1 ]]; then
+        BID=latest;
+        echo $BID
 else
    for P in ${PID[@]}; do
 		[ -d patches/$P/$RID ] && R=$RID || R=generic
@@ -471,7 +475,6 @@ if [ $# -gt 3 ]; then
                 #PID/RID/BID= P/R/B
 else
         buildquery
-        echo $P/$R/$B
 fi
 
 # echo ROM info
@@ -754,6 +757,7 @@ else
 			garbage tmp/${FILE}.out
                     else
                         echo "No $APK in your ROM. Not able to patch this file."
+                        echo "## No $APK in ROM ###" >> "$LOG"
                     fi
 		done
 		[[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$R/$B ###"
