@@ -236,7 +236,7 @@ proberom () {
 
 	if [ "${VID%.*}" == "2.3" ]; then
 		ANDR=gingerbread
-		RID=cm7;
+		RID=cm;
 	elif [ "${VID%.*}" == "4.0" ]; then
 		ANDR=ics
 		MID=$(getbuildprop ro.rommanager.developerid)
@@ -246,7 +246,7 @@ proberom () {
 
 		case "$MID" in
 		pa|cm9|cm|cyanogenmod*)
-			RID=cm9;
+			RID=cm;
 			;;
 		aokp|teamkang)
 			RID=aokp;
@@ -268,10 +268,10 @@ proberom () {
 
 		case "$MID" in
 		cm10|cm*|cyanogenmod*)
-			RID=cm10;
+			RID=cm;
 			;;
 		aokp*|teamkang)
-			RID=aokp-jb;
+			RID=aokp;
 			;;
                 pa*)
                         RID=pa;
@@ -283,7 +283,7 @@ proberom () {
 	else
 		printerror "unknown ROM version $VID"
 	fi
-	echo "... result of ROM check: version= $VID rom= $RID ..."
+	echo "... result of ROM check: version= $ANDR rom= $RID ..."
 }
 
 # NEW # Advanced build date query
@@ -296,16 +296,16 @@ if [ $# -gt 3 ]; then
 elif 
 [[ ${#PID[@]} -gt 1 ]]; then
         BID=latest;
-        echo $BID
 else
    for P in ${PID[@]}; do
-		[ -d patches/$P/$RID ] && R=$RID || R=generic
-		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
-		PR=patches/$P/$R
-		PRB=patches/$P/$R/$B
+                [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
+		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
+		PAR=patches/$P/$A/$R
+		PARB=patches/$P/$A/$R/$B
 	UTC=$(getbuildprop ro.build.date.utc)
 	BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d"`
-        DATES=`ls patches/$P/$R/ | grep '201*'`
+        DATES=`ls patches/$P/$A/$R/ | grep '201*'`
         # attempt to set builds before extant patches to earliest
              for i in $DATES; do
                   if [[ $i -lt $BID ]]; then
@@ -329,15 +329,17 @@ else
    done
 fi
 }
+        
 
 aosp_mod_check() {
-        if [ -s 'jar -xvf "$ROMX" system/framework/framework2.jar' ]; then
-                RID=aosp-mod
-                echo "Framework2.jar found; defaulting to $RID"
-        else
-                RID=aosp-jb
-                echo "No framework2.jar found; using $RID patches"
-        fi
+        jar -xvf "$ROMX" system/framework/framework2.jar >> $LOG
+                if [ -s system/framework/framework2.jar ]; then
+                        RID=aosp-mod
+                        echo "Framework2.jar found; defaulting to $RID"
+                else
+                        RID=aosp-jb
+                        echo "No framework2.jar found; using $RID patches"
+                fi
 }
 proberil () {
 	RIL=$(getbuildprop ro.telephony.ril_class)
@@ -357,6 +359,7 @@ echo "# VID= $VID" >> "$LOG"
 echo "# PID= ${PID[@]}" >> "$LOG"
 echo "# MID= $MID" >> "$LOG"
 echo "# RID= $RID" >> "$LOG"
+echo "# ANDR= $ANDR" >> "$LOG"
 echo "# BDID= $BDID" >> "$LOG"
 echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
@@ -448,6 +451,15 @@ proberom
 # rom type
 if [ $# -gt 2 ]; then
 	RID=$3
+        if [ -z "$RID"=="cm*" ]; then
+                RID="cm";
+        elif [ -z "$RID"=="aokp*" ]; then
+                RID="aokp"
+        elif [ -z "$RID"=="pa*" ]; then
+                RID="pa"
+        elif [ -z "$RID"=="aosp*" ]; then
+                aosp_mod_check
+        fi
 	echo "... Using $RID patches ..."
 else
 	echo "... Using results of ROM check ..."	
@@ -471,8 +483,6 @@ done
 if [ $# -gt 3 ]; then
 	BID=$4
         echo "$PID patch date set manually to $BID"
-        # Somewhere the below idea isn't exporting...
-                #PID/RID/BID= P/R/B
 else
         buildquery
 fi
@@ -480,27 +490,28 @@ fi
 # echo ROM info
 rominfo
 
-if [[ ( "$PID" == "-h"  || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
+if [[ ( "$PID" == "-h"  || "$ANDR" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 	echo "### supported patch candidates ###"
 	[ "$PID" != "-h" ] && PL=${PID[@]} || PL=`ls patches/`
 	for P in ${PL[@]}; do
-		[ "$PID" != "-h" -a "$RID" != "-h" ] && RL=${RID[@]} || RL=`ls patches/$P/`
+		[ "$PID" != "-h" -a "$RID" != "-h" ] && RL=${RID[@]} || RL=`ls patches/$P/$A`
 		for R in ${RL[@]} ; do
-			[ $R == "common" -o ! -d patches/$P/$R ] && continue
-			echo -n "$P : $R : "
-			\ls --ignore="*.sh" --ignore="*.txt" -r patches/$P/$R/
+			[ $R == "common" -o ! -d patches/$P/$A/$R ] && continue
+			echo -n "$P :$A :$R : "
+			\ls --ignore="*.sh" --ignore="*.txt" -r patches/$P/$A/$R/
 		done
 	done
 else
 	for P in ${PID[@]}; do
 		[ -d patches/$P ] || printerror "$P is not available"
-
-		[ -d patches/$P/$RID ] && R=$RID || R=generic
-		#[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
+                [ -d patches/$P/$ANDR ] && R=$ANDR || A=all
+		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+		#[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 
 		unset FILES
-		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
-		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
+                [ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+		[ -f patches/$P/$A/files.txt ] && FILES=$(cat patches/$P/$A/files.txt)
+		[ -f patches/$P/$A/$R/files.txt ] && FILES=$(cat patches/$P/$A/$R/files.txt)
 		for FILE in ${FILES[@]}; do
 			case "$FILE" in
 			+system/*)
@@ -568,7 +579,7 @@ else
 		for P in ${PID[@]}; do
 			if [ -s patches/$P/set_perm.txt ]; then
 				echo "...adding permissions..."
-				cat patches/$P/set_perm.txt >> updater-script
+				cat patches/$P/$A/set_perm.txt >> updater-script
 			fi
 		done
 
@@ -636,15 +647,15 @@ else
 	# apply system modification
 
         for P in ${PID[@]}; do
-		[ -d patches/$P/$RID ] && R=$RID || R=generic
-		[ -d patches/$P/$R/$BID ] && B=$BID || B=latest
-                #$PID/$RID/$BID=$P/$R/$B
-		PR=patches/$P/$R
-		PRB=patches/$P/$R/$B
+                [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
+		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
+		PAR=patches/$P/$A/$R
+		PARB=patches/$P/$A/$R/$B
 
 		unset FILES COPY DELS JARS APKS IMGS TXTS
-		[ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
-		[ -f patches/$P/$R/files.txt ] && FILES=$(cat patches/$P/$R/files.txt)
+		[ -f patches/$P/$A/files.txt ] && FILES=$(cat patches/$P/$A/files.txt)
+		[ -f patches/$P/$A/$R/files.txt ] && FILES=$(cat patches/$P/$A/$R/files.txt)
 		for FILE in ${FILES[@]}; do
 			case $FILE in
 			+system/*)
@@ -668,14 +679,14 @@ else
 			esac
 		done
 
-		[[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$R/$B ###"
+		[[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$A/$R/$B ###"
 		for FILE in ${COPY[@]}; do 
 			printtask "... copying $FILE ..."
 			DEST=${FILE%/*}
 			mkdir -p ./$DEST
-			if [ -e patches/$P/$R/$B/$FILE ]; then
+			if [ -e patches/$P/$A/$R/$B/$FILE ]; then
 				[ -e $FILE ] && printtask "... overwriting $FILE from $P ..."
-	 			\cp -av patches/$P/$R/$B/$FILE ./$DEST >> "$LOG"
+	 			\cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG"
 			else
 				printerror "$FILE is missing in the patch"
 			fi
@@ -683,8 +694,9 @@ else
 
 		# unconditional smali copying
 		[ -f patches/$P/smali.txt ] && SMALI=$(cat patches/$P/smali.txt)
-		[ -f patches/$P/$R/smali.txt ] && SMALI=$(cat patches/$P/$R/smali.txt)
-		[ -f patches/$P/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$R/$B/smali.txt)
+                [ -f patches/$P/$A/smali.txt ] && SMALI=$(cat patches/$P/$A/smali.txt)
+		[ -f patches/$P/$A/$R/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/smali.txt)
+		[ -f patches/$P/$A/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/$B/smali.txt)
 		MOVE=${SMALI##*/}
 		for SMALI in ${SMALI[@]}; do
 			printtask "... overwriting $MOVE ..."
@@ -692,25 +704,25 @@ else
 		done
 
 
-		[[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$R/$B ###"
+		[[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$A/$R/$B ###"
 		for FILE in ${DELS[@]}; do 
 			printtask "... deleting $FILE ..."
 	 		\rm -rf ./$FILE
 		done
 
-		[[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$R/$B ###"
+		[[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$A/$R/$B ###"
 		for FILE in ${JARS[@]}; do
 			JAR=${FILE##*/}
 			NAME=${JAR%.jar}
 			printtask "... apply $NAME.patch ..."
-			patch -Nls -p1 -d tmp/${FILE}.out < $PRB/${NAME}.patch 2>&1 > ${JAR}.log
+			patch -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
 			cat ${JAR}.log | tee -a "$LOG"
 			case "$NAME" in
 			framework)
 				# patch preloaded-classes only if a patch exists
-				if [ -f $PRB/preloaded.patch ]; then
+				if [ -f $PARB/preloaded.patch ]; then
 					printtask "... apply preloaded.patch ..."
-					patch -Nls -p1 -d tmp/${FILE}.out < $PRB/preloaded.patch 2>&1 > preloaded.log
+					patch -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
 					cat preloaded.log | tee -a "$LOG"
 					[[ `grep FAILED preloaded.log` != "" ]] && printerror "failed preloaded.patch"
 				fi
@@ -739,9 +751,9 @@ else
 			fi
 			[[ `grep FAILED ${JAR}.log` != "" ]] &&  printerror "failed $NAME.patch"
 			garbage tmp/${FILE}.out
-			if [ -f patches/$P/$R/$B/{JAR}.sh ]; then
+			if [ -f patches/$P/$A/$R/$B/{JAR}.sh ]; then
 				printtask "... apply $JAR.sh ..."
-				. patches/$P/$R/$B/{JAR}.sh 2>&1 > ${JAR}.log
+				. patches/$P/$A/$R/$B/{JAR}.sh 2>&1 > ${JAR}.log
 				cat ${JAR}.log | tee -a "$LOG"
 			fi
 		done
@@ -751,7 +763,7 @@ else
                     APK=${FILE##*/}
                     if [ -s tmp/${FILE}.out ] ; then
 			printtask "... apply $APK.patch ..."
-				patch -Nls -p2 -d tmp/${FILE}.out < $PRB/${APK}.patch 2>&1 >> ${APK}.log 
+				patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log 
 				cat ${APK}.log | tee -a "$LOG"
 			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $APK.patch"
 			garbage tmp/${FILE}.out
@@ -760,12 +772,12 @@ else
                         echo "## No $APK in ROM ###" >> "$LOG"
                     fi
 		done
-		[[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$R/$B ###"
+		[[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$A/$R/$B ###"
 		for FILE in ${IMGS[@]}; do
 			IMG=${FILE##*/}
 			#NAME=${IMG%.img}
 			echo "... applying $IMG.patch ..."
-			patch -Nls -p1 -d boot/ramdisk < $PRB/${IMG}.patch >> "$LOG" || printerror "failed patching $FILE"
+			patch -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || printerror "failed patching $FILE"
 			# Special Instructions- married to boot.img patching by necessity, not design. When 
 			# added to it's own section, it only runs for one mod. WIP.
 			#if [ -f patches/$P/$R/special_instructions.sh ]; then
@@ -775,28 +787,28 @@ else
 			#fi
 		done
 
-		[[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$R/$B ###"
+		[[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$A/$R/$B ###"
 		for FILE in ${TXTS[@]}; do
 			TXT=${FILE##*/}
-			if [[ -f $PRB/${TXT}.patch ]]; then
+			if [[ -f $PARB/${TXT}.patch ]]; then
 				printtask "... apply $TXT.patch ..."
-				patch -Nls -p2 -d system/ < $PRB/${TXT}.patch 2>&1 > ${TXT}.log 
+				patch -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
 				#cat ${TXT}.log | tee -a "$LOG"
 				[[ `grep FAILED ${TXT}.log` != "" ]] && printerror "failed $TXT.patch"
 			fi
-			if [[ -f $PR/${TXT}.awk ]]; then
+			if [[ -f $PAR/${TXT}.awk ]]; then
 				printtask "... apply $TXT.awk ..."
-				awk -f $PR/${TXT}.awk $FILE > text || printerror "failed $TXT.awk"
+				awk -f $PAR/${TXT}.awk $FILE > text || printerror "failed $TXT.awk"
 				mv text $FILE
 			fi
-			if [[ -f $PR/${TXT}.sed ]]; then
+			if [[ -f $PAR/${TXT}.sed ]]; then
 				printtask "... apply $TXT.sed ..."
-				sed -f $PR/${TXT}.sed $FILE > text || printerror "failed $TXT.sed"
+				sed -f $PAR/${TXT}.sed $FILE > text || printerror "failed $TXT.sed"
 				mv text $FILE
 			fi
-			if [[ -f $PR/${TXT}.sh ]]; then
+			if [[ -f $PAR/${TXT}.sh ]]; then
 				printtask "... apply $TXT.sh ..."
-				. $PR/${TXT}.sh 2>&1 >> ${TXT}.log || printerror "failed $TXT.sh"
+				. $PAR/${TXT}.sh 2>&1 >> ${TXT}.log || printerror "failed $TXT.sh"
 			fi
 			garbage system/
 		done
@@ -868,11 +880,12 @@ else
 
 	# add announcement
 	for P in ${PID[@]}; do
-		[ -d patches/$P/$RID ] && R=$RID || R=generic
-		if [ -f patches/$P/$R/README.txt ]; then
-			cat patches/$P/$R/README.txt
-		elif [ -f patches/$P/README.txt ]; then
-			cat patches/$P/README.txt
+                [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
+		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+		if [ -f patches/$P/$A/$R/README.txt ]; then
+			cat patches/$P/$A/$R/README.txt
+		elif [ -f patches/$P/$A/README.txt ]; then
+			cat patches/$P/$A/README.txt
 		fi
 	done
 fi
