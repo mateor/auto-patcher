@@ -301,6 +301,9 @@ elif
         BID=latest;
 else
    for P in ${PID[@]}; do
+        if [ "$PID"=="-h" ]; then
+                break
+        else               
                 [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
@@ -326,10 +329,11 @@ else
                            fi
                        done
                   fi
-             done
-        echo "... $PID patch date has been set to: $BID..."
-        B=$BID
-   done
+             done 
+             echo "... $PID patch date has been set to: $BID..."
+              B=$BID
+        fi  
+     done
 fi
 }
         
@@ -347,6 +351,30 @@ aosp_mod_check() {
 proberil () {
 	RIL=$(getbuildprop ro.telephony.ril_class)
 	[[ -n $RIL ]] && printtask "... result of ROM check: RIL= $RIL"
+}
+availablepatches () {
+echo "### supported patch candidates ###"
+echo ""
+MODS=$(ls patches)
+#echo ${MODS[@]}
+
+for M in ${MODS[@]}; do
+        AND=$(ls --ignore="common" --ignore="*.txt" patches/$M)
+        for A in ${AND[@]}; do
+                RID=$(ls --ignore="common" --ignore="*.sh" --ignore "*.awk" --ignore "provisionals" --ignore="*.txt" patches/$M/$A)
+                
+                for R in ${RID[@]}; do
+                        BID=$(ls --ignore "common" --ignore="*.sh" --ignore="*.txt" --ignore="*.awk" -v patches/$M/$A/$R)
+                        echo $M: $A: $R: ${BID[@]}
+                done
+        done 
+done
+echo ""
+echo "*****************************************************************"
+echo ""
+echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]."
+echo "The Auto-Patcher will automatically slot if you need aosp-jb or aosp-mod"
+echo ""
 }
 
 garbage () {
@@ -469,8 +497,11 @@ else
 fi
 
 # patch type
-if [ $# -gt 1 ]; then
-	PIL=${2//,/ }
+if [ $# -gt 1 ]; then 
+        PIL=${2//,/ }
+        if [ "$PIL"=="-h" ]; then
+                availablepatches
+        fi
 else
 	#PIL=`ls patches/`
 	PIL="pdroid v6supercharger"
@@ -492,19 +523,10 @@ fi
 
 # echo ROM info
 rominfo
-
-if [[ ( "$PID" == "-h"  || "$ANDR" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
-	echo "### supported patch candidates ###"
-	[ "$PID" != "-h" ] && PL=${PID[@]} || PL=`ls patches/`
-	for P in ${PL[@]}; do
-		[ "$PID" != "-h" -a "$RID" != "-h" ] && RL=${RID[@]} || RL=`ls patches/$P/$A`
-		for R in ${RL[@]} ; do
-			[ $R == "common" -o ! -d patches/$P/$A/$R ] && continue
-			echo -n "$P :$A :$R : "
-			\ls --ignore="*.sh" --ignore="*.txt" -r patches/$P/$A/$R/
-		done
-	done
+if [[ ( "$PID" == "-h"  || "$ANDR" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then 
+       echo "We know the help isn't pretty-- we're working on it..."        
 else
+
 	for P in ${PID[@]}; do
 		[ -d patches/$P ] || printerror "$P is not available"
                 [ -d patches/$P/$ANDR ] && R=$ANDR || A=all
