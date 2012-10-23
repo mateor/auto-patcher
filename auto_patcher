@@ -234,6 +234,17 @@ else
 fi
 }
 
+
+aosp_mod_check() {
+        jar -xvf "$ROMX" system/framework/framework2.jar >> $LOG
+                if [ -s system/framework/framework2.jar ]; then
+                        AOSP=aosp-mod
+                else
+                        AOSP=aosp-jb
+                fi
+                echo $AOSP
+}
+
 proberom () {
 	VID=$(getbuildprop ro.build.version.release)
 
@@ -280,7 +291,7 @@ proberom () {
                         RID=pa;
                         ;;
                 *)
-			aosp_mod_check;
+			RID=`aosp_mod_check`;
 			;;
 		esac
 	else
@@ -333,17 +344,6 @@ else
 fi
 }
         
-
-aosp_mod_check() {
-        jar -xvf "$ROMX" system/framework/framework2.jar >> $LOG
-                if [ -s system/framework/framework2.jar ]; then
-                        RID=aosp-mod
-                        echo "... Framework2.jar found; defaulting to $RID ..."
-                else
-                        RID=aosp-jb
-                        echo "... No framework2.jar found; using $RID patches ..."
-                fi
-}
 proberil () {
 	RIL=$(getbuildprop ro.telephony.ril_class)
 	[[ -n $RIL ]] && printtask "... result of ROM check: RIL= $RIL"
@@ -453,16 +453,20 @@ proberom
 
 # rom type
 if [ $# -gt 2 ]; then
-	RID=$3
-        if [ -z "$RID"=="cm*" ]; then
-                RID="cm";
-        elif [ -z "$RID"=="aokp*" ]; then
-                RID="aokp"
-        elif [ -z "$RID"=="pa*" ]; then
-                RID="pa"
-        elif [ -z "$RID"=="aosp*" ]; then
-                aosp_mod_check
-        fi
+	RID=$3        
+        case "$RID" in
+		cm10|cm*|cyanogenmod*)
+			;;
+		aokp*|teamkang)
+			RID=aokp;
+			;;
+                pa*)
+                        RID=pa;
+                        ;;
+                *)
+			RID=`aosp_mod_check`;
+			;;
+		esac
 	echo "... Using $RID patches ..."
 else
 	echo "... Using results of ROM check ..."	
