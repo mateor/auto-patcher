@@ -1,0 +1,2782 @@
+diff -NpruEbB stock_services/smali/com/android/server/am/ActivityManagerService.smali moded_services/smali/com/android/server/am/ActivityManagerService.smali
+--- stock_services/smali/com/android/server/am/ActivityManagerService.smali	2012-08-13 21:50:45.990665450 -0700
++++ moded_services/smali/com/android/server/am/ActivityManagerService.smali	2012-08-13 21:51:27.492567349 -0700
+@@ -13105,6 +13105,118 @@
+     return-void
+ .end method
+ 
++.method private enforcePrivacyPermission(Ljava/lang/Object;Lcom/android/server/am/BroadcastRecord;)V
++    .registers 10
++
++    if-eqz p2, :cond_3c
++
++    iget-object v4, p2, Lcom/android/server/am/BroadcastRecord;->intent:Landroid/content/Intent;
++
++    if-eqz v4, :cond_3c
++
++    iget-object v4, p2, Lcom/android/server/am/BroadcastRecord;->intent:Landroid/content/Intent;
++
++    invoke-virtual {v4}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v4
++
++    if-eqz v4, :cond_3c
++
++    const/4 v2, 0x0
++
++    const/4 v3, -0x1
++
++    :try_start_10
++    instance-of v4, p1, Lcom/android/server/am/BroadcastFilter;
++
++    if-eqz v4, :cond_3d
++
++    move-object v0, p1
++
++    check-cast v0, Lcom/android/server/am/BroadcastFilter;
++
++    move-object v4, v0
++
++    iget-object v4, v4, Lcom/android/server/am/BroadcastFilter;->receiverList:Lcom/android/server/am/ReceiverList;
++
++    iget-object v4, v4, Lcom/android/server/am/ReceiverList;->app:Lcom/android/server/am/ProcessRecord;
++
++    iget-object v4, v4, Lcom/android/server/am/ProcessRecord;->info:Landroid/content/pm/ApplicationInfo;
++
++    iget-object v2, v4, Landroid/content/pm/ApplicationInfo;->packageName:Ljava/lang/String;
++
++    check-cast p1, Lcom/android/server/am/BroadcastFilter;
++
++    iget-object v4, p1, Lcom/android/server/am/BroadcastFilter;->receiverList:Lcom/android/server/am/ReceiverList;
++
++    iget-object v4, v4, Lcom/android/server/am/ReceiverList;->app:Lcom/android/server/am/ProcessRecord;
++
++    iget-object v4, v4, Lcom/android/server/am/ProcessRecord;->info:Landroid/content/pm/ApplicationInfo;
++
++    iget v3, v4, Landroid/content/pm/ApplicationInfo;->uid:I
++    :try_end_2a
++    .catch Ljava/lang/Exception; {:try_start_10 .. :try_end_2a} :catch_54
++
++    :cond_2a
++    :goto_2a
++    if-eqz v2, :cond_3c
++
++    const/4 v4, -0x1
++
++    if-eq v3, v4, :cond_3c
++
++    iget-object v4, p2, Lcom/android/server/am/BroadcastRecord;->intent:Landroid/content/Intent;
++
++    iget-object v5, p0, Lcom/android/server/am/ActivityManagerService;->mContext:Landroid/content/Context;
++
++    iget-object v6, p2, Lcom/android/server/am/BroadcastRecord;->receivers:Ljava/util/List;
++
++    invoke-interface {v6}, Ljava/util/List;->size()I
++
++    move-result v6
++
++    invoke-static {v2, v3, v4, v5, v6}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->enforcePrivacyPermission(Ljava/lang/String;ILandroid/content/Intent;Landroid/content/Context;I)V
++
++    :cond_3c
++    :goto_3c
++    return-void
++
++    :cond_3d
++    :try_start_3d
++    instance-of v4, p1, Landroid/content/pm/ResolveInfo;
++
++    if-eqz v4, :cond_2a
++
++    move-object v0, p1
++
++    check-cast v0, Landroid/content/pm/ResolveInfo;
++
++    move-object v4, v0
++
++    iget-object v4, v4, Landroid/content/pm/ResolveInfo;->activityInfo:Landroid/content/pm/ActivityInfo;
++
++    iget-object v4, v4, Landroid/content/pm/ActivityInfo;->applicationInfo:Landroid/content/pm/ApplicationInfo;
++
++    iget-object v2, v4, Landroid/content/pm/ApplicationInfo;->packageName:Ljava/lang/String;
++
++    check-cast p1, Landroid/content/pm/ResolveInfo;
++
++    iget-object v4, p1, Landroid/content/pm/ResolveInfo;->activityInfo:Landroid/content/pm/ActivityInfo;
++
++    iget-object v4, v4, Landroid/content/pm/ActivityInfo;->applicationInfo:Landroid/content/pm/ApplicationInfo;
++
++    iget v3, v4, Landroid/content/pm/ApplicationInfo;->uid:I
++    :try_end_53
++    .catch Ljava/lang/Exception; {:try_start_3d .. :try_end_53} :catch_54
++
++    goto :goto_2a
++
++    :catch_54
++    move-exception v1
++
++    goto :goto_3c
++.end method
++
+ .method private final findAffinityTaskTopLocked(ILjava/lang/String;)I
+     .registers 10
+ 
+@@ -19156,7 +19268,7 @@
+     iput-object v3, v0, Lcom/android/server/am/BroadcastRecord;->resultTo:Landroid/content/IIntentReceiver;
+     :try_end_1e4
+     .catchall {:try_start_1bd .. :try_end_1e4} :catchall_5f
+-    .catch Landroid/os/RemoteException; {:try_start_1bd .. :try_end_1e4} :catch_26e
++    .catch Landroid/os/RemoteException; {:try_start_1bd .. :try_end_1e4} :catch_277
+ 
+     :cond_1e4
+     :goto_1e4
+@@ -19254,11 +19366,19 @@
+ 
+     move-result-object v21
+ 
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v21
++
++    move-object/from16 v2, v26
++
++    invoke-direct {v0, v1, v2}, Lcom/android/server/am/ActivityManagerService;->enforcePrivacyPermission(Ljava/lang/Object;Lcom/android/server/am/BroadcastRecord;)V
++
+     move-object/from16 v0, v21
+ 
+     instance-of v3, v0, Lcom/android/server/am/BroadcastFilter;
+ 
+-    if-eqz v3, :cond_28d
++    if-eqz v3, :cond_296
+ 
+     move-object/from16 v0, v21
+ 
+@@ -19280,15 +19400,15 @@
+ 
+     iget-object v3, v0, Lcom/android/server/am/BroadcastRecord;->receiver:Landroid/os/IBinder;
+ 
+-    if-eqz v3, :cond_263
++    if-eqz v3, :cond_26c
+ 
+     move-object/from16 v0, v26
+ 
+     iget-boolean v3, v0, Lcom/android/server/am/BroadcastRecord;->ordered:Z
+ 
+-    if-nez v3, :cond_26b
++    if-nez v3, :cond_274
+ 
+-    :cond_263
++    :cond_26c
+     const/4 v3, 0x0
+ 
+     move-object/from16 v0, v26
+@@ -19297,12 +19417,12 @@
+ 
+     invoke-direct/range {p0 .. p0}, Lcom/android/server/am/ActivityManagerService;->scheduleBroadcastsLocked()V
+ 
+-    :cond_26b
++    :cond_274
+     monitor-exit p0
+ 
+     goto/16 :goto_85
+ 
+-    :catch_26e
++    :catch_277
+     move-exception v14
+ 
+     const-string v3, "ActivityManager"
+@@ -19333,7 +19453,7 @@
+ 
+     goto/16 :goto_1e4
+ 
+-    :cond_28d
++    :cond_296
+     move-object/from16 v0, v21
+ 
+     check-cast v0, Landroid/content/pm/ResolveInfo;
+@@ -19376,7 +19496,7 @@
+ 
+     move-result v25
+ 
+-    if-eqz v25, :cond_345
++    if-eqz v25, :cond_34e
+ 
+     move-object/from16 v0, v18
+ 
+@@ -19384,7 +19504,7 @@
+ 
+     iget-boolean v3, v3, Landroid/content/pm/ActivityInfo;->exported:Z
+ 
+-    if-nez v3, :cond_3f4
++    if-nez v3, :cond_3fd
+ 
+     const-string v3, "ActivityManager"
+ 
+@@ -19514,10 +19634,10 @@
+ 
+     invoke-static {v3, v5}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    :goto_343
++    :goto_34c
+     const/16 v28, 0x1
+ 
+-    :cond_345
++    :cond_34e
+     move-object/from16 v0, v18
+ 
+     iget-object v3, v0, Landroid/content/pm/ResolveInfo;->activityInfo:Landroid/content/pm/ActivityInfo;
+@@ -19528,17 +19648,17 @@
+ 
+     const/16 v5, 0x3e8
+ 
+-    if-eq v3, v5, :cond_3cd
++    if-eq v3, v5, :cond_3d6
+ 
+     move-object/from16 v0, v26
+ 
+     iget-object v3, v0, Lcom/android/server/am/BroadcastRecord;->requiredPermission:Ljava/lang/String;
+-    :try_end_355
+-    .catchall {:try_start_1e4 .. :try_end_355} :catchall_5f
++    :try_end_35e
++    .catchall {:try_start_1e4 .. :try_end_35e} :catchall_5f
+ 
+-    if-eqz v3, :cond_3cd
++    if-eqz v3, :cond_3d6
+ 
+-    :try_start_357
++    :try_start_360
+     invoke-static {}, Landroid/app/AppGlobals;->getPackageManager()Landroid/content/pm/IPackageManager;
+ 
+     move-result-object v3
+@@ -19556,16 +19676,16 @@
+     iget-object v6, v6, Landroid/content/pm/ApplicationInfo;->packageName:Ljava/lang/String;
+ 
+     invoke-interface {v3, v5, v6}, Landroid/content/pm/IPackageManager;->checkPermission(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_36a
+-    .catchall {:try_start_357 .. :try_end_36a} :catchall_5f
+-    .catch Landroid/os/RemoteException; {:try_start_357 .. :try_end_36a} :catch_476
++    :try_end_373
++    .catchall {:try_start_360 .. :try_end_373} :catchall_5f
++    .catch Landroid/os/RemoteException; {:try_start_360 .. :try_end_373} :catch_47f
+ 
+     move-result v25
+ 
+-    :goto_36b
+-    if-eqz v25, :cond_3cd
++    :goto_374
++    if-eqz v25, :cond_3d6
+ 
+-    :try_start_36d
++    :try_start_376
+     const-string v3, "ActivityManager"
+ 
+     new-instance v5, Ljava/lang/StringBuilder;
+@@ -19660,12 +19780,12 @@
+ 
+     const/16 v28, 0x1
+ 
+-    :cond_3cd
++    :cond_3d6
+     move-object/from16 v0, v26
+ 
+     iget-object v3, v0, Lcom/android/server/am/BroadcastRecord;->curApp:Lcom/android/server/am/ProcessRecord;
+ 
+-    if-eqz v3, :cond_3dd
++    if-eqz v3, :cond_3e6
+ 
+     move-object/from16 v0, v26
+ 
+@@ -19673,12 +19793,12 @@
+ 
+     iget-boolean v3, v3, Lcom/android/server/am/ProcessRecord;->crashing:Z
+ 
+-    if-eqz v3, :cond_3dd
++    if-eqz v3, :cond_3e6
+ 
+     const/16 v28, 0x1
+ 
+-    :cond_3dd
+-    if-eqz v28, :cond_47b
++    :cond_3e6
++    if-eqz v28, :cond_484
+ 
+     const/4 v3, 0x0
+ 
+@@ -19704,7 +19824,7 @@
+ 
+     goto/16 :goto_85
+ 
+-    :cond_3f4
++    :cond_3fd
+     const-string v3, "ActivityManager"
+ 
+     new-instance v5, Ljava/lang/StringBuilder;
+@@ -19831,16 +19951,16 @@
+ 
+     invoke-static {v3, v5}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    goto/16 :goto_343
++    goto/16 :goto_34c
+ 
+-    :catch_476
++    :catch_47f
+     move-exception v14
+ 
+     const/16 v25, -0x1
+ 
+-    goto/16 :goto_36b
++    goto/16 :goto_374
+ 
+-    :cond_47b
++    :cond_484
+     const/4 v3, 0x1
+ 
+     move-object/from16 v0, v26
+@@ -19882,10 +20002,10 @@
+     move-object/from16 v0, v26
+ 
+     iput-object v3, v0, Lcom/android/server/am/BroadcastRecord;->curReceiver:Landroid/content/pm/ActivityInfo;
+-    :try_end_4a5
+-    .catchall {:try_start_36d .. :try_end_4a5} :catchall_5f
++    :try_end_4ae
++    .catchall {:try_start_376 .. :try_end_4ae} :catchall_5f
+ 
+-    :try_start_4a5
++    :try_start_4ae
+     invoke-static {}, Landroid/app/AppGlobals;->getPackageManager()Landroid/content/pm/IPackageManager;
+ 
+     move-result-object v3
+@@ -19901,13 +20021,13 @@
+     const/4 v6, 0x0
+ 
+     invoke-interface {v3, v5, v6}, Landroid/content/pm/IPackageManager;->setPackageStoppedState(Ljava/lang/String;Z)V
+-    :try_end_4b5
+-    .catchall {:try_start_4a5 .. :try_end_4b5} :catchall_5f
+-    .catch Landroid/os/RemoteException; {:try_start_4a5 .. :try_end_4b5} :catch_5d9
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_4a5 .. :try_end_4b5} :catch_4dc
++    :try_end_4be
++    .catchall {:try_start_4ae .. :try_end_4be} :catchall_5f
++    .catch Landroid/os/RemoteException; {:try_start_4ae .. :try_end_4be} :catch_5e2
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_4ae .. :try_end_4be} :catch_4e5
+ 
+-    :goto_4b5
+-    :try_start_4b5
++    :goto_4be
++    :try_start_4be
+     move-object/from16 v0, v18
+ 
+     iget-object v3, v0, Landroid/content/pm/ResolveInfo;->activityInfo:Landroid/content/pm/ActivityInfo;
+@@ -19922,15 +20042,15 @@
+ 
+     move-result-object v13
+ 
+-    if-eqz v13, :cond_525
++    if-eqz v13, :cond_52e
+ 
+     iget-object v3, v13, Lcom/android/server/am/ProcessRecord;->thread:Landroid/app/IApplicationThread;
+-    :try_end_4c7
+-    .catchall {:try_start_4b5 .. :try_end_4c7} :catchall_5f
++    :try_end_4d0
++    .catchall {:try_start_4be .. :try_end_4d0} :catchall_5f
+ 
+-    if-eqz v3, :cond_525
++    if-eqz v3, :cond_52e
+ 
+-    :try_start_4c9
++    :try_start_4d2
+     move-object/from16 v0, v18
+ 
+     iget-object v3, v0, Landroid/content/pm/ResolveInfo;->activityInfo:Landroid/content/pm/ActivityInfo;
+@@ -19944,16 +20064,16 @@
+     move-object/from16 v1, v26
+ 
+     invoke-direct {v0, v1, v13}, Lcom/android/server/am/ActivityManagerService;->processCurBroadcastLocked(Lcom/android/server/am/BroadcastRecord;Lcom/android/server/am/ProcessRecord;)V
+-    :try_end_4d9
+-    .catchall {:try_start_4c9 .. :try_end_4d9} :catchall_5f
+-    .catch Landroid/os/RemoteException; {:try_start_4c9 .. :try_end_4d9} :catch_508
++    :try_end_4e2
++    .catchall {:try_start_4d2 .. :try_end_4e2} :catchall_5f
++    .catch Landroid/os/RemoteException; {:try_start_4d2 .. :try_end_4e2} :catch_511
+ 
+-    :try_start_4d9
++    :try_start_4e2
+     monitor-exit p0
+ 
+     goto/16 :goto_85
+ 
+-    :catch_4dc
++    :catch_4e5
+     move-exception v14
+ 
+     const-string v3, "ActivityManager"
+@@ -19996,9 +20116,9 @@
+ 
+     invoke-static {v3, v5}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    goto :goto_4b5
++    goto :goto_4be
+ 
+-    :catch_508
++    :catch_511
+     move-exception v14
+ 
+     const-string v3, "ActivityManager"
+@@ -20027,7 +20147,7 @@
+ 
+     invoke-static {v3, v5, v14}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    :cond_525
++    :cond_52e
+     move-object/from16 v0, v18
+ 
+     iget-object v3, v0, Landroid/content/pm/ResolveInfo;->activityInfo:Landroid/content/pm/ActivityInfo;
+@@ -20064,11 +20184,11 @@
+ 
+     and-int/2addr v3, v10
+ 
+-    if-eqz v3, :cond_5c8
++    if-eqz v3, :cond_5d1
+ 
+     const/4 v10, 0x1
+ 
+-    :goto_54a
++    :goto_553
+     move-object/from16 v3, p0
+ 
+     invoke-virtual/range {v3 .. v10}, Lcom/android/server/am/ActivityManagerService;->startProcessLocked(Ljava/lang/String;Landroid/content/pm/ApplicationInfo;ZILjava/lang/String;Landroid/content/ComponentName;Z)Lcom/android/server/am/ProcessRecord;
+@@ -20079,7 +20199,7 @@
+ 
+     iput-object v3, v0, Lcom/android/server/am/BroadcastRecord;->curApp:Lcom/android/server/am/ProcessRecord;
+ 
+-    if-nez v3, :cond_5ca
++    if-nez v3, :cond_5d3
+ 
+     const-string v3, "ActivityManager"
+ 
+@@ -20193,12 +20313,12 @@
+ 
+     goto/16 :goto_85
+ 
+-    :cond_5c8
++    :cond_5d1
+     const/4 v10, 0x0
+ 
+-    goto :goto_54a
++    goto :goto_553
+ 
+-    :cond_5ca
++    :cond_5d3
+     move-object/from16 v0, v26
+ 
+     move-object/from16 v1, p0
+@@ -20212,15 +20332,15 @@
+     iput v0, v1, Lcom/android/server/am/ActivityManagerService;->mPendingBroadcastRecvIndex:I
+ 
+     monitor-exit p0
+-    :try_end_5d7
+-    .catchall {:try_start_4d9 .. :try_end_5d7} :catchall_5f
++    :try_end_5e0
++    .catchall {:try_start_4e2 .. :try_end_5e0} :catchall_5f
+ 
+     goto/16 :goto_85
+ 
+-    :catch_5d9
++    :catch_5e2
+     move-exception v3
+ 
+-    goto/16 :goto_4b5
++    goto/16 :goto_4be
+ .end method
+ 
+ .method private final processStartTimedOutLocked(Lcom/android/server/am/ProcessRecord;)V
+diff -NpruEbB stock_services/smali/com/android/server/ServerThread.smali moded_services/smali/com/android/server/ServerThread.smali
+--- stock_services/smali/com/android/server/ServerThread.smali	2012-08-13 21:50:44.958419167 -0700
++++ moded_services/smali/com/android/server/ServerThread.smali	2012-08-13 21:51:26.039220600 -0700
+@@ -32,6 +32,41 @@
+     return-void
+ .end method
+ 
++.method private addPrivacyService(Landroid/content/Context;)V
++    .registers 5
++
++    :try_start_0
++    const-string v1, "SystemServer"
++
++    const-string v2, "Privacy Service"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
++
++    const-string v1, "privacy"
++
++    new-instance v2, Landroid/privacy/PrivacySettingsManagerService;
++
++    invoke-direct {v2, p1}, Landroid/privacy/PrivacySettingsManagerService;-><init>(Landroid/content/Context;)V
++
++    invoke-static {v1, v2}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
++    :try_end_11
++    .catch Ljava/lang/Throwable; {:try_start_0 .. :try_end_11} :catch_12
++
++    :goto_11
++    return-void
++
++    :catch_12
++    move-exception v0
++
++    const-string v1, "SystemServer"
++
++    const-string v2, "Failure starting Privacy Service"
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_11
++.end method
++
+ .method static final startSystemUi(Landroid/content/Context;)V
+     .registers 5
+ 
+@@ -163,7 +198,7 @@
+ 
+     const/16 v9, 0x31
+ 
+-    if-ne v3, v9, :cond_627
++    if-ne v3, v9, :cond_62c
+ 
+     const/16 v86, 0x1
+ 
+@@ -174,7 +209,7 @@
+ 
+     const/4 v9, 0x1
+ 
+-    if-le v3, v9, :cond_62b
++    if-le v3, v9, :cond_630
+ 
+     const/4 v3, 0x1
+ 
+@@ -210,7 +245,7 @@
+ 
+     move-result v3
+ 
+-    if-eqz v3, :cond_62f
++    if-eqz v3, :cond_634
+ 
+     const/16 v62, 0x0
+ 
+@@ -288,7 +323,7 @@
+ 
+     invoke-direct {v6}, Lcom/android/server/PowerManagerService;-><init>()V
+     :try_end_aa
+-    .catch Ljava/lang/RuntimeException; {:try_start_8d .. :try_end_aa} :catch_936
++    .catch Ljava/lang/RuntimeException; {:try_start_8d .. :try_end_aa} :catch_93b
+ 
+     :try_start_aa
+     const-string v3, "power"
+@@ -343,7 +378,7 @@
+ 
+     move-result v3
+ 
+-    if-eqz v3, :cond_635
++    if-eqz v3, :cond_63a
+ 
+     const-string v3, "SystemServer"
+ 
+@@ -355,7 +390,7 @@
+ 
+     :cond_f0
+     :goto_f0
+-    if-eqz v62, :cond_64a
++    if-eqz v62, :cond_64f
+ 
+     const/4 v3, 0x1
+ 
+@@ -364,7 +399,7 @@
+ 
+     invoke-static {v4, v3, v0}, Lcom/android/server/pm/PackageManagerService;->main(Landroid/content/Context;ZZ)Landroid/content/pm/IPackageManager;
+     :try_end_f8
+-    .catch Ljava/lang/RuntimeException; {:try_start_aa .. :try_end_f8} :catch_659
++    .catch Ljava/lang/RuntimeException; {:try_start_aa .. :try_end_f8} :catch_65e
+ 
+     move-result-object v81
+ 
+@@ -373,8 +408,8 @@
+     :try_start_fb
+     invoke-interface/range {v81 .. v81}, Landroid/content/pm/IPackageManager;->isFirstBoot()Z
+     :try_end_fe
+-    .catch Landroid/os/RemoteException; {:try_start_fb .. :try_end_fe} :catch_8dd
+-    .catch Ljava/lang/RuntimeException; {:try_start_fb .. :try_end_fe} :catch_659
++    .catch Landroid/os/RemoteException; {:try_start_fb .. :try_end_fe} :catch_8e2
++    .catch Ljava/lang/RuntimeException; {:try_start_fb .. :try_end_fe} :catch_65e
+ 
+     move-result v65
+ 
+@@ -390,7 +425,7 @@
+ 
+     iput-object v3, v0, Lcom/android/server/ServerThread;->mContentResolver:Landroid/content/ContentResolver;
+     :try_end_10a
+-    .catch Ljava/lang/RuntimeException; {:try_start_ff .. :try_end_10a} :catch_659
++    .catch Ljava/lang/RuntimeException; {:try_start_ff .. :try_end_10a} :catch_65e
+ 
+     :try_start_10a
+     const-string v3, "SystemServer"
+@@ -407,8 +442,8 @@
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+     :try_end_11b
+-    .catch Ljava/lang/Throwable; {:try_start_10a .. :try_end_11b} :catch_64d
+-    .catch Ljava/lang/RuntimeException; {:try_start_10a .. :try_end_11b} :catch_659
++    .catch Ljava/lang/Throwable; {:try_start_10a .. :try_end_11b} :catch_652
++    .catch Ljava/lang/RuntimeException; {:try_start_10a .. :try_end_11b} :catch_65e
+ 
+     :goto_11b
+     :try_start_11b
+@@ -422,13 +457,17 @@
+ 
+     move/from16 v0, v62
+ 
+-    if-ne v0, v3, :cond_670
++    if-ne v0, v3, :cond_675
+ 
+     const/4 v3, 0x1
+ 
+     :goto_128
+     invoke-static {v4, v3}, Landroid/content/ContentService;->main(Landroid/content/Context;Z)Landroid/content/IContentService;
+ 
++    move-object/from16 v0, p0
++
++    invoke-direct {v0, v4}, Lcom/android/server/ServerThread;->addPrivacyService(Landroid/content/Context;)V
++
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "System Content Providers"
+@@ -448,10 +487,10 @@
+     move-object/from16 v0, v70
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/LightsService;-><init>(Landroid/content/Context;)V
+-    :try_end_143
+-    .catch Ljava/lang/RuntimeException; {:try_start_11b .. :try_end_143} :catch_659
++    :try_end_148
++    .catch Ljava/lang/RuntimeException; {:try_start_11b .. :try_end_148} :catch_65e
+ 
+-    :try_start_143
++    :try_start_148
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Battery Service"
+@@ -463,10 +502,10 @@
+     move-object/from16 v0, v70
+ 
+     invoke-direct {v5, v4, v0}, Lcom/android/server/BatteryService;-><init>(Landroid/content/Context;Lcom/android/server/LightsService;)V
+-    :try_end_151
+-    .catch Ljava/lang/RuntimeException; {:try_start_143 .. :try_end_151} :catch_93f
++    :try_end_156
++    .catch Ljava/lang/RuntimeException; {:try_start_148 .. :try_end_156} :catch_944
+ 
+-    :try_start_151
++    :try_start_156
+     const-string v3, "battery"
+ 
+     invoke-static {v3, v5}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+@@ -502,10 +541,10 @@
+     new-instance v7, Lcom/android/server/AlarmManagerService;
+ 
+     invoke-direct {v7, v4}, Lcom/android/server/AlarmManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_17c
+-    .catch Ljava/lang/RuntimeException; {:try_start_151 .. :try_end_17c} :catch_948
++    :try_end_181
++    .catch Ljava/lang/RuntimeException; {:try_start_156 .. :try_end_181} :catch_94d
+ 
+-    :try_start_17c
++    :try_start_181
+     const-string v3, "alarm"
+ 
+     invoke-static {v3, v7}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+@@ -536,18 +575,18 @@
+ 
+     move/from16 v0, v62
+ 
+-    if-eq v0, v3, :cond_673
++    if-eq v0, v3, :cond_678
+ 
+     const/4 v3, 0x1
+ 
+     move v9, v3
+ 
+-    :goto_1a1
+-    if-nez v65, :cond_677
++    :goto_1a6
++    if-nez v65, :cond_67c
+ 
+     const/4 v3, 0x1
+ 
+-    :goto_1a4
++    :goto_1a9
+     invoke-static {v4, v6, v9, v3}, Lcom/android/server/wm/WindowManagerService;->main(Landroid/content/Context;Lcom/android/server/PowerManagerService;ZZ)Lcom/android/server/wm/WindowManagerService;
+ 
+     move-result-object v109
+@@ -578,7 +617,7 @@
+ 
+     move-result v3
+ 
+-    if-eqz v3, :cond_67a
++    if-eqz v3, :cond_67f
+ 
+     const-string v3, "SystemServer"
+ 
+@@ -586,10 +625,10 @@
+ 
+     invoke-static {v3, v9}, Landroid/util/Slog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    :goto_1cd
++    :goto_1d2
+     sget-boolean v3, Landroid/os/SystemProperties;->QCOM_HARDWARE:Z
+ 
+-    if-eqz v3, :cond_1e1
++    if-eqz v3, :cond_1e6
+ 
+     const-string v3, "SystemServer"
+ 
+@@ -605,32 +644,32 @@
+ 
+     move-object/from16 v57, v58
+ 
+-    :cond_1e1
++    :cond_1e6
+     new-instance v53, Lcom/android/server/CpuGovernorService;
+ 
+     move-object/from16 v0, v53
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/CpuGovernorService;-><init>(Landroid/content/Context;)V
+-    :try_end_1e8
+-    .catch Ljava/lang/RuntimeException; {:try_start_17c .. :try_end_1e8} :catch_688
++    :try_end_1ed
++    .catch Ljava/lang/RuntimeException; {:try_start_181 .. :try_end_1ed} :catch_68d
+ 
+-    if-nez v53, :cond_1f1
++    if-nez v53, :cond_1f6
+ 
+-    :try_start_1ea
++    :try_start_1ef
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "CpuGovernorService failed to start"
+ 
+     invoke-static {v3, v9}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_1f1
+-    .catch Ljava/lang/RuntimeException; {:try_start_1ea .. :try_end_1f1} :catch_95f
++    :try_end_1f6
++    .catch Ljava/lang/RuntimeException; {:try_start_1ef .. :try_end_1f6} :catch_964
+ 
+-    :cond_1f1
++    :cond_1f6
+     move-object/from16 v52, v53
+ 
+     move-object/from16 v69, v70
+ 
+-    :goto_1f5
++    :goto_1fa
+     invoke-virtual {v4}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+ 
+     move-result-object v3
+@@ -665,9 +704,9 @@
+ 
+     move/from16 v0, v62
+ 
+-    if-eq v0, v3, :cond_241
++    if-eq v0, v3, :cond_246
+ 
+-    :try_start_219
++    :try_start_21e
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Input Method Service"
+@@ -679,22 +718,22 @@
+     move-object/from16 v0, v68
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/InputMethodManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_227
+-    .catch Ljava/lang/Throwable; {:try_start_219 .. :try_end_227} :catch_6da
++    :try_end_22c
++    .catch Ljava/lang/Throwable; {:try_start_21e .. :try_end_22c} :catch_6df
+ 
+-    :try_start_227
++    :try_start_22c
+     const-string v3, "input_method"
+ 
+     move-object/from16 v0, v68
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_22e
+-    .catch Ljava/lang/Throwable; {:try_start_227 .. :try_end_22e} :catch_931
++    :try_end_233
++    .catch Ljava/lang/Throwable; {:try_start_22c .. :try_end_233} :catch_936
+ 
+     move-object/from16 v67, v68
+ 
+-    :goto_230
+-    :try_start_230
++    :goto_235
++    :try_start_235
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Accessibility Manager"
+@@ -708,24 +747,24 @@
+     invoke-direct {v9, v4}, Lcom/android/server/accessibility/AccessibilityManagerService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_241
+-    .catch Ljava/lang/Throwable; {:try_start_230 .. :try_end_241} :catch_6e6
++    :try_end_246
++    .catch Ljava/lang/Throwable; {:try_start_235 .. :try_end_246} :catch_6eb
+ 
+-    :cond_241
+-    :goto_241
+-    :try_start_241
++    :cond_246
++    :goto_246
++    :try_start_246
+     invoke-virtual/range {v109 .. v109}, Lcom/android/server/wm/WindowManagerService;->displayReady()V
+-    :try_end_244
+-    .catch Ljava/lang/Throwable; {:try_start_241 .. :try_end_244} :catch_6f2
++    :try_end_249
++    .catch Ljava/lang/Throwable; {:try_start_246 .. :try_end_249} :catch_6f7
+ 
+-    :goto_244
+-    :try_start_244
++    :goto_249
++    :try_start_249
+     invoke-interface/range {v81 .. v81}, Landroid/content/pm/IPackageManager;->performBootDexOpt()V
+-    :try_end_247
+-    .catch Ljava/lang/Throwable; {:try_start_244 .. :try_end_247} :catch_6fe
++    :try_end_24c
++    .catch Ljava/lang/Throwable; {:try_start_249 .. :try_end_24c} :catch_703
+ 
+-    :goto_247
+-    :try_start_247
++    :goto_24c
++    :try_start_24c
+     invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
+ 
+     move-result-object v3
+@@ -743,17 +782,17 @@
+     const/4 v10, 0x0
+ 
+     invoke-interface {v3, v9, v10}, Landroid/app/IActivityManager;->showBootMessage(Ljava/lang/CharSequence;Z)V
+-    :try_end_25a
+-    .catch Landroid/os/RemoteException; {:try_start_247 .. :try_end_25a} :catch_92e
++    :try_end_25f
++    .catch Landroid/os/RemoteException; {:try_start_24c .. :try_end_25f} :catch_933
+ 
+-    :goto_25a
++    :goto_25f
+     const/4 v3, 0x1
+ 
+     move/from16 v0, v62
+ 
+-    if-eq v0, v3, :cond_966
++    if-eq v0, v3, :cond_96b
+ 
+-    :try_start_25f
++    :try_start_264
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Device Policy"
+@@ -765,22 +804,22 @@
+     move-object/from16 v0, v56
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/DevicePolicyManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_26d
+-    .catch Ljava/lang/Throwable; {:try_start_25f .. :try_end_26d} :catch_70a
++    :try_end_272
++    .catch Ljava/lang/Throwable; {:try_start_264 .. :try_end_272} :catch_70f
+ 
+-    :try_start_26d
++    :try_start_272
+     const-string v3, "device_policy"
+ 
+     move-object/from16 v0, v56
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_274
+-    .catch Ljava/lang/Throwable; {:try_start_26d .. :try_end_274} :catch_929
++    :try_end_279
++    .catch Ljava/lang/Throwable; {:try_start_272 .. :try_end_279} :catch_92e
+ 
+     move-object/from16 v55, v56
+ 
+-    :goto_276
+-    :try_start_276
++    :goto_27b
++    :try_start_27b
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Status Bar"
+@@ -794,22 +833,22 @@
+     move-object/from16 v1, v109
+ 
+     invoke-direct {v0, v4, v1}, Lcom/android/server/StatusBarManagerService;-><init>(Landroid/content/Context;Lcom/android/server/wm/WindowManagerService;)V
+-    :try_end_286
+-    .catch Ljava/lang/Throwable; {:try_start_276 .. :try_end_286} :catch_716
++    :try_end_28b
++    .catch Ljava/lang/Throwable; {:try_start_27b .. :try_end_28b} :catch_71b
+ 
+-    :try_start_286
++    :try_start_28b
+     const-string v3, "statusbar"
+ 
+     move-object/from16 v0, v93
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_28d
+-    .catch Ljava/lang/Throwable; {:try_start_286 .. :try_end_28d} :catch_924
++    :try_end_292
++    .catch Ljava/lang/Throwable; {:try_start_28b .. :try_end_292} :catch_929
+ 
+     move-object/from16 v92, v93
+ 
+-    :goto_28f
+-    :try_start_28f
++    :goto_294
++    :try_start_294
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Clipboard Service"
+@@ -823,11 +862,11 @@
+     invoke-direct {v9, v4}, Lcom/android/server/ClipboardService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_2a0
+-    .catch Ljava/lang/Throwable; {:try_start_28f .. :try_end_2a0} :catch_722
++    :try_end_2a5
++    .catch Ljava/lang/Throwable; {:try_start_294 .. :try_end_2a5} :catch_727
+ 
+-    :goto_2a0
+-    :try_start_2a0
++    :goto_2a5
++    :try_start_2a5
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "NetworkManagement Service"
+@@ -841,11 +880,11 @@
+     const-string v3, "network_management"
+ 
+     invoke-static {v3, v13}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_2b0
+-    .catch Ljava/lang/Throwable; {:try_start_2a0 .. :try_end_2b0} :catch_72e
++    :try_end_2b5
++    .catch Ljava/lang/Throwable; {:try_start_2a5 .. :try_end_2b5} :catch_733
+ 
+-    :goto_2b0
+-    :try_start_2b0
++    :goto_2b5
++    :try_start_2b5
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Text Service Manager Service"
+@@ -857,22 +896,22 @@
+     move-object/from16 v0, v97
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/TextServicesManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_2be
+-    .catch Ljava/lang/Throwable; {:try_start_2b0 .. :try_end_2be} :catch_73a
++    :try_end_2c3
++    .catch Ljava/lang/Throwable; {:try_start_2b5 .. :try_end_2c3} :catch_73f
+ 
+-    :try_start_2be
++    :try_start_2c3
+     const-string v3, "textservices"
+ 
+     move-object/from16 v0, v97
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_2c5
+-    .catch Ljava/lang/Throwable; {:try_start_2be .. :try_end_2c5} :catch_91f
++    :try_end_2ca
++    .catch Ljava/lang/Throwable; {:try_start_2c3 .. :try_end_2ca} :catch_924
+ 
+     move-object/from16 v96, v97
+ 
+-    :goto_2c7
+-    :try_start_2c7
++    :goto_2cc
++    :try_start_2cc
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "NetworkStats Service"
+@@ -884,22 +923,22 @@
+     move-object/from16 v0, v75
+ 
+     invoke-direct {v0, v4, v13, v7}, Lcom/android/server/net/NetworkStatsService;-><init>(Landroid/content/Context;Landroid/os/INetworkManagementService;Landroid/app/IAlarmManager;)V
+-    :try_end_2d5
+-    .catch Ljava/lang/Throwable; {:try_start_2c7 .. :try_end_2d5} :catch_746
++    :try_end_2da
++    .catch Ljava/lang/Throwable; {:try_start_2cc .. :try_end_2da} :catch_74b
+ 
+-    :try_start_2d5
++    :try_start_2da
+     const-string v3, "netstats"
+ 
+     move-object/from16 v0, v75
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_2dc
+-    .catch Ljava/lang/Throwable; {:try_start_2d5 .. :try_end_2dc} :catch_91a
++    :try_end_2e1
++    .catch Ljava/lang/Throwable; {:try_start_2da .. :try_end_2e1} :catch_91f
+ 
+     move-object/from16 v12, v75
+ 
+-    :goto_2de
+-    :try_start_2de
++    :goto_2e3
++    :try_start_2e3
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "NetworkPolicy Service"
+@@ -917,18 +956,18 @@
+     move-object v11, v6
+ 
+     invoke-direct/range {v8 .. v13}, Lcom/android/server/net/NetworkPolicyManagerService;-><init>(Landroid/content/Context;Landroid/app/IActivityManager;Landroid/os/IPowerManager;Landroid/net/INetworkStatsService;Landroid/os/INetworkManagementService;)V
+-    :try_end_2f0
+-    .catch Ljava/lang/Throwable; {:try_start_2de .. :try_end_2f0} :catch_752
++    :try_end_2f5
++    .catch Ljava/lang/Throwable; {:try_start_2e3 .. :try_end_2f5} :catch_757
+ 
+-    :try_start_2f0
++    :try_start_2f5
+     const-string v3, "netpolicy"
+ 
+     invoke-static {v3, v8}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_2f5
+-    .catch Ljava/lang/Throwable; {:try_start_2f0 .. :try_end_2f5} :catch_917
++    :try_end_2fa
++    .catch Ljava/lang/Throwable; {:try_start_2f5 .. :try_end_2fa} :catch_91c
+ 
+-    :goto_2f5
+-    :try_start_2f5
++    :goto_2fa
++    :try_start_2fa
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Wi-Fi P2pService"
+@@ -940,22 +979,22 @@
+     move-object/from16 v0, v108
+ 
+     invoke-direct {v0, v4}, Landroid/net/wifi/p2p/WifiP2pService;-><init>(Landroid/content/Context;)V
+-    :try_end_303
+-    .catch Ljava/lang/Throwable; {:try_start_2f5 .. :try_end_303} :catch_760
++    :try_end_308
++    .catch Ljava/lang/Throwable; {:try_start_2fa .. :try_end_308} :catch_765
+ 
+-    :try_start_303
++    :try_start_308
+     const-string v3, "wifip2p"
+ 
+     move-object/from16 v0, v108
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_30a
+-    .catch Ljava/lang/Throwable; {:try_start_303 .. :try_end_30a} :catch_912
++    :try_end_30f
++    .catch Ljava/lang/Throwable; {:try_start_308 .. :try_end_30f} :catch_917
+ 
+     move-object/from16 v107, v108
+ 
+-    :goto_30c
+-    :try_start_30c
++    :goto_311
++    :try_start_311
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Wi-Fi Service"
+@@ -967,22 +1006,22 @@
+     move-object/from16 v0, v106
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/WifiService;-><init>(Landroid/content/Context;)V
+-    :try_end_31a
+-    .catch Ljava/lang/Throwable; {:try_start_30c .. :try_end_31a} :catch_76c
++    :try_end_31f
++    .catch Ljava/lang/Throwable; {:try_start_311 .. :try_end_31f} :catch_771
+ 
+-    :try_start_31a
++    :try_start_31f
+     const-string v3, "wifi"
+ 
+     move-object/from16 v0, v106
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_321
+-    .catch Ljava/lang/Throwable; {:try_start_31a .. :try_end_321} :catch_90d
++    :try_end_326
++    .catch Ljava/lang/Throwable; {:try_start_31f .. :try_end_326} :catch_912
+ 
+     move-object/from16 v105, v106
+ 
+-    :goto_323
+-    :try_start_323
++    :goto_328
++    :try_start_328
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Connectivity Service"
+@@ -994,10 +1033,10 @@
+     move-object/from16 v0, v49
+ 
+     invoke-direct {v0, v4, v13, v12, v8}, Lcom/android/server/ConnectivityService;-><init>(Landroid/content/Context;Landroid/os/INetworkManagementService;Landroid/net/INetworkStatsService;Landroid/net/INetworkPolicyManager;)V
+-    :try_end_331
+-    .catch Ljava/lang/Throwable; {:try_start_323 .. :try_end_331} :catch_778
++    :try_end_336
++    .catch Ljava/lang/Throwable; {:try_start_328 .. :try_end_336} :catch_77d
+ 
+-    :try_start_331
++    :try_start_336
+     const-string v3, "connectivity"
+ 
+     move-object/from16 v0, v49
+@@ -1015,13 +1054,13 @@
+     invoke-virtual/range {v105 .. v105}, Lcom/android/server/WifiService;->checkAndStartWifi()V
+ 
+     invoke-virtual/range {v107 .. v107}, Landroid/net/wifi/p2p/WifiP2pService;->connectivityServiceReady()V
+-    :try_end_348
+-    .catch Ljava/lang/Throwable; {:try_start_331 .. :try_end_348} :catch_908
++    :try_end_34d
++    .catch Ljava/lang/Throwable; {:try_start_336 .. :try_end_34d} :catch_90d
+ 
+     move-object/from16 v48, v49
+ 
+-    :goto_34a
+-    :try_start_34a
++    :goto_34f
++    :try_start_34f
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Throttle Service"
+@@ -1033,22 +1072,22 @@
+     move-object/from16 v0, v95
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/ThrottleService;-><init>(Landroid/content/Context;)V
+-    :try_end_358
+-    .catch Ljava/lang/Throwable; {:try_start_34a .. :try_end_358} :catch_784
++    :try_end_35d
++    .catch Ljava/lang/Throwable; {:try_start_34f .. :try_end_35d} :catch_789
+ 
+-    :try_start_358
++    :try_start_35d
+     const-string v3, "throttle"
+ 
+     move-object/from16 v0, v95
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_35f
+-    .catch Ljava/lang/Throwable; {:try_start_358 .. :try_end_35f} :catch_903
++    :try_end_364
++    .catch Ljava/lang/Throwable; {:try_start_35d .. :try_end_364} :catch_908
+ 
+     move-object/from16 v94, v95
+ 
+-    :goto_361
+-    :try_start_361
++    :goto_366
++    :try_start_366
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Mount Service"
+@@ -1062,11 +1101,11 @@
+     invoke-direct {v9, v4}, Lcom/android/server/MountService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_372
+-    .catch Ljava/lang/Throwable; {:try_start_361 .. :try_end_372} :catch_790
++    :try_end_377
++    .catch Ljava/lang/Throwable; {:try_start_366 .. :try_end_377} :catch_795
+ 
+-    :goto_372
+-    :try_start_372
++    :goto_377
++    :try_start_377
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Profile Manager"
+@@ -1078,22 +1117,22 @@
+     move-object/from16 v0, v84
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/ProfileManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_380
+-    .catch Ljava/lang/Throwable; {:try_start_372 .. :try_end_380} :catch_79c
++    :try_end_385
++    .catch Ljava/lang/Throwable; {:try_start_377 .. :try_end_385} :catch_7a1
+ 
+-    :try_start_380
++    :try_start_385
+     const-string v3, "profile"
+ 
+     move-object/from16 v0, v84
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_387
+-    .catch Ljava/lang/Throwable; {:try_start_380 .. :try_end_387} :catch_8fe
++    :try_end_38c
++    .catch Ljava/lang/Throwable; {:try_start_385 .. :try_end_38c} :catch_903
+ 
+     move-object/from16 v83, v84
+ 
+-    :goto_389
+-    :try_start_389
++    :goto_38e
++    :try_start_38e
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Notification Manager"
+@@ -1109,10 +1148,10 @@
+     move-object/from16 v2, v69
+ 
+     invoke-direct {v0, v4, v1, v2}, Lcom/android/server/NotificationManagerService;-><init>(Landroid/content/Context;Lcom/android/server/StatusBarManagerService;Lcom/android/server/LightsService;)V
+-    :try_end_39b
+-    .catch Ljava/lang/Throwable; {:try_start_389 .. :try_end_39b} :catch_7a8
++    :try_end_3a0
++    .catch Ljava/lang/Throwable; {:try_start_38e .. :try_end_3a0} :catch_7ad
+ 
+-    :try_start_39b
++    :try_start_3a0
+     const-string v3, "notification"
+ 
+     move-object/from16 v0, v79
+@@ -1122,17 +1161,17 @@
+     move-object/from16 v0, v79
+ 
+     invoke-virtual {v8, v0}, Lcom/android/server/net/NetworkPolicyManagerService;->bindNotificationManager(Landroid/app/INotificationManager;)V
+-    :try_end_3a7
+-    .catch Ljava/lang/Throwable; {:try_start_39b .. :try_end_3a7} :catch_8f9
++    :try_end_3ac
++    .catch Ljava/lang/Throwable; {:try_start_3a0 .. :try_end_3ac} :catch_8fe
+ 
+     move-object/from16 v78, v79
+ 
+-    :goto_3a9
++    :goto_3ae
+     sget-boolean v3, Landroid/os/SystemProperties;->QCOM_HDMI_OUT:Z
+ 
+-    if-eqz v3, :cond_3be
++    if-eqz v3, :cond_3c3
+ 
+-    :try_start_3ad
++    :try_start_3b2
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "HDMI Service"
+@@ -1146,12 +1185,12 @@
+     invoke-direct {v9, v4}, Lcom/android/server/HDMIService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_3be
+-    .catch Ljava/lang/Throwable; {:try_start_3ad .. :try_end_3be} :catch_7b4
++    :try_end_3c3
++    .catch Ljava/lang/Throwable; {:try_start_3b2 .. :try_end_3c3} :catch_7b9
+ 
+-    :cond_3be
+-    :goto_3be
+-    :try_start_3be
++    :cond_3c3
++    :goto_3c3
++    :try_start_3c3
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Device Storage Monitor"
+@@ -1165,11 +1204,11 @@
+     invoke-direct {v9, v4}, Lcom/android/server/DeviceStorageMonitorService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_3cf
+-    .catch Ljava/lang/Throwable; {:try_start_3be .. :try_end_3cf} :catch_7c0
++    :try_end_3d4
++    .catch Ljava/lang/Throwable; {:try_start_3c3 .. :try_end_3d4} :catch_7c5
+ 
+-    :goto_3cf
+-    :try_start_3cf
++    :goto_3d4
++    :try_start_3d4
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Location Manager"
+@@ -1181,22 +1220,22 @@
+     move-object/from16 v0, v72
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/LocationManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_3dd
+-    .catch Ljava/lang/Throwable; {:try_start_3cf .. :try_end_3dd} :catch_7cc
++    :try_end_3e2
++    .catch Ljava/lang/Throwable; {:try_start_3d4 .. :try_end_3e2} :catch_7d1
+ 
+-    :try_start_3dd
++    :try_start_3e2
+     const-string v3, "location"
+ 
+     move-object/from16 v0, v72
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_3e4
+-    .catch Ljava/lang/Throwable; {:try_start_3dd .. :try_end_3e4} :catch_8f4
++    :try_end_3e9
++    .catch Ljava/lang/Throwable; {:try_start_3e2 .. :try_end_3e9} :catch_8f9
+ 
+     move-object/from16 v71, v72
+ 
+-    :goto_3e6
+-    :try_start_3e6
++    :goto_3eb
++    :try_start_3eb
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Country Detector"
+@@ -1208,22 +1247,22 @@
+     move-object/from16 v0, v51
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/CountryDetectorService;-><init>(Landroid/content/Context;)V
+-    :try_end_3f4
+-    .catch Ljava/lang/Throwable; {:try_start_3e6 .. :try_end_3f4} :catch_7d8
++    :try_end_3f9
++    .catch Ljava/lang/Throwable; {:try_start_3eb .. :try_end_3f9} :catch_7dd
+ 
+-    :try_start_3f4
++    :try_start_3f9
+     const-string v3, "country_detector"
+ 
+     move-object/from16 v0, v51
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_3fb
+-    .catch Ljava/lang/Throwable; {:try_start_3f4 .. :try_end_3fb} :catch_8ef
++    :try_end_400
++    .catch Ljava/lang/Throwable; {:try_start_3f9 .. :try_end_400} :catch_8f4
+ 
+     move-object/from16 v50, v51
+ 
+-    :goto_3fd
+-    :try_start_3fd
++    :goto_402
++    :try_start_402
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Search Service"
+@@ -1237,11 +1276,11 @@
+     invoke-direct {v9, v4}, Landroid/server/search/SearchManagerService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_40e
+-    .catch Ljava/lang/Throwable; {:try_start_3fd .. :try_end_40e} :catch_7e4
++    :try_end_413
++    .catch Ljava/lang/Throwable; {:try_start_402 .. :try_end_413} :catch_7e9
+ 
+-    :goto_40e
+-    :try_start_40e
++    :goto_413
++    :try_start_413
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "DropBox Service"
+@@ -1261,11 +1300,11 @@
+     invoke-direct {v9, v4, v10}, Lcom/android/server/DropBoxManagerService;-><init>(Landroid/content/Context;Ljava/io/File;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_426
+-    .catch Ljava/lang/Throwable; {:try_start_40e .. :try_end_426} :catch_7f0
++    :try_end_42b
++    .catch Ljava/lang/Throwable; {:try_start_413 .. :try_end_42b} :catch_7f5
+ 
+-    :goto_426
+-    :try_start_426
++    :goto_42b
++    :try_start_42b
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Wallpaper Service"
+@@ -1277,22 +1316,22 @@
+     move-object/from16 v0, v104
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/WallpaperManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_434
+-    .catch Ljava/lang/Throwable; {:try_start_426 .. :try_end_434} :catch_7fc
++    :try_end_439
++    .catch Ljava/lang/Throwable; {:try_start_42b .. :try_end_439} :catch_801
+ 
+-    :try_start_434
++    :try_start_439
+     const-string v3, "wallpaper"
+ 
+     move-object/from16 v0, v104
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_43b
+-    .catch Ljava/lang/Throwable; {:try_start_434 .. :try_end_43b} :catch_8ea
++    :try_end_440
++    .catch Ljava/lang/Throwable; {:try_start_439 .. :try_end_440} :catch_8ef
+ 
+     move-object/from16 v103, v104
+ 
+-    :goto_43d
+-    :try_start_43d
++    :goto_442
++    :try_start_442
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Audio Service"
+@@ -1306,11 +1345,11 @@
+     invoke-direct {v9, v4}, Landroid/media/AudioService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_44e
+-    .catch Ljava/lang/Throwable; {:try_start_43d .. :try_end_44e} :catch_808
++    :try_end_453
++    .catch Ljava/lang/Throwable; {:try_start_442 .. :try_end_453} :catch_80d
+ 
+-    :goto_44e
+-    :try_start_44e
++    :goto_453
++    :try_start_453
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Dock Observer"
+@@ -1322,15 +1361,15 @@
+     move-object/from16 v0, v60
+ 
+     invoke-direct {v0, v4, v6}, Lcom/android/server/DockObserver;-><init>(Landroid/content/Context;Lcom/android/server/PowerManagerService;)V
+-    :try_end_45c
+-    .catch Ljava/lang/Throwable; {:try_start_44e .. :try_end_45c} :catch_814
++    :try_end_461
++    .catch Ljava/lang/Throwable; {:try_start_453 .. :try_end_461} :catch_819
+ 
+     move-object/from16 v59, v60
+ 
+-    :goto_45e
+-    if-eqz v66, :cond_470
++    :goto_463
++    if-eqz v66, :cond_475
+ 
+-    :try_start_460
++    :try_start_465
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Rotation Switch Observer"
+@@ -1342,14 +1381,14 @@
+     move-object/from16 v0, v90
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/RotationSwitchObserver;-><init>(Landroid/content/Context;)V
+-    :try_end_46e
+-    .catch Ljava/lang/Throwable; {:try_start_460 .. :try_end_46e} :catch_820
++    :try_end_473
++    .catch Ljava/lang/Throwable; {:try_start_465 .. :try_end_473} :catch_825
+ 
+     move-object/from16 v89, v90
+ 
+-    :cond_470
+-    :goto_470
+-    :try_start_470
++    :cond_475
++    :goto_475
++    :try_start_475
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Wired Accessory Observer"
+@@ -1359,11 +1398,11 @@
+     new-instance v3, Lcom/android/server/WiredAccessoryObserver;
+ 
+     invoke-direct {v3, v4}, Lcom/android/server/WiredAccessoryObserver;-><init>(Landroid/content/Context;)V
+-    :try_end_47c
+-    .catch Ljava/lang/Throwable; {:try_start_470 .. :try_end_47c} :catch_82c
++    :try_end_481
++    .catch Ljava/lang/Throwable; {:try_start_475 .. :try_end_481} :catch_831
+ 
+-    :goto_47c
+-    :try_start_47c
++    :goto_481
++    :try_start_481
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "USB Service"
+@@ -1375,22 +1414,22 @@
+     move-object/from16 v0, v101
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/usb/UsbService;-><init>(Landroid/content/Context;)V
+-    :try_end_48a
+-    .catch Ljava/lang/Throwable; {:try_start_47c .. :try_end_48a} :catch_838
++    :try_end_48f
++    .catch Ljava/lang/Throwable; {:try_start_481 .. :try_end_48f} :catch_83d
+ 
+-    :try_start_48a
++    :try_start_48f
+     const-string v3, "usb"
+ 
+     move-object/from16 v0, v101
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_491
+-    .catch Ljava/lang/Throwable; {:try_start_48a .. :try_end_491} :catch_8e5
++    :try_end_496
++    .catch Ljava/lang/Throwable; {:try_start_48f .. :try_end_496} :catch_8ea
+ 
+     move-object/from16 v100, v101
+ 
+-    :goto_493
+-    :try_start_493
++    :goto_498
++    :try_start_498
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "UI Mode Manager Service"
+@@ -1402,13 +1441,13 @@
+     move-object/from16 v0, v99
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/UiModeManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_4a1
+-    .catch Ljava/lang/Throwable; {:try_start_493 .. :try_end_4a1} :catch_844
++    :try_end_4a6
++    .catch Ljava/lang/Throwable; {:try_start_498 .. :try_end_4a6} :catch_849
+ 
+     move-object/from16 v98, v99
+ 
+-    :goto_4a3
+-    :try_start_4a3
++    :goto_4a8
++    :try_start_4a8
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Backup Service"
+@@ -1422,11 +1461,11 @@
+     invoke-direct {v9, v4}, Lcom/android/server/BackupManagerService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_4b4
+-    .catch Ljava/lang/Throwable; {:try_start_4a3 .. :try_end_4b4} :catch_850
++    :try_end_4b9
++    .catch Ljava/lang/Throwable; {:try_start_4a8 .. :try_end_4b9} :catch_855
+ 
+-    :goto_4b4
+-    :try_start_4b4
++    :goto_4b9
++    :try_start_4b9
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "AppWidget Service"
+@@ -1438,22 +1477,22 @@
+     move-object/from16 v0, v40
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/AppWidgetService;-><init>(Landroid/content/Context;)V
+-    :try_end_4c2
+-    .catch Ljava/lang/Throwable; {:try_start_4b4 .. :try_end_4c2} :catch_85c
++    :try_end_4c7
++    .catch Ljava/lang/Throwable; {:try_start_4b9 .. :try_end_4c7} :catch_861
+ 
+-    :try_start_4c2
++    :try_start_4c7
+     const-string v3, "appwidget"
+ 
+     move-object/from16 v0, v40
+ 
+     invoke-static {v3, v0}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_4c9
+-    .catch Ljava/lang/Throwable; {:try_start_4c2 .. :try_end_4c9} :catch_8e0
++    :try_end_4ce
++    .catch Ljava/lang/Throwable; {:try_start_4c7 .. :try_end_4ce} :catch_8e5
+ 
+     move-object/from16 v39, v40
+ 
+-    :goto_4cb
+-    :try_start_4cb
++    :goto_4d0
++    :try_start_4d0
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Recognition Service"
+@@ -1465,13 +1504,13 @@
+     move-object/from16 v0, v88
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/RecognitionManagerService;-><init>(Landroid/content/Context;)V
+-    :try_end_4d9
+-    .catch Ljava/lang/Throwable; {:try_start_4cb .. :try_end_4d9} :catch_868
++    :try_end_4de
++    .catch Ljava/lang/Throwable; {:try_start_4d0 .. :try_end_4de} :catch_86d
+ 
+     move-object/from16 v87, v88
+ 
+-    :goto_4db
+-    :try_start_4db
++    :goto_4e0
++    :try_start_4e0
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "DiskStats Service"
+@@ -1485,11 +1524,11 @@
+     invoke-direct {v9, v4}, Lcom/android/server/DiskStatsService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_4ec
+-    .catch Ljava/lang/Throwable; {:try_start_4db .. :try_end_4ec} :catch_874
++    :try_end_4f1
++    .catch Ljava/lang/Throwable; {:try_start_4e0 .. :try_end_4f1} :catch_879
+ 
+-    :goto_4ec
+-    :try_start_4ec
++    :goto_4f1
++    :try_start_4f1
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "SamplingProfiler Service"
+@@ -1503,11 +1542,11 @@
+     invoke-direct {v9, v4}, Lcom/android/server/SamplingProfilerService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_4fd
+-    .catch Ljava/lang/Throwable; {:try_start_4ec .. :try_end_4fd} :catch_880
++    :try_end_502
++    .catch Ljava/lang/Throwable; {:try_start_4f1 .. :try_end_502} :catch_885
+ 
+-    :goto_4fd
+-    :try_start_4fd
++    :goto_502
++    :try_start_502
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "NetworkTimeUpdateService"
+@@ -1519,13 +1558,13 @@
+     move-object/from16 v0, v77
+ 
+     invoke-direct {v0, v4}, Lcom/android/server/NetworkTimeUpdateService;-><init>(Landroid/content/Context;)V
+-    :try_end_50b
+-    .catch Ljava/lang/Throwable; {:try_start_4fd .. :try_end_50b} :catch_88c
++    :try_end_510
++    .catch Ljava/lang/Throwable; {:try_start_502 .. :try_end_510} :catch_891
+ 
+     move-object/from16 v76, v77
+ 
+-    :goto_50d
+-    :try_start_50d
++    :goto_512
++    :try_start_512
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "AssetRedirectionManager Service"
+@@ -1539,10 +1578,10 @@
+     invoke-direct {v9, v4}, Lcom/android/server/AssetRedirectionManagerService;-><init>(Landroid/content/Context;)V
+ 
+     invoke-static {v3, v9}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-    :try_end_51e
+-    .catch Ljava/lang/Throwable; {:try_start_50d .. :try_end_51e} :catch_898
++    :try_end_523
++    .catch Ljava/lang/Throwable; {:try_start_512 .. :try_end_523} :catch_89d
+ 
+-    :goto_51e
++    :goto_523
+     move-object/from16 v0, p0
+ 
+     iget-object v3, v0, Lcom/android/server/ServerThread;->mContentResolver:Landroid/content/ContentResolver;
+@@ -1587,7 +1626,7 @@
+ 
+     move-result v28
+ 
+-    if-eqz v28, :cond_8a4
++    if-eqz v28, :cond_8a9
+ 
+     invoke-static {}, Lcom/android/server/am/ActivityManagerService;->self()Lcom/android/server/am/ActivityManagerService;
+ 
+@@ -1605,32 +1644,32 @@
+ 
+     invoke-virtual {v3}, Ldalvik/system/VMRuntime;->disableJitCompilation()V
+ 
+-    :goto_55f
+-    if-eqz v55, :cond_564
+-
+-    :try_start_561
+-    invoke-virtual/range {v55 .. v55}, Lcom/android/server/DevicePolicyManagerService;->systemReady()V
+-    :try_end_564
+-    .catch Ljava/lang/Throwable; {:try_start_561 .. :try_end_564} :catch_8ad
+-
+-    :cond_564
+     :goto_564
+-    if-eqz v78, :cond_569
++    if-eqz v55, :cond_569
+ 
+     :try_start_566
+-    invoke-virtual/range {v78 .. v78}, Lcom/android/server/NotificationManagerService;->systemReady()V
++    invoke-virtual/range {v55 .. v55}, Lcom/android/server/DevicePolicyManagerService;->systemReady()V
+     :try_end_569
+-    .catch Ljava/lang/Throwable; {:try_start_566 .. :try_end_569} :catch_8b9
++    .catch Ljava/lang/Throwable; {:try_start_566 .. :try_end_569} :catch_8b2
+ 
+     :cond_569
+     :goto_569
+-    :try_start_569
++    if-eqz v78, :cond_56e
++
++    :try_start_56b
++    invoke-virtual/range {v78 .. v78}, Lcom/android/server/NotificationManagerService;->systemReady()V
++    :try_end_56e
++    .catch Ljava/lang/Throwable; {:try_start_56b .. :try_end_56e} :catch_8be
++
++    :cond_56e
++    :goto_56e
++    :try_start_56e
+     invoke-virtual/range {v109 .. v109}, Lcom/android/server/wm/WindowManagerService;->systemReady()V
+-    :try_end_56c
+-    .catch Ljava/lang/Throwable; {:try_start_569 .. :try_end_56c} :catch_8c5
++    :try_end_571
++    .catch Ljava/lang/Throwable; {:try_start_56e .. :try_end_571} :catch_8ca
+ 
+-    :goto_56c
+-    if-eqz v28, :cond_575
++    :goto_571
++    if-eqz v28, :cond_57a
+ 
+     invoke-static {}, Lcom/android/server/am/ActivityManagerService;->self()Lcom/android/server/am/ActivityManagerService;
+ 
+@@ -1638,7 +1677,7 @@
+ 
+     invoke-virtual {v3}, Lcom/android/server/am/ActivityManagerService;->showSafeModeOverlay()V
+ 
+-    :cond_575
++    :cond_57a
+     invoke-virtual/range {v109 .. v109}, Lcom/android/server/wm/WindowManagerService;->computeNewConfiguration()Landroid/content/res/Configuration;
+ 
+     move-result-object v47
+@@ -1675,12 +1714,12 @@
+ 
+     invoke-virtual {v6}, Lcom/android/server/PowerManagerService;->systemReady()V
+ 
+-    :try_start_59d
++    :try_start_5a2
+     invoke-interface/range {v81 .. v81}, Landroid/content/pm/IPackageManager;->systemReady()V
+-    :try_end_5a0
+-    .catch Ljava/lang/Throwable; {:try_start_59d .. :try_end_5a0} :catch_8d1
++    :try_end_5a5
++    .catch Ljava/lang/Throwable; {:try_start_5a2 .. :try_end_5a5} :catch_8d6
+ 
+-    :goto_5a0
++    :goto_5a5
+     new-instance v64, Landroid/content/IntentFilter;
+ 
+     invoke-direct/range {v64 .. v64}, Landroid/content/IntentFilter;-><init>()V
+@@ -1785,7 +1824,7 @@
+ 
+     move-result v3
+ 
+-    if-eqz v3, :cond_61c
++    if-eqz v3, :cond_621
+ 
+     const-string v3, "SystemServer"
+ 
+@@ -1793,7 +1832,7 @@
+ 
+     invoke-static {v3, v9}, Landroid/util/Slog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    :cond_61c
++    :cond_621
+     invoke-static {}, Landroid/os/Looper;->loop()V
+ 
+     const-string v3, "SystemServer"
+@@ -1804,25 +1843,25 @@
+ 
+     return-void
+ 
+-    :cond_627
++    :cond_62c
+     const/16 v86, 0x0
+ 
+     goto/16 :goto_35
+ 
+-    :cond_62b
++    :cond_630
+     const/16 v85, 0x0
+ 
+     goto/16 :goto_47
+ 
+-    :cond_62f
++    :cond_634
+     invoke-static/range {v63 .. v63}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
+ 
+     move-result v62
+ 
+     goto/16 :goto_60
+ 
+-    :cond_635
+-    :try_start_635
++    :cond_63a
++    :try_start_63a
+     const-string v3, "1"
+ 
+     move-object/from16 v0, v54
+@@ -1843,12 +1882,12 @@
+ 
+     goto/16 :goto_f0
+ 
+-    :cond_64a
++    :cond_64f
+     const/4 v3, 0x0
+ 
+     goto/16 :goto_f3
+ 
+-    :catch_64d
++    :catch_652
+     move-exception v61
+ 
+     const-string v3, "SystemServer"
+@@ -1858,19 +1897,19 @@
+     move-object/from16 v0, v61
+ 
+     invoke-static {v3, v9, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_657
+-    .catch Ljava/lang/RuntimeException; {:try_start_635 .. :try_end_657} :catch_659
++    :try_end_65c
++    .catch Ljava/lang/RuntimeException; {:try_start_63a .. :try_end_65c} :catch_65e
+ 
+     goto/16 :goto_11b
+ 
+-    :catch_659
++    :catch_65e
+     move-exception v61
+ 
+     move-object/from16 v7, v38
+ 
+     move-object/from16 v5, v41
+ 
+-    :goto_65e
++    :goto_663
+     const-string v3, "System"
+ 
+     const-string v9, "******************************************"
+@@ -1885,49 +1924,49 @@
+ 
+     invoke-static {v3, v9, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto/16 :goto_1f5
++    goto/16 :goto_1fa
+ 
+-    :cond_670
++    :cond_675
+     const/4 v3, 0x0
+ 
+     goto/16 :goto_128
+ 
+-    :cond_673
++    :cond_678
+     const/4 v3, 0x0
+ 
+     move v9, v3
+ 
+-    goto/16 :goto_1a1
++    goto/16 :goto_1a6
+ 
+-    :cond_677
++    :cond_67c
+     const/4 v3, 0x0
+ 
+-    goto/16 :goto_1a4
++    goto/16 :goto_1a9
+ 
+-    :cond_67a
++    :cond_67f
+     const/4 v3, 0x1
+ 
+     move/from16 v0, v62
+ 
+-    if-ne v0, v3, :cond_68c
++    if-ne v0, v3, :cond_691
+ 
+-    :try_start_67f
++    :try_start_684
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "No Bluetooth Service (factory test)"
+ 
+     invoke-static {v3, v9}, Landroid/util/Slog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    goto/16 :goto_1cd
++    goto/16 :goto_1d2
+ 
+-    :catch_688
++    :catch_68d
+     move-exception v61
+ 
+     move-object/from16 v69, v70
+ 
+-    goto :goto_65e
++    goto :goto_663
+ 
+-    :cond_68c
++    :cond_691
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Bluetooth Service"
+@@ -1939,10 +1978,10 @@
+     move-object/from16 v0, v43
+ 
+     invoke-direct {v0, v4}, Landroid/server/BluetoothService;-><init>(Landroid/content/Context;)V
+-    :try_end_69a
+-    .catch Ljava/lang/RuntimeException; {:try_start_67f .. :try_end_69a} :catch_688
++    :try_end_69f
++    .catch Ljava/lang/RuntimeException; {:try_start_684 .. :try_end_69f} :catch_68d
+ 
+-    :try_start_69a
++    :try_start_69f
+     const-string v3, "bluetooth"
+ 
+     move-object/from16 v0, v43
+@@ -1958,10 +1997,10 @@
+     move-object/from16 v1, v43
+ 
+     invoke-direct {v0, v4, v1}, Landroid/server/BluetoothA2dpService;-><init>(Landroid/content/Context;Landroid/server/BluetoothService;)V
+-    :try_end_6ad
+-    .catch Ljava/lang/RuntimeException; {:try_start_69a .. :try_end_6ad} :catch_94f
++    :try_end_6b2
++    .catch Ljava/lang/RuntimeException; {:try_start_69f .. :try_end_6b2} :catch_954
+ 
+-    :try_start_6ad
++    :try_start_6b2
+     const-string v3, "bluetooth_a2dp"
+ 
+     move-object/from16 v0, v45
+@@ -1994,25 +2033,25 @@
+ 
+     move-result v46
+ 
+-    if-nez v37, :cond_6d4
++    if-nez v37, :cond_6d9
+ 
+-    if-eqz v46, :cond_6d4
++    if-eqz v46, :cond_6d9
+ 
+     invoke-virtual/range {v43 .. v43}, Landroid/server/BluetoothService;->enable()Z
+-    :try_end_6d4
+-    .catch Ljava/lang/RuntimeException; {:try_start_6ad .. :try_end_6d4} :catch_956
++    :try_end_6d9
++    .catch Ljava/lang/RuntimeException; {:try_start_6b2 .. :try_end_6d9} :catch_95b
+ 
+-    :cond_6d4
++    :cond_6d9
+     move-object/from16 v44, v45
+ 
+     move-object/from16 v42, v43
+ 
+-    goto/16 :goto_1cd
++    goto/16 :goto_1d2
+ 
+-    :catch_6da
++    :catch_6df
+     move-exception v61
+ 
+-    :goto_6db
++    :goto_6e0
+     const-string v3, "starting Input Manager Service"
+ 
+     move-object/from16 v0, p0
+@@ -2021,9 +2060,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_230
++    goto/16 :goto_235
+ 
+-    :catch_6e6
++    :catch_6eb
+     move-exception v61
+ 
+     const-string v3, "starting Accessibility Manager"
+@@ -2034,9 +2073,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_241
++    goto/16 :goto_246
+ 
+-    :catch_6f2
++    :catch_6f7
+     move-exception v61
+ 
+     const-string v3, "making display ready"
+@@ -2047,9 +2086,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_244
++    goto/16 :goto_249
+ 
+-    :catch_6fe
++    :catch_703
+     move-exception v61
+ 
+     const-string v3, "performing boot dexopt"
+@@ -2060,12 +2099,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_247
++    goto/16 :goto_24c
+ 
+-    :catch_70a
++    :catch_70f
+     move-exception v61
+ 
+-    :goto_70b
++    :goto_710
+     const-string v3, "starting DevicePolicyService"
+ 
+     move-object/from16 v0, p0
+@@ -2074,12 +2113,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_276
++    goto/16 :goto_27b
+ 
+-    :catch_716
++    :catch_71b
+     move-exception v61
+ 
+-    :goto_717
++    :goto_71c
+     const-string v3, "starting StatusBarManagerService"
+ 
+     move-object/from16 v0, p0
+@@ -2088,9 +2127,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_28f
++    goto/16 :goto_294
+ 
+-    :catch_722
++    :catch_727
+     move-exception v61
+ 
+     const-string v3, "starting Clipboard Service"
+@@ -2101,9 +2140,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_2a0
++    goto/16 :goto_2a5
+ 
+-    :catch_72e
++    :catch_733
+     move-exception v61
+ 
+     const-string v3, "starting NetworkManagement Service"
+@@ -2114,12 +2153,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_2b0
++    goto/16 :goto_2b5
+ 
+-    :catch_73a
++    :catch_73f
+     move-exception v61
+ 
+-    :goto_73b
++    :goto_740
+     const-string v3, "starting Text Service Manager Service"
+ 
+     move-object/from16 v0, p0
+@@ -2128,12 +2167,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_2c7
++    goto/16 :goto_2cc
+ 
+-    :catch_746
++    :catch_74b
+     move-exception v61
+ 
+-    :goto_747
++    :goto_74c
+     const-string v3, "starting NetworkStats Service"
+ 
+     move-object/from16 v0, p0
+@@ -2142,14 +2181,14 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_2de
++    goto/16 :goto_2e3
+ 
+-    :catch_752
++    :catch_757
+     move-exception v61
+ 
+     move-object/from16 v8, v74
+ 
+-    :goto_755
++    :goto_75a
+     const-string v3, "starting NetworkPolicy Service"
+ 
+     move-object/from16 v0, p0
+@@ -2158,12 +2197,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_2f5
++    goto/16 :goto_2fa
+ 
+-    :catch_760
++    :catch_765
+     move-exception v61
+ 
+-    :goto_761
++    :goto_766
+     const-string v3, "starting Wi-Fi P2pService"
+ 
+     move-object/from16 v0, p0
+@@ -2172,12 +2211,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_30c
++    goto/16 :goto_311
+ 
+-    :catch_76c
++    :catch_771
+     move-exception v61
+ 
+-    :goto_76d
++    :goto_772
+     const-string v3, "starting Wi-Fi Service"
+ 
+     move-object/from16 v0, p0
+@@ -2186,12 +2225,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_323
++    goto/16 :goto_328
+ 
+-    :catch_778
++    :catch_77d
+     move-exception v61
+ 
+-    :goto_779
++    :goto_77e
+     const-string v3, "starting Connectivity Service"
+ 
+     move-object/from16 v0, p0
+@@ -2200,12 +2239,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_34a
++    goto/16 :goto_34f
+ 
+-    :catch_784
++    :catch_789
+     move-exception v61
+ 
+-    :goto_785
++    :goto_78a
+     const-string v3, "starting ThrottleService"
+ 
+     move-object/from16 v0, p0
+@@ -2214,9 +2253,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_361
++    goto/16 :goto_366
+ 
+-    :catch_790
++    :catch_795
+     move-exception v61
+ 
+     const-string v3, "starting Mount Service"
+@@ -2227,12 +2266,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_372
++    goto/16 :goto_377
+ 
+-    :catch_79c
++    :catch_7a1
+     move-exception v61
+ 
+-    :goto_79d
++    :goto_7a2
+     const-string v3, "SystemServer"
+ 
+     const-string v9, "Failure starting Profile Manager"
+@@ -2241,12 +2280,12 @@
+ 
+     invoke-static {v3, v9, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto/16 :goto_389
++    goto/16 :goto_38e
+ 
+-    :catch_7a8
++    :catch_7ad
+     move-exception v61
+ 
+-    :goto_7a9
++    :goto_7ae
+     const-string v3, "starting Notification Manager"
+ 
+     move-object/from16 v0, p0
+@@ -2255,9 +2294,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_3a9
++    goto/16 :goto_3ae
+ 
+-    :catch_7b4
++    :catch_7b9
+     move-exception v61
+ 
+     const-string v3, "SystemServer"
+@@ -2268,9 +2307,9 @@
+ 
+     invoke-static {v3, v9, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto/16 :goto_3be
++    goto/16 :goto_3c3
+ 
+-    :catch_7c0
++    :catch_7c5
+     move-exception v61
+ 
+     const-string v3, "starting DeviceStorageMonitor service"
+@@ -2281,12 +2320,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_3cf
++    goto/16 :goto_3d4
+ 
+-    :catch_7cc
++    :catch_7d1
+     move-exception v61
+ 
+-    :goto_7cd
++    :goto_7d2
+     const-string v3, "starting Location Manager"
+ 
+     move-object/from16 v0, p0
+@@ -2295,12 +2334,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_3e6
++    goto/16 :goto_3eb
+ 
+-    :catch_7d8
++    :catch_7dd
+     move-exception v61
+ 
+-    :goto_7d9
++    :goto_7de
+     const-string v3, "starting Country Detector"
+ 
+     move-object/from16 v0, p0
+@@ -2309,9 +2348,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_3fd
++    goto/16 :goto_402
+ 
+-    :catch_7e4
++    :catch_7e9
+     move-exception v61
+ 
+     const-string v3, "starting Search Service"
+@@ -2322,9 +2361,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_40e
++    goto/16 :goto_413
+ 
+-    :catch_7f0
++    :catch_7f5
+     move-exception v61
+ 
+     const-string v3, "starting DropBoxManagerService"
+@@ -2335,12 +2374,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_426
++    goto/16 :goto_42b
+ 
+-    :catch_7fc
++    :catch_801
+     move-exception v61
+ 
+-    :goto_7fd
++    :goto_802
+     const-string v3, "starting Wallpaper Service"
+ 
+     move-object/from16 v0, p0
+@@ -2349,9 +2388,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_43d
++    goto/16 :goto_442
+ 
+-    :catch_808
++    :catch_80d
+     move-exception v61
+ 
+     const-string v3, "starting Audio Service"
+@@ -2362,9 +2401,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_44e
++    goto/16 :goto_453
+ 
+-    :catch_814
++    :catch_819
+     move-exception v61
+ 
+     const-string v3, "starting DockObserver"
+@@ -2375,9 +2414,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_45e
++    goto/16 :goto_463
+ 
+-    :catch_820
++    :catch_825
+     move-exception v61
+ 
+     const-string v3, "starting RotationSwitchObserver"
+@@ -2388,9 +2427,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_470
++    goto/16 :goto_475
+ 
+-    :catch_82c
++    :catch_831
+     move-exception v61
+ 
+     const-string v3, "starting WiredAccessoryObserver"
+@@ -2401,12 +2440,12 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_47c
++    goto/16 :goto_481
+ 
+-    :catch_838
++    :catch_83d
+     move-exception v61
+ 
+-    :goto_839
++    :goto_83e
+     const-string v3, "starting UsbService"
+ 
+     move-object/from16 v0, p0
+@@ -2415,9 +2454,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_493
++    goto/16 :goto_498
+ 
+-    :catch_844
++    :catch_849
+     move-exception v61
+ 
+     const-string v3, "starting UiModeManagerService"
+@@ -2428,9 +2467,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_4a3
++    goto/16 :goto_4a8
+ 
+-    :catch_850
++    :catch_855
+     move-exception v61
+ 
+     const-string v3, "SystemServer"
+@@ -2441,12 +2480,12 @@
+ 
+     invoke-static {v3, v9, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto/16 :goto_4b4
++    goto/16 :goto_4b9
+ 
+-    :catch_85c
++    :catch_861
+     move-exception v61
+ 
+-    :goto_85d
++    :goto_862
+     const-string v3, "starting AppWidget Service"
+ 
+     move-object/from16 v0, p0
+@@ -2455,9 +2494,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_4cb
++    goto/16 :goto_4d0
+ 
+-    :catch_868
++    :catch_86d
+     move-exception v61
+ 
+     const-string v3, "starting Recognition Service"
+@@ -2468,9 +2507,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_4db
++    goto/16 :goto_4e0
+ 
+-    :catch_874
++    :catch_879
+     move-exception v61
+ 
+     const-string v3, "starting DiskStats Service"
+@@ -2481,9 +2520,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_4ec
++    goto/16 :goto_4f1
+ 
+-    :catch_880
++    :catch_885
+     move-exception v61
+ 
+     const-string v3, "starting SamplingProfiler Service"
+@@ -2494,9 +2533,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_4fd
++    goto/16 :goto_502
+ 
+-    :catch_88c
++    :catch_891
+     move-exception v61
+ 
+     const-string v3, "starting NetworkTimeUpdate service"
+@@ -2507,9 +2546,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_50d
++    goto/16 :goto_512
+ 
+-    :catch_898
++    :catch_89d
+     move-exception v61
+ 
+     const-string v3, "SystemServer"
+@@ -2520,18 +2559,18 @@
+ 
+     invoke-static {v3, v9, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto/16 :goto_51e
++    goto/16 :goto_523
+ 
+-    :cond_8a4
++    :cond_8a9
+     invoke-static {}, Ldalvik/system/VMRuntime;->getRuntime()Ldalvik/system/VMRuntime;
+ 
+     move-result-object v3
+ 
+     invoke-virtual {v3}, Ldalvik/system/VMRuntime;->startJitCompilation()V
+ 
+-    goto/16 :goto_55f
++    goto/16 :goto_564
+ 
+-    :catch_8ad
++    :catch_8b2
+     move-exception v61
+ 
+     const-string v3, "making Device Policy Service ready"
+@@ -2542,9 +2581,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_564
++    goto/16 :goto_569
+ 
+-    :catch_8b9
++    :catch_8be
+     move-exception v61
+ 
+     const-string v3, "making Notification Service ready"
+@@ -2555,9 +2594,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_569
++    goto/16 :goto_56e
+ 
+-    :catch_8c5
++    :catch_8ca
+     move-exception v61
+ 
+     const-string v3, "making Window Manager Service ready"
+@@ -2568,9 +2607,9 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_56c
++    goto/16 :goto_571
+ 
+-    :catch_8d1
++    :catch_8d6
+     move-exception v61
+ 
+     const-string v3, "making Package Manager Service ready"
+@@ -2581,136 +2620,136 @@
+ 
+     invoke-virtual {v0, v3, v1}, Lcom/android/server/ServerThread;->reportWtf(Ljava/lang/String;Ljava/lang/Throwable;)V
+ 
+-    goto/16 :goto_5a0
++    goto/16 :goto_5a5
+ 
+-    :catch_8dd
++    :catch_8e2
+     move-exception v3
+ 
+     goto/16 :goto_ff
+ 
+-    :catch_8e0
++    :catch_8e5
+     move-exception v61
+ 
+     move-object/from16 v39, v40
+ 
+-    goto/16 :goto_85d
++    goto/16 :goto_862
+ 
+-    :catch_8e5
++    :catch_8ea
+     move-exception v61
+ 
+     move-object/from16 v100, v101
+ 
+-    goto/16 :goto_839
++    goto/16 :goto_83e
+ 
+-    :catch_8ea
++    :catch_8ef
+     move-exception v61
+ 
+     move-object/from16 v103, v104
+ 
+-    goto/16 :goto_7fd
++    goto/16 :goto_802
+ 
+-    :catch_8ef
++    :catch_8f4
+     move-exception v61
+ 
+     move-object/from16 v50, v51
+ 
+-    goto/16 :goto_7d9
++    goto/16 :goto_7de
+ 
+-    :catch_8f4
++    :catch_8f9
+     move-exception v61
+ 
+     move-object/from16 v71, v72
+ 
+-    goto/16 :goto_7cd
++    goto/16 :goto_7d2
+ 
+-    :catch_8f9
++    :catch_8fe
+     move-exception v61
+ 
+     move-object/from16 v78, v79
+ 
+-    goto/16 :goto_7a9
++    goto/16 :goto_7ae
+ 
+-    :catch_8fe
++    :catch_903
+     move-exception v61
+ 
+     move-object/from16 v83, v84
+ 
+-    goto/16 :goto_79d
++    goto/16 :goto_7a2
+ 
+-    :catch_903
++    :catch_908
+     move-exception v61
+ 
+     move-object/from16 v94, v95
+ 
+-    goto/16 :goto_785
++    goto/16 :goto_78a
+ 
+-    :catch_908
++    :catch_90d
+     move-exception v61
+ 
+     move-object/from16 v48, v49
+ 
+-    goto/16 :goto_779
++    goto/16 :goto_77e
+ 
+-    :catch_90d
++    :catch_912
+     move-exception v61
+ 
+     move-object/from16 v105, v106
+ 
+-    goto/16 :goto_76d
++    goto/16 :goto_772
+ 
+-    :catch_912
++    :catch_917
+     move-exception v61
+ 
+     move-object/from16 v107, v108
+ 
+-    goto/16 :goto_761
++    goto/16 :goto_766
+ 
+-    :catch_917
++    :catch_91c
+     move-exception v61
+ 
+-    goto/16 :goto_755
++    goto/16 :goto_75a
+ 
+-    :catch_91a
++    :catch_91f
+     move-exception v61
+ 
+     move-object/from16 v12, v75
+ 
+-    goto/16 :goto_747
++    goto/16 :goto_74c
+ 
+-    :catch_91f
++    :catch_924
+     move-exception v61
+ 
+     move-object/from16 v96, v97
+ 
+-    goto/16 :goto_73b
++    goto/16 :goto_740
+ 
+-    :catch_924
++    :catch_929
+     move-exception v61
+ 
+     move-object/from16 v92, v93
+ 
+-    goto/16 :goto_717
++    goto/16 :goto_71c
+ 
+-    :catch_929
++    :catch_92e
+     move-exception v61
+ 
+     move-object/from16 v55, v56
+ 
+-    goto/16 :goto_70b
++    goto/16 :goto_710
+ 
+-    :catch_92e
++    :catch_933
+     move-exception v3
+ 
+-    goto/16 :goto_25a
++    goto/16 :goto_25f
+ 
+-    :catch_931
++    :catch_936
+     move-exception v61
+ 
+     move-object/from16 v67, v68
+ 
+-    goto/16 :goto_6db
++    goto/16 :goto_6e0
+ 
+-    :catch_936
++    :catch_93b
+     move-exception v61
+ 
+     move-object/from16 v7, v38
+@@ -2719,9 +2758,9 @@
+ 
+     move-object/from16 v6, v82
+ 
+-    goto/16 :goto_65e
++    goto/16 :goto_663
+ 
+-    :catch_93f
++    :catch_944
+     move-exception v61
+ 
+     move-object/from16 v7, v38
+@@ -2730,27 +2769,27 @@
+ 
+     move-object/from16 v69, v70
+ 
+-    goto/16 :goto_65e
++    goto/16 :goto_663
+ 
+-    :catch_948
++    :catch_94d
+     move-exception v61
+ 
+     move-object/from16 v7, v38
+ 
+     move-object/from16 v69, v70
+ 
+-    goto/16 :goto_65e
++    goto/16 :goto_663
+ 
+-    :catch_94f
++    :catch_954
+     move-exception v61
+ 
+     move-object/from16 v42, v43
+ 
+     move-object/from16 v69, v70
+ 
+-    goto/16 :goto_65e
++    goto/16 :goto_663
+ 
+-    :catch_956
++    :catch_95b
+     move-exception v61
+ 
+     move-object/from16 v44, v45
+@@ -2759,19 +2798,19 @@
+ 
+     move-object/from16 v69, v70
+ 
+-    goto/16 :goto_65e
++    goto/16 :goto_663
+ 
+-    :catch_95f
++    :catch_964
+     move-exception v61
+ 
+     move-object/from16 v52, v53
+ 
+     move-object/from16 v69, v70
+ 
+-    goto/16 :goto_65e
++    goto/16 :goto_663
+ 
+-    :cond_966
++    :cond_96b
+     move-object/from16 v8, v74
+ 
+-    goto/16 :goto_51e
++    goto/16 :goto_523
+ .end method

@@ -1,0 +1,24 @@
+#!/system/bin/sh
+# An unforunate wrapper script 
+# so that the exit code of pppd may be retrieved
+
+
+# this is a workaround for issue #651747
+#trap "/system/bin/sleep 1;exit 0" TERM
+
+
+PPPD_PID=
+
+PPPD_TTY=`/system/bin/getprop ril.pppd_tty`
+
+/system/bin/setprop "net.datakey.ppp-exit" ""
+
+/system/bin/log -t pppd "Starting pppd with tty [$PPPD_TTY]"
+
+/system/bin/pppd $PPPD_TTY 115200 $* debug dump kdebug 8 call datakey
+PPPD_EXIT=$?
+PPPD_PID=$!
+
+/system/bin/log -t pppd "pppd exited with $PPPD_EXIT"
+
+/system/bin/setprop "net.datakey.ppp-exit" "$PPPD_EXIT"
