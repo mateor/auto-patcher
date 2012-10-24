@@ -269,9 +269,6 @@ proberom () {
 		aokp|teamkang)
 			RID=aokp;
 			;;
-#		aosp|AOSP)	# AOSP probing does not work yet
-#			RID=aosp;
-#			;;
 		*)
 			RID=aosp; 
 			echo "!!! $MID is not supported yet, trying generic latest !!!"
@@ -293,7 +290,7 @@ proberom () {
 			;;
                 pa*)
                         RID=pa;
-                        ;;
+                        ;;               
                 *)
 			RID=`aosp_mod_check`;
 			;;
@@ -314,7 +311,10 @@ if [ $# -gt 3 ]; then
 elif 
 [[ ${#PID[@]} -gt 1 ]]; then
         BID=latest;
-else
+elif
+   [ -s "$PID"=="-h" ]; then
+             BID="-h"
+else      
    for P in ${PID[@]}; do
                 [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
