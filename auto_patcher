@@ -202,7 +202,7 @@ abspath () {
 		[[ ${1:0:1} == "/" ]] && echo "$1" || echo "$PWD/$1"
 		;;
 	Linux)
-		echo $(readlink -f "$1")
+                echo $(readlink -f "$1")
 		;;
 	*)
 		if [[ ${1:0:1} == "/" ]]; then
@@ -307,6 +307,15 @@ proberom () {
 # This should set the patch date automatically.
 
 buildquery() {
+UTC=$(getbuildprop ro.build.date.utc)
+case `uname -s` in
+        [D]darwin)
+                BDID=`date -r $UTC +%Y%m%d`;
+                ;;
+        *)
+                BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d"`;
+                ;;
+esac
 
 if [ $# -gt 3 ]; then
 	BID=${4//,/ };
@@ -323,8 +332,6 @@ else
 		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 		PAR=patches/$P/$A/$R
 		PARB=patches/$P/$A/$R/$B
-	UTC=$(getbuildprop ro.build.date.utc)
-	BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d"`
         DATES=`ls patches/$P/$A/$R/ | grep '201*'`
         # attempt to set builds before extant patches to earliest
              for i in $DATES; do
