@@ -502,15 +502,28 @@ rominfo
 
 if [[ ( "$PID" == "-h"  || "$ANDR" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 	echo "### supported patch candidates ###"
-	[ "$PID" != "-h" ] && PL=${PID[@]} || PL=`ls patches/`
-	for P in ${PL[@]}; do
-		[ "$PID" != "-h" -a "$RID" != "-h" ] && RL=${RID[@]} || RL=`ls patches/$P/$A`
-		for R in ${RL[@]} ; do
-			[ $R == "common" -o ! -d patches/$P/$A/$R ] && continue
-			echo -n "$P :$A :$R : "
-			\ls --ignore="*.sh" --ignore="*.txt" -r patches/$P/$A/$R/
-		done
-	done
+	MODS=$(ls patches)
+#echo ${MODS[@]}
+
+for M in ${MODS[@]}; do
+        AND=$(ls --ignore="common" --ignore="*.txt" patches/$M)
+        #echo $M: ${AND[@]}
+        for A in ${AND[@]}; do
+                RID=$(ls --ignore="common" --ignore="*.sh" --ignore "provisionals" --ignore="*.txt" patches/$M/$A)
+                #echo $M: $A: ${RID[@]}
+                for R in ${RID[@]}; do
+                        BID=$(ls --ignore "common" --ignore="*.sh" --ignore="*.txt" --ignore=".awk" -v patches/$M/$A/$R)
+                        echo $M: $A: $R: ${BID[@]}
+                done
+        done
+done
+echo ""
+echo "*****************************************************************"
+echo ""
+echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]."
+echo "The Auto-Patcher will automatically slot if you need aosp-jb or aosp-mod"
+echo ""
+
 else
 	for P in ${PID[@]}; do
 		[ -d patches/$P ] || printerror "$P is not available"
