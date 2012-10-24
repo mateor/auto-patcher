@@ -20,7 +20,7 @@
 # 2012.05.15. remove restore.zip upon failure
 # 2012.05.15. (v0.4.1) added CM7 (GB) patches
 # 2012.05.18. (v0.4.2) added checking for tool commands
-# 2012.05.21. (v0.4.3) apply device-specific patche only when it is specified
+# 2012.05.21. (v0.4.3) apply device-specific patches only when it is specified
 # 2012.05.26. added task title to log
 # 2012.05.31. (v0.4.4) CM9 patches updated, crespo-aosp added
 # 2012.06.04. (v0.4.5) added checking tools and rom, added aroma installer support, add patch outputs reroute
@@ -113,17 +113,15 @@ set -a
 
 printusage () {
 	echo "      The $VERSION"
-	echo "      pdroid 1.32 patches 2012.09.13."
-	echo "      v6supercharger patches 2012.08.17."
 	echo ""
 	echo "usage: $0 ROM.ZIP MODS [ROMTYPE] [PATCHDATE]"
 	echo ""
-	echo "MODS can be pdroid,v6supercharger or pdroid or v6supercharger"
-	echo "optional [ROMTYPE] can be cm9, aokp, etc."
-	echo "optional [PATCHDATE] can be specified to use older patch versions."
+	echo "MODS can be pdroid, extension, v6supercharger, tabletUI, etc..."
+	echo "recommended: [ROMTYPE] can be cm, aokp, aosp or pa"
+	echo "optional: [PATCHDATE] can be specified to use older patch versions."
 	echo "try \"$0 ROM.ZIP -h\" to see what is available"
 	echo ""
-	exit
+	exit 
 }
 
 debug () {
@@ -132,16 +130,47 @@ debug () {
 	echo "! patching failed."
 	echo "! it may be possible to patch $ROM using other patch version"
 	echo ""
-	[ -d "$TEMP" ] && \rm -rf "$TEMP"
+	cleanup
 	printusage
 }
 
+cleanup () {
+        [ -d "$TEMP" ] && \rm -rf "$TEMP"
+}
 printerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo "!!! error: $@"
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
 	debug
+}
+misspatch () {
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "!! error: $@ "
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo ""
+        echo "!! The Auto-Patcher could not find its patches and/or tools!"
+        echo ""
+        echo "* Did you run ./batch.sh first?"
+        echo ""
+        echo "The patch_patches.tgz and patch_tools.tgz need to be in this directory,"
+        echo "  one way or another..."
+        echo ""
+        cleanup
+        printusage
+}
+
+misstools () {
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"        
+        echo "Your set-up is missing a dependency." 
+        echo "We require JDK, patch and cpio."
+        echo ""
+        echo ""
+        echo "Each distro is different"
+        echo "but you must ensure you have them all installed and try again."
+        echo ""
+        cleanup
+        printusage
 }
 
 printtask () {
@@ -416,13 +445,13 @@ fi
 
 
 printtask "### verify tools ###"
-which patch >> "$LOG" || printerror "Missing \"patch diff command\""
-which tar >> "$LOG" || printerror "Missing \"tar archive command\""
-which jar >> "$LOG" || printerror "Missing \"jar (JDK)\""
-which java >> "$LOG" || printerror "Missing \"java (JRE)\""
-which cpio >> "$LOG" || printerror "Missing \"cpio archive command\""
-[ -f "$TOOL" ] || printerror "patch tool is missing"
-[ -f "$PTCH" ] || printerror "patch patches are missing"
+which patch >> "$LOG" || misstools "Missing \"patch diff command\""
+which tar >> "$LOG" || misstools "Missing \"tar archive command\""
+which jar >> "$LOG" || misstools "Missing \"jar (JDK)\""
+which java >> "$LOG" || misstools "Missing \"java (JRE)\""
+which cpio >> "$LOG" || misstools "Missing \"cpio archive command\""
+[ -f "$TOOL" ] || misspatch "patch tool is missing"
+[ -f "$PTCH" ] || misspatch "patch patches are missing"
 printtask "### verify ROM ###"
 [ -f "$ROM" ] || printerror "Cannot find $ROM"
 echo "### running $0 $@" >> "$LOG"
