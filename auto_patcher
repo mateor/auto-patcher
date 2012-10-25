@@ -473,7 +473,7 @@ tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 			;;	
 	esac
 # Ensure aapt permissions - possibly to one day be expanded to all tools in a function.
-chmod -v a+x aapt$EXE
+chmod a+x aapt$EXE
 		
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
@@ -533,18 +533,26 @@ fi
 rominfo
 
 if [[ ( "$PID" == "-h"  || "$ANDR" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
+        case `uname -s` in
+                [Dd]arwin)
+                        LIST="find . -name '*.sh' 'common' 'provisionals' '*.txt' '*.awk' -prune"
+                        ;;
+                *)
+                        LIST="ls --ignore="common" --ignore="*.sh" --ignore "provisionals" --ignore="*.txt" --ignore "*.awk""
+                        ;;
+        esac
 	echo "### supported patch candidates ###"
 	MODS=$(ls --ignore "extension" patches)
 #echo ${MODS[@]}
 
 for M in ${MODS[@]}; do
-        AND=$(ls --ignore="common" --ignore="*.txt" patches/$M)
+        AND=$($LIST patches/$M)
         #echo $M: ${AND[@]}
         for A in ${AND[@]}; do
-                RID=$(ls --ignore="common" --ignore="*.sh" --ignore "provisionals" --ignore="*.txt" patches/$M/$A)
+                RID=$($LIST patches/$M/$A)
                 #echo $M: $A: ${RID[@]}
                 for R in ${RID[@]}; do
-                        BID=$(ls --ignore "common" --ignore="*.sh" --ignore="*.txt" --ignore=".awk" -v patches/$M/$A/$R)
+                        BID=$($LIST -v patches/$M/$A/$R)
                         echo $M: $A: $R: ${BID[@]}
                 done
         done
