@@ -472,6 +472,8 @@ tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 			\mv linux/aapt .
 			;;	
 	esac
+# Ensure aapt permissions - possibly to one day be expanded to all tools in a function.
+chmod -v a+x aapt$EXE
 		
 printtask "### unzip patch patches ###"
 tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
@@ -882,11 +884,7 @@ else
 	done
 
 	[[ -n ${AID[@]} ]] && printtask "### rebuild apk ###"
-        printtask "... Fixing aapt permissions ..."
-        chmod a+x ../patch_tools/mac/aapt
-        chmod a+x ../patch_tools/cygwin/aapt.exe
-        chmod a+x ../patch_tools/linux/aapt
-	for FILE in ${AID[@]}; do
+        for FILE in ${AID[@]}; do
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
