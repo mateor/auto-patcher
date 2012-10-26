@@ -475,7 +475,7 @@ export PATH
 echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
-tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
+tar xzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 
 # Get OS specific tools
 	case `uname -s` in
@@ -498,7 +498,7 @@ tar xvzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 chmod a+x aapt$EXE
 		
 printtask "### unzip patch patches ###"
-tar xvzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
+tar xzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
 
 # we need build.prop for both RIL probing and ROM probing
 jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
@@ -573,10 +573,8 @@ if [[ ( "$PID" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 
 for M in ${MODS[@]}; do
         AND=$($LIST patches/$M)
-        #echo $M: ${AND[@]}
         for A in ${AND[@]}; do
                 RID=$($LIST patches/$M/$A)
-                #echo $M: $A: ${RID[@]}
                 for R in ${RID[@]}; do
                         BID=$($LIST -v patches/$M/$A/$R)
                         echo $M: $A: $R: ${BID[@]}
@@ -686,7 +684,7 @@ else
 	fi
 
 	printtask "### create restore.zip ###"
-	jar -cfv tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
+	jar -cvf tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
 	java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
 	\mv signed.zip restore.zip
 	\rm -f tmp.zip
@@ -926,7 +924,7 @@ else
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
 		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
-		jar -ufv $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
+		jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
 		#\rm -r tmp/${FILE}.out
 	done	
 
