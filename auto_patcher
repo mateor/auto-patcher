@@ -116,12 +116,15 @@ set -a
 printusage () {
 	echo "      The $VERSION"
 	echo ""
-	echo "usage: $0 ROM.ZIP MODS [ROMTYPE] [PATCHDATE]"
+	echo "usage: $0 [ROMNAME].zip [MODS] [ROMTYPE] [PATCHDATE]"
 	echo ""
-	echo "MODS can be pdroid, extension, v6supercharger, tabletUI, etc..."
-	echo "recommended: [ROMTYPE] can be cm, aokp, aosp or pa"
-	echo "optional: [PATCHDATE] can be specified to use older patch versions."
-	echo "try \"$0 ROM.ZIP -h\" to see what is available"
+	echo "[MODS] can be pdroid, extension, v6supercharger, tabletUI, etc..."
+        echo "MODS can be combined by separating them with a comma and NO SPACES!!!"
+        echo ""
+	echo "[ROMTYPE] can be cm, aokp, aosp or pa    [recommended]"
+	echo "[PATCHDATE] will select older patch versions, e.g 2012103     [optional]"
+        echo ""
+        echo "try \"$0 ROM.ZIP -h\" to see what is available"
 	echo ""
 	exit 
 }
@@ -146,6 +149,22 @@ printerror () {
 	echo ""	
 	debug
 }
+
+romerror () {
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "!!! error: $@"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo ""
+        echo "!!!There are only four supported ROMTYPES:"
+        echo "1) cm   2) aokp   3) aosp    4) pa"
+        echo ""
+        echo "Find out which of the above ROMTYPES your rom is based on and try again!"
+        echo ""
+        echo "**********************************************"
+        cleanup
+        printusage
+}
+
 misspatch () {
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "!! error: $@ "
@@ -498,9 +517,12 @@ if [ $# -gt 2 ]; then
                 pa*)
                         RID=pa;
                         ;;
-                *)
+                aosp*)
 			RID=`aosp_mod_check`;
 			;;
+                *)
+                        romerror "$RID is not a valid ROMTYPE!!"
+                        ;;
 		esac
 	echo "... Using $RID patches ..."
 else
