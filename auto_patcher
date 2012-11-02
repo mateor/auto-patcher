@@ -357,6 +357,8 @@ esac
 if [ $# -gt 3 ]; then
 	BID=${4//,/ };
 elif 
+# This does what it says, although it is not ideal. Best thing is to institute $BID array
+# In python, we would use dictionary. Not sure about best for shell. A GUI would fix.
 [[ ${#PID[@]} -gt 1 ]]; then
         BID=latest;
 else      
@@ -367,24 +369,31 @@ else
 		PAR=patches/$P/$A/$R
 		PARB=patches/$P/$A/$R/$B
         DATES=`ls patches/$P/$A/$R/ | grep '201*'`
-        # attempt to set builds before extant patches to earliest
+        BID=20201231 # Intialize variable - High so as to determine lowest in first loop.
+
+        # find earliest available patch date
              for i in $DATES; do
                   if [[ $i -lt $BID ]]; then
-                         BID=$i
+                        BID=$i
                   fi
-                  if [[ $(($BID-$BDID)) -lt 0 ]]; then
-                         BID=$i
-                  else
+             done
+
+        # If build date before earliest available- use earliest available patches
+             if [[ $(($BID-$BDID)) -gt 0 ]]; then
+                        BID=$i
+             else
+
                        for g in $DATES; do
                            if [[ $(($BDID-$g)) -eq 0 ]]; then
+                               # if $UTC matches an available patch- use that patch
                                BID=$g
                                break
                            elif [[ $(($BDID-$g)) -gt 0 ]] && [[ $g -gt $BID ]]; then
+                                # loop sets the highest $BID w/o going over $UTC
                                 BID=$g
                            fi
                        done
-                  fi
-             done
+             fi
         echo "... $PID patch date has been set to: $BID..."
         B=$BID
    done
@@ -571,7 +580,8 @@ done
 # Build date
 if [ $# -gt 3 ]; then
 	BID=$4
-        # even here, we should try and create a function that matches as close to the above BID as possible
+        # even here, we should try and create a function that matches as close to the above
+        # BID as possible. Now, a bad match (user error) defaults to latest
         echo "... $PID patch date set manually to $BID ..."
 else
         buildquery
