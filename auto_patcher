@@ -302,6 +302,27 @@ ever_check() {
                 fi
         fi
 }
+
+pa_check() {
+        CMID=$(getbuildprop ro.modversion)
+        PAID=$(getbuildprop ro.pa.version)
+        if [[ -n $PAID ]]; then
+                echo "PA_ID in FUll!"
+                RID=pa
+        else
+                case $CMID in
+                        [Pp][Aa]*)
+                                RID=pa;
+                                echo "Sumthing in case";
+                                ;;
+                        *)
+                                echo "CM in CASE";
+                                RID=cm;
+                                ;;
+                esac
+        fi
+}
+
 proberom () {
 	VID=$(getbuildprop ro.build.version.release)
 
@@ -329,6 +350,11 @@ proberom () {
 		esac
 	elif [ "${VID%.*}" == "4.1" ]; then
 		ANDR=jellybean
+                CMID=$(getbuildprop ro.cm.version)
+                if [[ -n $CMID ]]; then
+                        echo "PACHECK WHAT!"
+                        pa_check
+                else
 		MID=$(getbuildprop ro.build.display.id)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
 		DID=$(getbuildprop ro.product.device)
@@ -351,6 +377,7 @@ proberom () {
 			RID=`aosp_mod_check`;
 			;;
 		esac
+                fi
 	else
 		printerror "unknown ROM version $VID"
 	fi
