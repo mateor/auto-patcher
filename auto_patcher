@@ -282,12 +282,26 @@ aosp_mod_check() {
         jar -xvf "$ROMX" system/framework/framework2.jar >> $LOG
                 if [ -s system/framework/framework2.jar ]; then
                         AOSP=aosp-mod
+                        ever_check
                 else
                         AOSP=aosp-jb
                 fi
                 echo $AOSP
 }
 
+ever_check() {
+        MID=$(getbuildprop ro.build.romversion)
+        if [ $MID == "Evervolv*" ]; then
+                AOSP=aosp-ever 
+        else
+                MID=$(getbuildprop ro.build.display.id)
+                if [ $MID == "ev*" ]; then
+                        AOSP=aosp-ever
+                else
+                        AOSP=aosp-mod
+                fi
+        fi
+}
 proberom () {
 	VID=$(getbuildprop ro.build.version.release)
 
@@ -329,7 +343,10 @@ proberom () {
 			;;
                 pa*)
                         RID=pa;
-                        ;;               
+                        ;;   
+                ev*)
+                        RID=aosp-ever;
+                        ;;            
                 *)
 			RID=`aosp_mod_check`;
 			;;
@@ -359,7 +376,7 @@ esac
 if [ $# -gt 3 ]; then
 	BID=${4//,/ };
 elif 
-# This does what it says, although it is not ideal. Best thing is to institute $BID array
+# Multiple mods all default to latest- this isn't ideal. Best thing is to institute $BID array
 # In python, we would use dictionary. Not sure about best for shell. A GUI would fix.
 [[ ${#PID[@]} -gt 1 ]]; then
         BID=latest;
@@ -553,6 +570,9 @@ if [ $# -gt 2 ]; then
                 pa*)
                         RID=pa;
                         ;;
+                aosp-ever)
+                        RID=aosp-ever;
+                        ;;                
                 aosp*)
 			RID=`aosp_mod_check`;
 			;;
