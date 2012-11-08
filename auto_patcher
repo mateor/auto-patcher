@@ -309,6 +309,10 @@ ever_check() {
 pa_check() {
         CMID=$(getbuildprop ro.modversion)
         PAID=$(getbuildprop ro.pa.version)
+        MID=$(getbuildprop ro.build.display.id)
+	[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
+	DID=$(getbuildprop ro.product.device)
+	[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
         if [[ -n $PAID ]]; then
                 RID=pa
         else
@@ -960,6 +964,12 @@ else
 			garbage system/
 		done
 	done
+
+# Device specific scripts- Placement is up-for-review
+        if [ -f patches/devices/$DID/$DID.sh ]; then
+				. patches/devices/$DID/$DID.sh
+        fi
+
 
 # Rebuilding system files
 
