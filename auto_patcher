@@ -233,6 +233,19 @@ askconsent () {
 	esac
 }
 
+replace_updater () {
+
+# Function for devices that use SDcard installs. Also to be tested for CM7
+#  since CM7 seems to use an updater-script that wipes EMMC. Testing
+
+UPDIR=META-INF/com/google/android
+
+        \rm $UPDIR/updater-script >> "$LOG"
+        \cp -v patches/common/$UPDIR/updater-script $UPDIR >> "$LOG"
+        echo "run_program(\"/sbin/busybox\", \"umount\", \"/system\");" >> UPDATE.txt
+        cat UPDATE.txt >> $UPDIR/updater-script
+}
+
 abspath () {
 	case `uname -s` in
 	CYGWIN*)
@@ -972,6 +985,10 @@ else
 				. patches/devices/$DID/$DID.sh
         fi
 
+# Replace updater-script for CM7-- Testing
+        if [ $ANDR=="gingerbread" ]; then
+                replace_updater
+        fi
 
 # Rebuilding system files
 
