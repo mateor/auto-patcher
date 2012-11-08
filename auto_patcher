@@ -151,6 +151,15 @@ printerror () {
 	debug
 }
 
+mismatch () {
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "!!! error: $@"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo ""
+        cleanup
+	printusage
+}
+
 romerror () {
 	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo "!!! error: $@"
@@ -272,6 +281,49 @@ abspath () {
 	esac
 }
 
+mods_info () {
+        case $PID in
+        voice)
+                FLOOR=4.0.0
+                ;;
+        v6supercharger)
+                FLOOR=4.0.0
+                ;;
+        pdroid)
+                FLOOR=2.3.7
+                ;;
+        pd2.0)
+                FLOOR=4.1.2
+                ;;
+        external_internal)
+                FLOOR=2.3.3
+                ;;
+        insecure)
+                FLOOR=2.3.3
+                ;;
+        secure)
+                FLOOR=2.3.3
+                ;;
+        3gdongle)
+                FLOOR=4.1.0
+                ;;
+        tabletUI)
+                FLOOR=4.1.0
+                ;;
+        esac
+   # strip decimals from android version (i.e. 2.3.7 becomes 237)
+                NVID=${VID//[.]/}
+                COMPAT=${FLOOR//[.]/}
+}
+
+compat_check () {
+        for P in ${PID[@]}; do
+                mods_info
+                if [[ "$NVID" -lt "$COMPAT" ]]; then
+                        mismatch "Your rom is too old! The minimum for $P is Android $FLOOR!"
+                fi
+        done
+}
 extpath () {
 	case `uname -s` in
 	CYGWIN*)
@@ -600,7 +652,7 @@ proberom
 # rom type
 if [ $# -gt 1 ]; then
         PIT=$2
-        if [[ $PIT = "-h" ]]; then
+        if [[ "$PIT" = "-h" ]]; then
               helpcheck
         fi
 fi
@@ -643,6 +695,8 @@ fi
 for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
+
+compat_check
 
 # Build date
 if [ $# -gt 3 ]; then
@@ -988,7 +1042,7 @@ else
         fi
 
 # Replace updater-script for CM7-- Testing
-        if [ $ANDR=="gingerbread" ]; then
+        if [ "$ANDR" == "gingerbread" ]; then
                 replace_updater
         fi
 
