@@ -115,6 +115,7 @@ set -a
 #function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
 printusage () {
+        # This could REALLY use some better formatting. Even I find it intimidating looking.
 	echo "      The $VERSION"
 	echo ""
 	echo "usage: $0 [ROMNAME].zip [MODS] [ROMTYPE] [PATCHDATE]"
@@ -125,12 +126,13 @@ printusage () {
 	echo "* [ROMTYPE] can be cm, aokp, aosp or pa                      [recommended]"
 	echo "* [PATCHDATE] will select older patch versions, e.g 2012103     [optional]"
         echo ""
-        echo "try \"$0 ROM.ZIP -h\" to see what is available"
+        echo " try \"$0 ROM.ZIP -h\" to see what is available"
 	echo ""
 	exit 
 }
 
 debug () {
+        # From printerror. For problems decompiling or patching mostly.
 	echo "! please refer to $LOG for any debugging"
 	echo ""
 	echo "! patching failed."
@@ -144,26 +146,51 @@ cleanup () {
         [ -d "$TEMP" ] && \rm -rf "$TEMP"
 }
 printerror () {
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error: $@"
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        # General purpose error. Used for errors in main, as opposed to probe or set-up.
+        echo ""
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	printtask "!!! error: $@"
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
 	debug
 }
 
+smali_error () {
+        # Smali binary error. Problem often goes away on second run.
+        echo ""
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	printtask "!!! error: $@"
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo ""
+        printtask "!!! This error is generally due to an unknown bug in the smali binary!"
+        echo ""
+        echo "In our experience, it goes away if you run the patcher a second time."
+        echo " Please run the Auto-Patcher with the same command once again."
+        echo ""
+        echo "If after the third attempt the same thing happens,"
+        echo " please upload your logfile to our support thread!"
+        echo ""	
+	cleanup
+}
+
+
 mismatch () {
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error: $@"
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        # Function that exposes attempts to apply a mod to an upsupported Android version
+        echo ""
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	printtask "!!! error: $@"
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""
         cleanup
 	printusage
 }
 
 romerror () {
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "!!! error: $@"
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        # For when an unsupported romtype is manually entered on the command-line
+        echo ""
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	printtask "!!! error: $@"
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""
         echo "!!!There are only four supported ROMTYPES:"
         echo "1) cm   2) aokp   3) aosp    4) pa"
@@ -176,11 +203,11 @@ romerror () {
 }
 
 misspatch () {
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo "!! error: $@ "
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        printtask "!! error: $@ "
+        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo ""
-        echo "!! The Auto-Patcher could not find its patches and/or tools!"
+        printtask "!! The Auto-Patcher could not find its patches and/or tools!"
         echo ""
         echo "* Did you run ./batch.sh first?"
         echo ""
@@ -192,8 +219,10 @@ misspatch () {
 }
 
 misstools () {
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"        
-        echo "Your set-up is missing a dependency." 
+        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"        
+        printtask "!! error: $@ "
+        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        printtask "Your set-up is missing a dependency." 
         echo "We require JDK, patch and cpio."
         echo ""
         echo ""
@@ -211,10 +240,10 @@ printtask () {
 
 copyfailed () {
 	echo ""
-	echo "File for which patching failed:"
-	echo "---------------------------------------------"
+	printtask "File for which patching failed:"
+	printtask "---------------------------------------------"
 	echo ""
-	echo "${FAIL##*/}"
+	printtask "${FAIL##*/}"
 	echo ""
 	echo "---------------------------------------------"
 	echo ""
@@ -251,11 +280,11 @@ replace_updater () {
 
 UPDIR=META-INF/com/google/android
 
-        \rm $UPDIR/updater-script >> "$LOG"
+        \rm $UPDIR/updater-script
         \cp patches/common/$UPDIR/updater-script $UPDIR
         echo "run_program(\"/sbin/busybox\", \"umount\", \"/system\");" >> UPDATE.txt
         cat UPDATE.txt >> $UPDIR/updater-script
-        echo "" >> "$LOG"
+        echo ""
         echo "New updater-script being used:" >> "$LOG"
         echo "-----------------------------" >> "$LOG"
         cat $UPDIR/updater-script >> "$LOG"
@@ -1057,7 +1086,7 @@ else
 		JAR=${FILE##*/}
 		printtask "... rebuild $JAR ..."
 		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
-		[ -f tmp/${FILE}.out/classes.dex ] || printerror "failed compiling $JAR !!!"
+		[ -f tmp/${FILE}.out/classes.dex ] || smali_error "failed compiling $JAR !!!"
 		jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
 			jar -ufv ${FILE} -C tmp/${FILE}.out/ preloaded-classes >> "$LOG" 2>> "$LOG"
