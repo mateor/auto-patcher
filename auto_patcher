@@ -527,13 +527,10 @@ else
                         BID=$i
                   fi
              done
-
-        # If build date before earliest available- use earliest available patches
-             if [[ $(($BID-$BDID)) -gt 0 ]]; then
-                        BID=$i
-             else
-
-                       for g in $DATES; do
+        # Check if earliest patches are from before build date. Else use earliest
+             if [[ $(($BID-$BDID)) -lt 0 ]]; then
+        # If older, than find best match
+                        for g in $DATES; do
                            if [[ $(($BDID-$g)) -eq 0 ]]; then
                                # if $UTC matches an available patch- use that patch
                                BID=$g
