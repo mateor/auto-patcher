@@ -163,15 +163,24 @@ smali_error () {
 	printtask "!!! error: $@"
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo ""
-        printtask "!!! This error is generally due to an unknown bug in the smali binary!"
-        echo ""
-        echo "In our experience, it goes away if you run the patcher a second time."
-        echo " Please run the Auto-Patcher with the same command once again."
-        echo ""
-        echo "If after the third attempt the same thing happens,"
-        echo " please upload your logfile to our support thread!"
-        echo ""	
-	cleanup
+        if [[ `grep 'method index is too large' "$LOG"` != "" ]]; then
+                printtask "!!! Problem with method cap !!!"
+                printtask "... attempting fix ..."
+		. patches/common/framework.jar.sh 2>&1 > ${JAR}.log
+                printtask "... rebuild framework.jar ..."
+                java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+		[ -f tmp/${FILE}.out/classes.dex ] || printerror "Could not resolve method cap issue- please submit log"
+        else
+                printtask "!!! This error is generally due to an unknown bug in the smali binary!"
+                echo "In our experience, it goes away if you run the patcher a second time."
+                echo " Please run the Auto-Patcher with the same command once again."
+                echo ""
+                echo "If after the third attempt the same thing happens,"
+                echo " please upload your logfile to our support thread!"
+                echo ""
+	        cleanup
+                exit
+        fi
 }
 
 
@@ -749,7 +758,7 @@ else
 		[ -d patches/$P ] || printerror "$P is not available"
                 [ -d patches/$P/$ANDR ] && R=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
-		#[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
+		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 
 		unset FILES
                 [ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
@@ -1147,7 +1156,11 @@ else
 	for P in ${PID[@]}; do
                 [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
-		if [ -f patches/$P/$A/$R/README.txt ]; then
+                [ -d patches/$P/$A/$R/$BID && B=$BID || B=latest
+
+                if [ -f patches/$P/$A/$R/$B/README.txt ]; then
+			cat patches/$P/$A/$R/$B/README.txt
+                elif [ -f patches/$P/$A/$R/README.txt ]; then
 			cat patches/$P/$A/$R/README.txt
 		elif [ -f patches/$P/$A/README.txt ]; then
 			cat patches/$P/$A/README.txt
