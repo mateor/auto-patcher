@@ -871,16 +871,21 @@ else
 			\mv preloaded-classes tmp/${FILE}.out/
 		fi
 	done
-	for FILE in ${AID[@]}; do
-		APK=${FILE##*/}
-		printtask "... decompile $APK ..."
-		if [ $FILE == "system/framework/framework-res.apk" ]; then
-			printtask "... installing framework files ..."
-			java -jar apktool.jar if $FILE
-		fi
-		java -jar apktool.jar d -f $FILE tmp/$FILE.out
-		
-	done
+
+        # Pull framework-files for APK...
+        if [ ${#AID[@]} -gt 0 ]; then
+                jar -xvf "$ROMX" system/framework/framework-res.apk >> "$LOG"
+                printtask "... installing framework files ..."
+		java -jar apktool.jar if system/framework/framework-res.apk
+        # Decompile APKs
+	        for FILE in ${AID[@]}; do
+		        APK=${FILE##*/}
+		        printtask "... decompile $APK ..."
+		        java -jar apktool.jar d -f $FILE tmp/$FILE.out
+		done
+        fi
+
+        # Unpack image files {boot.img only so far...}
 	for FILE in ${IID[@]}; do
 		printtask "### unpacking $FILE ###"                
 		case "$FILE" in
