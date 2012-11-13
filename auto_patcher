@@ -125,7 +125,7 @@ printusage () {
         echo "MODS can be combined by separating them with a comma and NO SPACES!!!"
         echo ""
 	echo "* [ROMTYPE] can be cm, aokp, aosp or pa                      [recommended]"
-	echo "* [PATCHDATE] will select older patch versions, e.g 2012103     [optional]"
+	echo "* [PATCHDATE] will select older patch versions, e.g 20121030    [optional]"
         echo ""
         echo " try \"$0 ROM.ZIP -h\" to see what is available"
 	echo ""
@@ -194,6 +194,16 @@ mismatch () {
         cleanup
 	printusage
 }
+dateerror () {
+        # Remind users to include a romtype if they are going to specify a patch date
+        echo ""
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	printtask "!!! error: $@"
+	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo ""
+        echo "Please put a ROMTYPE before the patch date and run again!!"
+        romtype
+}
 
 romerror () {
         # For when an unsupported romtype is manually entered on the command-line
@@ -201,13 +211,17 @@ romerror () {
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	printtask "!!! error: $@"
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        romtype
+}
+
+romtype () {
+        # Romtype help- From romerror (bad romtype) and dateerror (using patch date w/o specifying romtype)
 	echo ""
-        echo "!!!There are only four supported ROMTYPES:"
-        echo "1) cm   2) aokp   3) aosp    4) pa"
+        echo "!!!There are only four supported ROMTYPES: 1) cm  2) aokp  3) aosp  4) pa"
         echo ""
         echo "Find out which of the above ROMTYPES your rom is based on and try again!"
-        echo ""
         echo "**********************************************"
+        echo ""
         cleanup
         printusage
 }
@@ -718,6 +732,9 @@ if [ $# -gt 2 ]; then
                 aosp*)
 			RID=`aosp_mod_check`;
 			;;
+                201*)
+                        dateerror "You must specify ROMTYPE if designating a patch date!!"
+                        ;;
                 *)
                         romerror "$RID is not a valid ROMTYPE!!"
                         ;;
