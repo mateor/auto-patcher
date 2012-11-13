@@ -168,7 +168,7 @@ smali_error () {
                 printtask "... attempting fix ..."
 		. patches/common/framework.jar.sh 2>&1 > ${JAR}.log
                 printtask "... rebuild framework.jar ..."
-                java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+                java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
 		[ -f tmp/${FILE}.out/classes.dex ] || printerror "Could not resolve method cap issue- please submit log"
         else
                 printtask "!!! This error is generally due to an unknown bug in the smali binary!"
@@ -442,9 +442,11 @@ proberom () {
 
 	if [ "${VID%.*}" == "2.3" ]; then
 		ANDR=gingerbread
+                API=10
 		RID=cm;
 	elif [ "${VID%.*}" == "4.0" ]; then
 		ANDR=ics
+                API=15
 		MID=$(getbuildprop ro.rommanager.developerid)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
 		DID=$(getbuildprop ro.product.device)
@@ -466,6 +468,7 @@ proberom () {
 		esac
 	elif [ "${VID%.*}" == "4.1" ]; then
 		ANDR=jellybean
+                API=16
                 CMID=$(getbuildprop ro.cm.version)
                 if [[ -n $CMID ]]; then
                         pa_check
@@ -866,7 +869,7 @@ else
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
 		printtask "... decompile $JAR ..."
-		java -jar baksmali.jar -b -a 15 -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+		java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
 			printtask "... extract preloaded-classes ..."
 			jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
@@ -1102,7 +1105,7 @@ else
 	for FILE in ${JID[@]}; do
 		JAR=${FILE##*/}
 		printtask "... rebuild $JAR ..."
-		java -Xmx512M -jar smali.jar -a 15 tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+		java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
 		[ -f tmp/${FILE}.out/classes.dex ] || smali_error "failed compiling $JAR !!!"
 		jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
 		if [ $FILE == "system/framework/framework.jar" ]; then
