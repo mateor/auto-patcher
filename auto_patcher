@@ -116,7 +116,7 @@ set -a
 # function for converting hex to binary- for testing
 #function h2b { echo "obase=2; ibase=16; $( echo "$*" | sed -e 's/0x//g' -e 's/\([a-z]\)/\u\1/g' )" | bc; }
 
-printusage () {
+printusage_help () {
         # This could REALLY use some better formatting. Even I find it intimidating looking.
 	echo "      The $VERSION"
 	echo ""
@@ -133,28 +133,72 @@ printusage () {
 	exit 
 }
 
-debug () {
-        # From printerror. For problems decompiling or patching mostly.
+display_help () {
+        cd patches
+        echo ""
+        echo "AVAILABLE PATCHES"
+        echo ""
+        echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]."
+        echo "The Auto-Patcher will automatically slot if you need aosp-jb or aosp-mod"
+        echo ""
+        echo "*******************************************************************"
+        echo ""
+        echo "Please keep in mind that the Android flavor {ics, jellybean..etc}"
+        echo " is there only for your information and is not needed on the command line"
+        echo ""
+        find -H * -name 2012* | more -d -10
+echo ""
+echo "*****************************************************************"
+echo ""
+echo "All listed mods are currently supported. So if you only see older patches,"
+echo "that simply means those early patches are still working for current roms."
+echo ""
+        cleanup
+        printusage_help
+}
+
+debug_help () {
+        # From print_error. For problems decompiling or patching mostly.
 	echo "! please refer to $LOG for any debugging"
 	echo ""
 	echo "! patching failed."
 	echo "! it may be possible to patch $ROM using other patch version"
 	echo ""
 	cleanup
-	printusage
+	printusage_help
+}
+
+romtype_help () {
+        # From rom_error (bad romtype) and date_error (patch date w/o specifying romtype)
+	echo ""
+        echo "!!!There are only four supported ROMTYPES: 1) cm  2) aokp  3) aosp  4) pa"
+        echo ""
+        echo "Find out which of the above ROMTYPES your rom is based on and try again!"
+        echo "**********************************************"
+        echo ""
+        cleanup
+        printusage_help
 }
 
 cleanup () {
         [ -d "$TEMP" ] && \rm -rf "$TEMP"
 }
-printerror () {
+
+garbage () {
+	unset GARBAGE
+	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
+	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
+}
+
+
+print_error () {
         # General purpose error. Used for errors in main, as opposed to probe or set-up.
         echo ""
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	printtask "!!! error: $@"
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""	
-	debug
+	debug_help
 }
 
 smali_error () {
@@ -170,7 +214,7 @@ smali_error () {
 		. patches/common/framework.jar.sh 2>&1 > ${JAR}.log
                 printtask "... rebuild framework.jar ..."
                 java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
-		[ -f tmp/${FILE}.out/classes.dex ] || printerror "Could not resolve method cap issue- please submit log"
+		[ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
         else
                 printtask "!!! This error is generally due to an unknown bug in the smali binary!"
                 echo "In our experience, it goes away if you run the patcher a second time."
@@ -185,7 +229,7 @@ smali_error () {
 }
 
 
-mismatch () {
+mismatch_error () {
         # Function that exposes attempts to apply a mod to an upsupported Android version
         echo ""
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -193,9 +237,9 @@ mismatch () {
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""
         cleanup
-	printusage
+	printusage_help
 }
-dateerror () {
+date_error () {
         # Remind users to include a romtype if they are going to specify a patch date
         echo ""
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -203,31 +247,19 @@ dateerror () {
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	echo ""
         echo "Please put a ROMTYPE before the patch date and run again!!"
-        romtype
+        romtype_help
 }
 
-romerror () {
+rom_error () {
         # For when an unsupported romtype is manually entered on the command-line
         echo ""
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	printtask "!!! error: $@"
 	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        romtype
+        romtype_help
 }
 
-romtype () {
-        # Romtype help- From romerror (bad romtype) and dateerror (using patch date w/o specifying romtype)
-	echo ""
-        echo "!!!There are only four supported ROMTYPES: 1) cm  2) aokp  3) aosp  4) pa"
-        echo ""
-        echo "Find out which of the above ROMTYPES your rom is based on and try again!"
-        echo "**********************************************"
-        echo ""
-        cleanup
-        printusage
-}
-
-misspatch () {
+misspatch_error () {
         printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         printtask "!! error: $@ "
         printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -240,10 +272,10 @@ misspatch () {
         echo "  one way or another..."
         echo ""
         cleanup
-        printusage
+        printusage_help
 }
 
-misstools () {
+misstools_error () {
         printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"        
         printtask "!! error: $@ "
         printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -255,7 +287,7 @@ misstools () {
         echo "but you must ensure you have them all installed and try again."
         echo ""
         cleanup
-        printusage
+        printusage_help
 }
 
 printtask () {
@@ -378,7 +410,7 @@ compat_check () {
         for P in ${PID[@]}; do
                 mods_info
                 if [[ "$NVID" -lt "$COMPAT" ]]; then
-                        mismatch "Your rom is too old! The minimum for $P is Android $FLOOR!"
+                        mismatch_error "Your rom is too old! The minimum for $P is Android $FLOOR!"
                 fi
         done
 }
@@ -512,7 +544,7 @@ proberom () {
 		        esac
                 fi
 	else
-		printerror "unknown ROM version $VID"
+		print_error "unknown ROM version $VID"
 	fi
 	echo "... result of ROM check: version= $ANDR rom= $RID ..."
 }
@@ -597,36 +629,6 @@ proberil () {
 	[[ -n $RIL ]] && printtask "... result of ROM check: RIL= $RIL"
 }
 
-garbage () {
-	unset GARBAGE
-	GARBAGE=($(find $@ -name "*.orig")) && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
-	GARBAGE=($(find $@ -name "*.rej"))  && rm -rf ${GARBAGE[@]} && echo "GARBAGE= ${GARBAGE[@]}" >> "$LOG"
-}
-
-helpcheck () {
-        cd patches
-        echo ""
-        echo "AVAILABLE PATCHES"
-        echo ""
-        echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]."
-        echo "The Auto-Patcher will automatically slot if you need aosp-jb or aosp-mod"
-        echo ""
-        echo "*******************************************************************"
-        echo ""
-        echo "Please keep in mind that the Android flavor {ics, jellybean..etc}"
-        echo " is there only for your information and is not needed on the command line"
-        echo ""
-        find -H * -name 2012* | more -d -10
-echo ""
-echo "*****************************************************************"
-echo ""
-echo "All listed mods are currently supported. So if you only see older patches,"
-echo "that simply means those early patches are still working for current roms."
-echo ""
-        cleanup
-        printusage
-}
-
 rominfo () {
 echo "# VER= $VERSION" >> "$LOG"
 echo "# OS=  $OSTYPE ${BIT}bit" >> "$LOG"
@@ -641,7 +643,7 @@ echo "# BID= $BID" >> "$LOG"
 
 }
 
-[[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage
+[[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage_help
 
 ROOT=$(abspath `dirname "$0"`)
 TOOL="$ROOT/patch_tools.tgz"
@@ -674,15 +676,15 @@ fi
 
 
 printtask "### verify tools ###"
-which patch >> "$LOG" || misstools "Missing \"patch diff command\""
-which tar >> "$LOG" || misstools "Missing \"tar archive command\""
-which jar >> "$LOG" || misstools "Missing \"jar (JDK)\""
-which java >> "$LOG" || misstools "Missing \"java (JRE)\""
-which cpio >> "$LOG" || misstools "Missing \"cpio archive command\""
-[ -f "$TOOL" ] || misspatch "patch tool is missing"
-[ -f "$PTCH" ] || misspatch "patch patches are missing"
+which patch >> "$LOG" || misstools_error "Missing \"patch diff command\""
+which tar >> "$LOG" || misstools_error "Missing \"tar archive command\""
+which jar >> "$LOG" || misstools_error "Missing \"jar (JDK)\""
+which java >> "$LOG" || misstools_error "Missing \"java (JRE)\""
+which cpio >> "$LOG" || misstools_error "Missing \"cpio archive command\""
+[ -f "$TOOL" ] || misspatch_error "patch tool is missing"
+[ -f "$PTCH" ] || misspatch_error "patch patches are missing"
 printtask "### verify ROM ###"
-[ -f "$ROM" ] || printerror "Cannot find $ROM"
+[ -f "$ROM" ] || print_error "Cannot find $ROM"
 echo "### running $0 $@" >> "$LOG"
 mkdir "$TEMP"
 cd "$TEMP"
@@ -692,7 +694,7 @@ export PATH
 echo "PATH= $PATH" >> "$LOG"
 
 printtask "### unzip patch tools ###"
-tar xzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
+tar xzf "$TOOL" > /dev/null || print_error "failed extracting tools !!!"
 
 # Get OS specific tools
 	case `uname -s` in
@@ -715,10 +717,10 @@ tar xzf "$TOOL" > /dev/null || printerror "failed extracting tools !!!"
 chmod a+x aapt$EXE
 		
 printtask "### unzip patch patches ###"
-tar xzf "$PTCH" > /dev/null || printerror "failed extracting patches !!!"
+tar xzf "$PTCH" > /dev/null || print_error "failed extracting patches !!!"
 
 # we need build.prop for both RIL probing and ROM probing
-jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || printerror "failed extracting build.prop from $ROMX !!!"
+jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || print_error "failed extracting build.prop from $ROMX !!!"
 
 # rom + ril type
 proberil
@@ -729,7 +731,7 @@ proberom
 if [ $# -gt 1 ]; then
         PIT=$2
         if [[ "$PIT" = "-h" ]]; then
-              helpcheck
+              display_help
         fi
 fi
 if [ $# -gt 2 ]; then
@@ -750,10 +752,10 @@ if [ $# -gt 2 ]; then
 			RID=`aosp_mod_check`;
 			;;
                 201*)
-                        dateerror "You must specify ROMTYPE if designating a patch date!!"
+                        date_error "You must specify ROMTYPE if designating a patch date!!"
                         ;;
                 *)
-                        romerror "$RID is not a valid ROMTYPE!!"
+                        rom_error "$RID is not a valid ROMTYPE!!"
                         ;;
 		esac
 	echo "... Using $RID patches ..."
@@ -792,10 +794,10 @@ fi
 rominfo
 
 if [[ ( "$PID" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
-        helpcheck
+        display_help
 else
 	for P in ${PID[@]}; do
-		[ -d patches/$P ] || printerror "$P is not available"
+		[ -d patches/$P ] || print_error "$P is not available"
                 [ -d patches/$P/$ANDR ] && R=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
@@ -808,7 +810,7 @@ else
                 for FILE in ${FILES[@]}; do
 			case "$FILE" in
 			+system/*)
-				[[ ${CID[@]} =~ ${FILE:1} ]] && printerror "${FILE:1} is already being copied" || CID=(${CID[@]} ${FILE:1})
+				[[ ${CID[@]} =~ ${FILE:1} ]] && print_error "${FILE:1} is already being copied" || CID=(${CID[@]} ${FILE:1})
 				;;
 			-system/*)
 				[[ ${EID[@]} =~ ${FILE:1} ]] || EID=(${EID[@]} ${FILE:1})
@@ -839,7 +841,7 @@ else
 
 	printtask "### unzip rom ###"
 	# extract system files
-	jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || printerror "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
+	jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_error "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
 	#\cp -a system/ backup	# only for debugging purpose
 
 	printtask "### create updater script ###"
@@ -937,11 +939,11 @@ else
 				        gzip -dc ../boot.img-ramdisk.gz | cpio -i >> "$LOG" 2>> "$LOG"
 				        cd ../../
                                 else
-                                        printerror "A mod needs to patch boot.img! This rom does not contains boot.img."
+                                        print_error "A mod needs to patch boot.img! This rom does not contains boot.img."
                                 fi
 				;;
 			*)
-				printerror "cannot process $FILE"
+				print_error "cannot process $FILE"
 				;;
                 esac
 	done
@@ -993,7 +995,7 @@ else
 				[ -e $FILE ] && printtask "... overwriting $FILE from $P ..."
 	 			\cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG"
 			else
-				printerror "$FILE is missing in the patch"
+				print_error "$FILE is missing in the patch"
 			fi
 		done
 
@@ -1033,7 +1035,7 @@ else
 					printtask "... apply preloaded.patch ..."
 					patch -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
 					cat preloaded.log | tee -a "$LOG"
-					[[ `grep FAILED preloaded.log` != "" ]] && printerror "failed preloaded.patch"
+					[[ `grep FAILED preloaded.log` != "" ]] && print_error "failed preloaded.patch"
 				fi
 				;;
 			*)
@@ -1049,16 +1051,16 @@ else
 				for FAIL in ${FAILS[@]}; do
 					echo "!!! patch error for $FAIL !!!" >> "$LOG"
 					#cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG"
-					[[ ${SID[@]} =~ $FAIL ]] && printerror "$FAIL was already replaced before"
-					[ -f patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL} ] || printerror "failed $FAIL in $JAR cannot be remedied"
-					copyfailed || printerror "failed $NAME.patch"
+					[[ ${SID[@]} =~ $FAIL ]] && print_error "$FAIL was already replaced before"
+					[ -f patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL} ] || print_error "failed $FAIL in $JAR cannot be remedied"
+					copyfailed || print_error "failed $NAME.patch"
 					printtask "... replace $FAIL ..."
 					\rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
 					\cp -av  patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL} >> "$LOG" || echo "FAILED to cp $FAIL" >> ${JAR}.log
 					SID=(${SID[@]} $FAIL)
 				done
 			fi
-			[[ `grep FAILED ${JAR}.log` != "" ]] &&  printerror "failed $NAME.patch"
+			[[ `grep FAILED ${JAR}.log` != "" ]] &&  print_error "failed $NAME.patch"
 			garbage tmp/${FILE}.out
 			if [ -f patches/$P/$A/$R/$B/${JAR}.sh ]; then
 				printtask "... apply $JAR.sh ..."
@@ -1074,7 +1076,7 @@ else
 			printtask "... apply $APK.patch ..."
 				patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log 
 				cat ${APK}.log | tee -a "$LOG"
-			[[ `grep FAILED ${APK}.log` != "" ]] && printerror "failed $APK.patch"
+			[[ `grep FAILED ${APK}.log` != "" ]] && print_error "failed $APK.patch"
 			garbage tmp/${FILE}.out
                     else
                         echo "No $APK in your ROM. Not able to patch this file."
@@ -1086,7 +1088,7 @@ else
 			IMG=${FILE##*/}
 			#NAME=${IMG%.img}
 			printtask "... applying $IMG.patch ..."
-			patch -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || printerror "failed patching $FILE"
+			patch -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
 			# Special Instructions- married to boot.img patching by necessity, not design. When 
 			# added to it's own section, it only runs for one mod. WIP.
 			#if [ -f patches/$P/$R/special_instructions.sh ]; then
@@ -1103,21 +1105,21 @@ else
 				printtask "... apply $TXT.patch ..."
 				patch -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
 				#cat ${TXT}.log | tee -a "$LOG"
-				[[ `grep FAILED ${TXT}.log` != "" ]] && printerror "failed $TXT.patch"
+				[[ `grep FAILED ${TXT}.log` != "" ]] && print_error "failed $TXT.patch"
 			fi
 			if [[ -f $PAR/${TXT}.awk ]]; then
 				printtask "... apply $TXT.awk ..."
-				awk -f $PAR/${TXT}.awk $FILE > text || printerror "failed $TXT.awk"
+				awk -f $PAR/${TXT}.awk $FILE > text || print_error "failed $TXT.awk"
 				mv text $FILE
 			fi
 			if [[ -f $PAR/${TXT}.sed ]]; then
 				printtask "... apply $TXT.sed ..."
-				sed -f $PAR/${TXT}.sed $FILE > text || printerror "failed $TXT.sed"
+				sed -f $PAR/${TXT}.sed $FILE > text || print_error "failed $TXT.sed"
 				mv text $FILE
 			fi
 			if [[ -f $PAR/${TXT}.sh ]]; then
 				printtask "... apply $TXT.sh ..."
-				. $PAR/${TXT}.sh 2>&1 >> ${TXT}.log || printerror "failed $TXT.sh"
+				. $PAR/${TXT}.sh 2>&1 >> ${TXT}.log || print_error "failed $TXT.sh"
 			fi
 			garbage system/
 		done
@@ -1151,7 +1153,7 @@ else
         for FILE in ${AID[@]}; do
 		APK=${FILE##*/}
 		printtask "... rebuild $APK ..."
-		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || printerror "failed compiling $FILE !!!"
+		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || print_error "failed compiling $FILE !!!"
 		jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
 		#\rm -r tmp/${FILE}.out
 	done	
@@ -1176,11 +1178,11 @@ else
 				echo "base = $BASE" >> "$LOG"
 
 				printtask "... rebuilding boot.img ..."
-				./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || printerror "failed building boot.img"
+				./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || print_error "failed building boot.img"
 				cd ..
 				;;
 			*)
-				printerror "cannot process $FILE"
+				print_error "cannot process $FILE"
 				;;
 		esac
 	done
