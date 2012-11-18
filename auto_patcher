@@ -521,6 +521,8 @@ proberom () {
 
 buildquery() {
 UTC=$(getbuildprop ro.build.date.utc)
+
+# Difference in how OS X and Linux/Cygwin handles 'date' utility
 case `uname -s` in
         [Dd]arwin)
                 BDID=`date -r $UTC +%Y%m%d`
@@ -532,46 +534,60 @@ case `uname -s` in
                 ;;
 esac
 
+# If patch date is specified on CLI, use that patch date
 if [ $# -gt 3 ]; then
 	BID=${4//,/ };
-elif 
-# Multiple mods all default to latest- this isn't ideal. Best thing is to institute $BID array
-# In python, we would use dictionary. Not sure about best for shell. A GUI would fix.
-[[ ${#PID[@]} -gt 1 ]]; then
-        BID=latest;
-else      
-   for P in ${PID[@]}; do
-                [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
-		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
-		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
-		PAR=patches/$P/$A/$R
-		PARB=patches/$P/$A/$R/$B
-        DATES=`ls patches/$P/$A/$R/ | grep '201*'`
-        BID=20201231 # Intialize variable - High so as to determine lowest in first loop.
 
-        # find earliest available patch date
-             for i in $DATES; do
-                  if [[ $i -lt $BID ]]; then
-                        BID=$i
-                  fi
-             done
-        # Check if earliest patches are from before build date. Else use earliest
-             if [[ $(($BID-$BDID)) -lt 0 ]]; then
-        # If older, than find best match
-                        for g in $DATES; do
-                           if [[ $(($BDID-$g)) -eq 0 ]]; then
-                               # if $UTC matches an available patch- use that patch
-                               BID=$g
-                               break
-                           elif [[ $(($BDID-$g)) -gt 0 ]] && [[ $g -gt $BID ]]; then
-                                # loop sets the highest $BID w/o going over $UTC
-                                BID=$g
-                           fi
-                       done
-             fi
-        echo "... $PID patch date has been set to: $BID..."
-        B=$BID
-   done
+# Multiple mods all default to latest- this isn't ideal. We should institute $BID array
+# In python, we would use dictionary. Not sure about best for shell. A GUI would fix.
+elif [[ ${#PID[@]} -gt 1 ]];then
+        BID=latest;
+else
+     case $ANDR in
+          gingerbread)
+                # CM7 roms do not have UTC time stamp- so no build query.
+                BID=latest;
+                echo "*** CM7 roms default to latest patches. If using an older rom ***"
+                echo "*** specify patch date on command line. Use -h to see available patches ***"
+                ;;
+          *)
+                for P in ${PID[@]}; do
+                        [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
+		        [ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+		        [ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
+		        PAR=patches/$P/$A/$R
+		        PARB=patches/$P/$A/$R/$B
+                        DATES=`ls patches/$P/$A/$R/ | grep '201*'`
+                        # Intialize variable - High so as to determine lowest in first loop.
+                        BID=20201231
+
+                                # find earliest available patch date
+                                for i in $DATES; do
+                                        if [[ $i -lt $BID ]]; then
+                                                BID=$i
+                                        fi
+                                done
+
+       # Check if earliest patches are from before build date. Else use earliest
+
+                                # If older than earliest patch set, then find best match
+                                if [[ $(($BID-$BDID)) -lt 0 ]]; then
+                                        for g in $DATES; do
+                                                # use any patch that matches $UTC
+                                                if [[ $(($BDID-$g)) -eq 0 ]]; then
+                                                        BID=$g
+                                                        break
+                                                # Set highest $BID w/o going over $UTC
+                                                elif [[ $(($BDID-$g)) -gt 0 ]] && [[ $g -gt $BID ]]; then
+                                                        BID=$g
+                                                fi
+                                        done
+                                fi
+                                echo "... $PID patch date has been set to: $BID..."
+                                B=$BID
+                done
+                ;;
+     esac
 fi
 }
         
