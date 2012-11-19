@@ -4,7 +4,7 @@
 
 printusage_help () {
         # This could REALLY use some better formatting. Even I find it intimidating looking.
-	echo "      The $VERSION"
+	echo "      The Auto-Patcher $VERSION"
 	echo ""
 	echo "usage: $0 [ROMNAME].zip [MODS] [ROMTYPE] [PATCHDATE]"
 	echo ""
