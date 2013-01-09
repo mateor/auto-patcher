@@ -411,6 +411,14 @@ mods_info () {
                 COMPATC=${CEILING//[.]/}
 }
 
+apk_check () {
+     if [ -f patches/$P/$A/$R/$B/$FILE ]; then
+          echo "... Patching $APK failed, but we will copy over a prepatched file ..."
+          \cp -av patches/$P/$A/$R/$B/$FILE $FILE >> "$LOG"
+     else
+          print_error "failed patching $APK!!!"
+     fi
+}
 compat_check () {
         for P in ${PID[@]}; do
                 mods_info
@@ -542,10 +550,10 @@ proberom () {
 			         ;;
                    pa*)
                         RID=pa;
-                        ;;   
+                        ;;
                    ev*)
                         RID=aosp-ever;
-                        ;;            
+                        ;;
                    *)
 			         RID=`aosp_mod_check`;
 			         ;;
@@ -572,10 +580,10 @@ proberom () {
 			        ;;
                    pa*)
                        RID=pa;
-                       ;;   
+                       ;;
                    ev*)
                        RID=aosp-ever;
-                       ;;            
+                       ;;
                    *)
 	                  RID=aosp;
 			        ;;
@@ -785,7 +793,7 @@ if [ $# -gt 2 ]; then
                ;;
           aosp-ever)
                RID=aosp-ever;
-               ;;                
+               ;;
           aosp*)
 	          case "ANDR" in
                     4.1)
@@ -1121,9 +1129,9 @@ else
                     APK=${FILE##*/}
                     if [ -d "tmp/${FILE}.out" ] ; then
 			          printtask "... apply $APK.patch ..."
-				     patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log 
+				     patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log
 				     cat ${APK}.log | tee -a "$LOG"
-			          [[ `grep FAILED ${APK}.log` != "" ]] && print_error "failed $APK.patch"
+			          [[ `grep FAILED ${APK}.log` != "" ]] && apk_check
 			          garbage tmp/${FILE}.out
                     else
                         echo "No $APK in your ROM. Not able to patch this file."
