@@ -104,6 +104,7 @@
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
 VERSION="v2.4.7"
+CURRENT_ANDROID="4.2.1"
 
 # pass variables to children
 set -a
@@ -350,69 +351,115 @@ UPDIR=META-INF/com/google/android
 }
 
 abspath () {
-	case `uname -s` in
-	CYGWIN*)
-		echo $(cygpath -ua "$1")
-		;;
-	Darwin)
-		#[[ $(echo $1 | awk '/^\//') == $1 ]] && echo "$1" || echo "$PWD/$1"
-		[[ ${1:0:1} == "/" ]] && echo "$1" || echo "$PWD/$1"
-		;;
-	Linux)
-                echo $(readlink -f "$1")
-		;;
-	*)
-		if [[ ${1:0:1} == "/" ]]; then
-			echo "$1"
-		elif [[ ${1:0:2} == "./" ]]; then
-			echo "$PWD/${1:2}"
-		else
-			echo "$PWD/$1"
-		fi
-		;;
-	esac
+     case `uname -s` in
+     CYGWIN*)
+          echo $(cygpath -ua "$1")
+          ;;
+     Darwin)
+         #[[ $(echo $1 | awk '/^\//') == $1 ]] && echo "$1" || echo "$PWD/$1"
+          [[ ${1:0:1} == "/" ]] && echo "$1" || echo "$PWD/$1"
+          ;;
+     Linux)
+          echo $(readlink -f "$1")
+          ;;
+     *)
+          if [[ ${1:0:1} == "/" ]]; then
+               echo "$1"
+          elif [[ ${1:0:2} == "./" ]]; then
+               echo "$PWD/${1:2}"
+          else
+               echo "$PWD/$1"
+          fi
+          ;;
+     esac
 }
 
 mods_info () {
-        CEILING=10.0.0 # Default is that everything works...we'll see.
+        CEILING=$CURRENT_ANDROID # Default is that everything works...we'll see.
         case $PID in
+        mods)
+             echo ""
+             echo "The Auto-Patcher $VERSION"
+             echo "*************************************"
+             echo ""
+             echo "The available mods are"
+             echo "**************************************************"
+             echo "*  pdroid   opd       pd2.0   v6supercharger     *"
+             echo "*  voice    insecure  secure  external_internal  *"
+             echo "*  tabletUI 3gdongle  voice                      *"
+             echo "**************************************************"
+             echo ""
+             echo "To find out more about any mod, simply enter:"
+             echo "     ./auto_patcher -h <MODNAME>"
+             echo ""
+             echo " For usage info: ./auto_patcher -h"
+             echo ""
+             exit
+             ;;
+        auto*)
+             echo ""
+             echo "**************************************"
+             echo "The Auto-Patcher ate a kitten once..."
+             echo "**************************************"
+             printusage_help
+             ;;
         voice)
-                FLOOR=4.0.0
-                ;;
+             FLOOR=4.0.0
+             DESC="Use on wifi-only tablets to have the software register as 'voice-enabled'. Allows VOIP like Google Voice to function."
+             ;;
         v6supercharger)
-                FLOOR=4.0.0
-                CEILING=4.2.1
-                ;;
+             FLOOR=4.0.0
+             CEILING=4.2.1
+             DESC="A memory-management tool. It requires smali edits for Android roms 4.0+."
+             DESC1="The Auto-Patcher applies all 56 edits recommended by the dev."
+             DEV="Zeppelinrox"
+             DEPENDENCY="The V6 Supercharger Script. Get it at http://forum.xda-developers.com/showthread.php?t=991276/"
+               ;;
         pdroid)
-                FLOOR=2.3.7
-                CEILING=4.1.2
-                ;;
+             FLOOR=2.3.7
+             CEILING=4.1.2
+             DESC="Security Software that blocks permissions w/o causing FC's. No longer under development.Try the open-source expansion of this program, PDroid Manager."
+             DESC1="Run the 'opd' mod within the Auto-Patcher."
+             DEV="Svyat"
+             DEPENDENCY="The Pdroid app. You can get it at http://forum.xda-developers.com/showthread.php?t=1923576"
+             ;;
         pd2.0)
-                FLOOR=4.1.2
-                CEILING=4.1.2
-                ;;
+             FLOOR=4.1.2
+             CEILING=4.1.2
+             DESC="A closed-source expansion of the PDroid application."
+             DEV="CollegeDev"
+             DEPENDENCY="The PDroid2.0 app available at http://forum.xda-developers.com/showthread.php?t=1923576"
+             ;;
         external_internal)
-                FLOOR=2.3.3
-                ;;
+             FLOOR=2.3.3
+             DESC="Swap internal and external storage."
+             ;;
         insecure)
-                FLOOR=2.3.3
-                ;;
+             FLOOR=2.3.3
+             DESC="Make any boot.img insecure and allow remount as well as adb push/pull of system files. True root."
+             ;;
         secure)
-                FLOOR=2.3.3
-                ;;
+             FLOOR=2.3.3
+             DESC="Make any boot.img secure."
+             ;;
         3gdongle)
-                FLOOR=4.1.0
-                CEILING=4.2.1
-                ;;
+             FLOOR=4.1.0
+             CEILING=4.2.1
+             DESC="Allows 3gdongles to work on wifi tablets w/o 3rd party applications."
+             DEV="trevd"
+             DEPENDENCY="None, but read the troubleshooting guide at http://forum.xda-developers.com/showthread.php?t=1798631"
+             ;;
         tabletUI)
-                FLOOR=4.1.0
-                CEILING=4.1.2
-                ;;
+             FLOOR=4.1.0
+             CEILING=4.1.2
+             DESC="Changes the user interface of Phones and Phablets to the popular Tablet UI."
+             DEV="barmullio"
+             ;;
         esac
-   # strip decimals from android version (i.e. 2.3.7 becomes 237)
-                NVID=${VID//[.]/}
-                COMPATF=${FLOOR//[.]/}
-                COMPATC=${CEILING//[.]/}
+   # strip decimals from android version (i.e. 2.3.7 becomes 237) so we can do math
+        NVID=${VID//[.]/}
+        COMPATF=${FLOOR//[.]/}
+        COMPATC=${CEILING//[.]/}
 }
 
 apk_check () {
@@ -688,6 +735,29 @@ echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
 
 }
+
+if [[ $1 == -h ]]; then
+     if [ $# -gt 1 ]; then
+          PID=$2
+          mods_info
+          echo ""
+          echo "The Auto-Patcher $VERSION by Mateorod and Pastime1971"
+          echo "*************************************************"
+          echo ""
+          echo "Mod Name:    $PID"
+          echo ""
+          echo "    $DESC"
+          echo "$DESC1"
+          echo ""
+          echo "Developer: $DEV"
+          echo "Dependancies: $DEPENDENCY"
+          echo ""
+          echo "Works on Android ROMs from $FLOOR to $CEILING"
+          echo
+          exit
+     fi
+fi
+
 [[ $# -lt 1 || -z $1 ]] && printusage_help
 [[ $1 == "-h" ]] && usage_more_help | less && display_help
 
