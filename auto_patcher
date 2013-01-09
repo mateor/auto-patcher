@@ -141,7 +141,7 @@ display_help () {
         echo ""
         echo "*******************************************************************"
         echo ""
-        echo "Please keep in mind that the Android flavor {ics, jellybean..etc}"
+        echo "Please keep in mind the Android version covers a range {2.3+, 4.0+,...etc.}"
         echo " is there only for your information and is not needed on the command line"
         echo ""
         find -H * -name 2012* | more -d -10
@@ -398,6 +398,7 @@ mods_info () {
                 ;;
         3gdongle)
                 FLOOR=4.1.0
+                CEILING=4.1.2
                 ;;
         tabletUI)
                 FLOOR=4.1.0
@@ -406,17 +407,18 @@ mods_info () {
         esac
    # strip decimals from android version (i.e. 2.3.7 becomes 237)
                 NVID=${VID//[.]/}
-                COMPAT=${FLOOR//[.]/}
+                COMPATF=${FLOOR//[.]/}
+                COMPATC=${CEILING//[.]/}
 }
 
 compat_check () {
         for P in ${PID[@]}; do
                 mods_info
                 if [[ "$NVID" -lt "$COMPAT" ]]; then
-                        mismatch_error "Your $NVID rom is too old! The minimum for $P is Android $FLOOR!"
+                        mismatch_error "Your Android $VID rom is too old! The minimum for $P is Android $FLOOR!"
                 fi
-                if [[ "$NVID" -gt "$COMPAT" ]]; then
-                        mismatch_error "Sorry, $P has not been made available for Android $CEILING yet!"
+                if [[ "$NVID" -gt "$COMPATC" ]]; then
+                        mismatch_error "Sorry, $P has not been made available for Android $VID yet!"
                 fi
         done
 }
@@ -492,14 +494,14 @@ pa_check() {
 
 proberom () {
 	VID=$(getbuildprop ro.build.version.release)
-
-	if [ "${VID%.*}" == "2.3" ]; then
-		ANDR=gingerbread
+     ANDR="${VID%.*}" # Cut flavor to 1 significant digit to cover specific range or release.
+	if [ "$ANDR" == "2.3" ]; then
+		FLAVR=gingerbread
                 API=10
 		RID=cm;
-	elif [ "${VID%.*}" == "4.0" ]; then
-		ANDR=ics
-                API=15
+	elif [ "$ANDR" == "4.0" ]; then
+		FLAVR=ics
+          API=15
 		MID=$(getbuildprop ro.rommanager.developerid)
 		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
 		DID=$(getbuildprop ro.product.device)
@@ -514,18 +516,14 @@ proberom () {
 			;;
 		aosp*)
 			RID=aosp;
-                        ;;
-                *)
+               ;;
+          *)
 			echo "!!! $MID is not supported yet, trying generic latest !!!"
 			;;
 		esac
-	elif [ "${VID%.*}" == "4.1" ] || [ "${VID%.*}" == "4.2" ]; then
-		ANDR=jellybean
-          if [ "${VID%.*}" == "4.1" ]; then
-               API=16
-          else
-               API=17
-          fi
+	elif [ "$ANDR" == "4.1" ]; then
+		FLAVR=jellybean
+          API=16
           CMID=$(getbuildprop ro.cm.version)
                 if [[ -n $CMID ]]; then
                         pa_check
@@ -535,31 +533,61 @@ proberom () {
 		DID=$(getbuildprop ro.product.device)
 		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
 
-		        case "$MID" in
-		        cm10|cm*|cyanogenmod*)
+		         case "$MID" in
+		         cm10|cm*|cyanogenmod*)
+			         RID=cm;
+			         ;;
+		         aokp*|teamkang)
+			         RID=aokp;
+			         ;;
+                   pa*)
+                        RID=pa;
+                        ;;   
+                   ev*)
+                        RID=aosp-ever;
+                        ;;            
+                   *)
+			         RID=`aosp_mod_check`;
+			         ;;
+		         esac
+                fi
+     elif [ "$ANDR" == "4.2" ]; then
+		FLAVR=jellybean
+          API=17
+          CMID=$(getbuildprop ro.cm.version)
+          if [[ -n $CMID ]]; then
+               pa_check
+          else
+          MID=$(getbuildprop ro.build.display.id)
+		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
+		DID=$(getbuildprop ro.product.device)
+		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+
+		     case "$MID" in
+		         cm10|cm*|cyanogenmod*)
 			        RID=cm;
 			        ;;
-		        aokp*|teamkang)
+		         aokp*|teamkang)
 			        RID=aokp;
 			        ;;
-                        pa*)
-                                RID=pa;
-                                ;;   
-                        ev*)
-                                RID=aosp-ever;
-                                ;;            
-                        *)
-			        RID=`aosp_mod_check`;
+                   pa*)
+                       RID=pa;
+                       ;;   
+                   ev*)
+                       RID=aosp-ever;
+                       ;;            
+                   *)
+	                  RID=aosp;
 			        ;;
-		        esac
-                fi
-	else
+		     esac
+          fi
+     else
 		print_error "unknown ROM version $VID"
 	fi
-	echo "... result of ROM check: version= $ANDR rom= $RID ..."
+	echo "... result of ROM check: version= $VID rom= $RID ..."
 }
 
-# NEW # Advanced build date query
+# Advanced build date query
 # This should set the patch date automatically.
 
 buildquery() {
@@ -595,7 +623,7 @@ else
                 ;;
           *)
                 for P in ${PID[@]}; do
-                        [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
+                  [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
 		        [ -d patches/$P/$A/$RID ] && R=$RID || R=generic
 		        [ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 		        PAR=patches/$P/$A/$R
@@ -746,28 +774,35 @@ if [ $# -gt 1 ]; then
 fi
 if [ $# -gt 2 ]; then
 	RID=$3        
-        case "$RID" in
+     case "$RID" in
 		cm10|cm*|cyanogenmod*)
 			;;
 		aokp*|teamkang)
 			RID=aokp;
 			;;
-                pa*)
-                        RID=pa;
-                        ;;
-                aosp-ever)
-                        RID=aosp-ever;
-                        ;;                
-                aosp*)
-			RID=`aosp_mod_check`;
-			;;
-                201*)
-                        date_error "You must specify ROMTYPE if designating a patch date!!"
-                        ;;
-                *)
-                        rom_error "$RID is not a valid ROMTYPE!!"
-                        ;;
-		esac
+          pa*)
+               RID=pa;
+               ;;
+          aosp-ever)
+               RID=aosp-ever;
+               ;;                
+          aosp*)
+	          case "ANDR" in
+                    4.1)
+                         RID=`aosp_mod_check`;
+                         ;;
+                    *)
+                         RID=aosp
+                         ;;
+               esac
+               ;;
+          201*)
+               date_error "You must specify ROMTYPE if designating a patch date!!"
+               ;;
+          *)
+               rom_error "$RID is not a valid ROMTYPE!!"
+               ;;
+	esac
 	echo "... Using $RID patches ..."
 else
 	echo "... Using results of ROM check ..."	
@@ -808,15 +843,15 @@ if [[ ( "$PID" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
 else
 	for P in ${PID[@]}; do
 		[ -d patches/$P ] || print_error "$P is not available"
-                [ -d patches/$P/$ANDR ] && R=$ANDR || A=all
+          [ -d patches/$P/$ANDR ] && R=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 
 		unset FILES
-                [ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+          [ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
 		[ -f patches/$P/$A/files.txt ] && FILES=$(cat patches/$P/$A/files.txt)
 		[ -f patches/$P/$A/$R/files.txt ] && FILES=$(cat patches/$P/$A/$R/files.txt)
-                [ -f patches/$P/$A/$R/$B/files.txt ] && FILES=$(cat patches/$P/$A/$R/$B/files.txt)
+          [ -f patches/$P/$A/$R/$B/files.txt ] && FILES=$(cat patches/$P/$A/$R/$B/files.txt)
                 for FILE in ${FILES[@]}; do
 			case "$FILE" in
 			+system/*)
@@ -931,8 +966,10 @@ else
         # Decompile APKs
 	        for FILE in ${AID[@]}; do
 		        APK=${FILE##*/}
-		        printtask "... decompile $APK ..."
-		        java -jar apktool.jar d -f $FILE tmp/$FILE.out
+                  if [ -f $FILE ]; then
+		              printtask "... decompile $APK ..."
+		              java -jar apktool.jar d -f $FILE tmp/$FILE.out
+                  fi
 		done
         fi
 
@@ -941,16 +978,16 @@ else
 		printtask "### unpacking $FILE ###"                
 		case "$FILE" in
 			boot.img)
-                                if [ -f boot.img ]; then
+                    if [ -f boot.img ]; then
 				        cd boot
 				        ./unpackbootimg$EXE -i ../boot.img >> "$LOG" 2>> "$LOG"
                                         mkdir ramdisk
 				        cd ramdisk
 				        gzip -dc ../boot.img-ramdisk.gz | cpio -i >> "$LOG" 2>> "$LOG"
 				        cd ../../
-                                else
-                                        print_error "A mod needs to patch boot.img! This rom does not contains boot.img."
-                                fi
+                    else
+                            print_error "A mod needs to patch boot.img! This rom does not contains boot.img."
+                    fi
 				;;
 			*)
 				print_error "cannot process $FILE"
@@ -962,17 +999,17 @@ else
 	# apply system modification
 
         for P in ${PID[@]}; do
-                [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
+          [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
 		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
 		[ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 		PAR=patches/$P/$A/$R
 		PARB=patches/$P/$A/$R/$B
 
 		unset FILES COPY DELS JARS APKS IMGS TXTS
-                [ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
+          [ -f patches/$P/files.txt ] && FILES=$(cat patches/$P/files.txt)
 		[ -f patches/$P/$A/files.txt ] && FILES=$(cat patches/$P/$A/files.txt)
 		[ -f patches/$P/$A/$R/files.txt ] && FILES=$(cat patches/$P/$A/$R/files.txt)
-                [ -f patches/$P/$A/$R/$B/files.txt ] && FILES=$(cat patches/$P/$A/$R/$B/files.txt)
+          [ -f patches/$P/$A/$R/$B/files.txt ] && FILES=$(cat patches/$P/$A/$R/$B/files.txt)
 		for FILE in ${FILES[@]}; do
 			case $FILE in
 			+system/*)
@@ -1005,23 +1042,23 @@ else
 				[ -e $FILE ] && printtask "... overwriting $FILE from $P ..."
 	 			\cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG"
 			else
-				print_error "$FILE is missing in the patch"
+				print_error "$FILE is missing in the patch. Please upload your logfile to the support thread!"
 			fi
 		done
 
 		# unconditional smali copying
 		[ -f patches/$P/smali.txt ] && SMALI=$(cat patches/$P/smali.txt)
-                [ -f patches/$P/$A/smali.txt ] && SMALI=$(cat patches/$P/$A/smali.txt)
+          [ -f patches/$P/$A/smali.txt ] && SMALI=$(cat patches/$P/$A/smali.txt)
 		[ -f patches/$P/$A/$R/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/smali.txt)
 		[ -f patches/$P/$A/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/$B/smali.txt)
 		MOVE=${SMALI##*/}
 		for SMALI in ${SMALI[@]}; do
 			printtask "... overwriting $MOVE ..."
-                                if [ -f patches/$P/$A/$R/provisionals/$SMALI ]; then
-                                        \cp -av patches/$P/$ANDR/$R/provisionals/$SMALI tmp/$SMALI >> "$LOG"
-                                else
-				        \cp -av patches/$P/$ANDR/provisionals/$SMALI tmp/$SMALI >> "$LOG"
-                                fi
+                     if [ -f patches/$P/$A/$R/provisionals/$SMALI ]; then
+                         \cp -av patches/$P/$ANDR/$R/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+                     else
+				     \cp -av patches/$P/$ANDR/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+                     fi
 		done
 
 
@@ -1079,15 +1116,15 @@ else
 			fi
 		done
 
-		[[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$R/$B ###"
+		[[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$A/$R/$B ###"
 		for FILE in ${APKS[@]}; do
                     APK=${FILE##*/}
                     if [ -d "tmp/${FILE}.out" ] ; then
-			printtask "... apply $APK.patch ..."
-				patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log 
-				cat ${APK}.log | tee -a "$LOG"
-			[[ `grep FAILED ${APK}.log` != "" ]] && print_error "failed $APK.patch"
-			garbage tmp/${FILE}.out
+			          printtask "... apply $APK.patch ..."
+				     patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log 
+				     cat ${APK}.log | tee -a "$LOG"
+			          [[ `grep FAILED ${APK}.log` != "" ]] && print_error "failed $APK.patch"
+			          garbage tmp/${FILE}.out
                     else
                         echo "No $APK in your ROM. Not able to patch this file."
                         echo "## No $APK in ROM ###" >> "$LOG"
@@ -1162,10 +1199,11 @@ else
 	[[ -n ${AID[@]} ]] && printtask "### rebuild apk ###"
         for FILE in ${AID[@]}; do
 		APK=${FILE##*/}
-		printtask "... rebuild $APK ..."
-		java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || print_error "failed compiling $FILE !!!"
-		jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
-		#\rm -r tmp/${FILE}.out
+          if [ -d tmp/${FILE}.out ]; then
+               printtask "... rebuild $APK ..."
+		     java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || print_error "failed compiling $FILE !!!"
+		     jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
+          fi
 	done	
 
 	[[ -n ${IID[@]} ]] && printtask "### rebuild img ###"
@@ -1212,16 +1250,16 @@ else
 	# add announcement- optional.
 	for P in ${PID[@]}; do
                 [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
-		[ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+		      [ -d patches/$P/$A/$RID ] && R=$RID || R=generic
                 [ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
 
                 if [ -f patches/$P/$A/$R/$B/README.txt ]; then
-			cat patches/$P/$A/$R/$B/README.txt
+			     cat patches/$P/$A/$R/$B/README.txt
                 elif [ -f patches/$P/$A/$R/README.txt ]; then
-			cat patches/$P/$A/$R/README.txt
-		elif [ -f patches/$P/$A/README.txt ]; then
-			cat patches/$P/$A/README.txt
-		fi
+			     cat patches/$P/$A/$R/README.txt
+		      elif [ -f patches/$P/$A/README.txt ]; then
+			     cat patches/$P/$A/README.txt
+		      fi
 	done
 fi
 cd ..
