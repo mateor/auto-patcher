@@ -370,18 +370,22 @@ abspath () {
 }
 
 mods_info () {
+        CEILING=10.0.0 # Default is that everything works...we'll see.
         case $PID in
         voice)
                 FLOOR=4.0.0
                 ;;
         v6supercharger)
                 FLOOR=4.0.0
+                CEILING=4.1.2
                 ;;
         pdroid)
                 FLOOR=2.3.7
+                CEILING=4.1.2
                 ;;
         pd2.0)
                 FLOOR=4.1.2
+                CEILING=4.1.2
                 ;;
         external_internal)
                 FLOOR=2.3.3
@@ -397,6 +401,7 @@ mods_info () {
                 ;;
         tabletUI)
                 FLOOR=4.1.0
+                CEILING=4.1.2
                 ;;
         esac
    # strip decimals from android version (i.e. 2.3.7 becomes 237)
@@ -408,7 +413,10 @@ compat_check () {
         for P in ${PID[@]}; do
                 mods_info
                 if [[ "$NVID" -lt "$COMPAT" ]]; then
-                        mismatch_error "Your rom is too old! The minimum for $P is Android $FLOOR!"
+                        mismatch_error "Your $NVID rom is too old! The minimum for $P is Android $FLOOR!"
+                fi
+                if [[ "$NVID" -gt "$COMPAT" ]]; then
+                        mismatch_error "Sorry, $P has not been made available for Android $CEILING yet!"
                 fi
         done
 }
