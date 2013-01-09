@@ -105,30 +105,34 @@
 
 VERSION="v2.4.7"
 
-echo ""
-echo "The Auto-Patcher $VERSION"
-echo ""
-# by pastime1971 and mateorod
-    	
-
 # pass variables to children
 set -a
 
 printusage_help () {
-        # This could REALLY use some better formatting. Even I find it intimidating looking.
-	echo "      The Auto-Patcher $VERSION"
-	echo ""
-	echo "usage: $0 [ROMNAME].zip [MODS] [ROMTYPE] [PATCHDATE]"
-	echo ""
-	echo "* [MODS] can be pdroid, pd2.0, v6supercharger, tabletUI, etc..."
-        echo "MODS can be combined by separating them with a comma and NO SPACES!!!"
-        echo ""
-	echo "* [ROMTYPE] can be cm, aokp, aosp or pa                      [recommended]"
-	echo "* [PATCHDATE] will select older patch versions, e.g 20121030    [optional]"
-        echo ""
-        echo " try \"$0 ROM.ZIP -h\" to see what is available"
-	echo ""
-	exit 
+     usage_help
+     exit
+}
+
+usage_help () {
+     # This could REALLY use some better formatting. Even I find it intimidating looking.
+     echo "      The Auto-Patcher $VERSION"
+     echo ""
+     echo "usage: $0 [ROMNAME].zip [MODS] [ROMTYPE] [PATCHDATE]"
+     echo ""
+     echo "* [MODS] can be pdroid, pd2.0, v6supercharger, tabletUI, etc..."
+     echo "MODS can be combined by separating them with a comma and NO SPACES!!!"
+     echo ""
+     echo "* [ROMTYPE] can be cm, aokp, aosp or pa                      [recommended]"
+     echo "* [PATCHDATE] will select older patch versions, e.g 20121030    [optional]"
+     echo ""
+     echo " try \"$0 ROM.ZIP -h\" to see what is available"
+     echo ""
+}
+
+usage_more_help () {
+     usage_help
+     echo ""
+     echo "press 'q' to see a list of available patches or CTRL-c to quit the help menu"
 }
 
 display_help () {
@@ -156,30 +160,30 @@ echo ""
 }
 
 debug_help () {
-        # From print_error. For problems decompiling or patching mostly.
-	echo "! please refer to $LOG for any debugging"
-	echo ""
-	echo "! patching failed."
-	echo "! it may be possible to patch $ROM using other patch version"
-	echo ""
-	cleanup
-	printusage_help
+     # From print_error. For problems decompiling or patching mostly.
+     echo "! please refer to $LOG for any debugging"
+     echo ""
+     echo "! patching failed."
+     echo "! it may be possible to patch $ROM using other patch version"
+     echo ""
+     cleanup
+     printusage_help
 }
 
 romtype_help () {
-        # From rom_error (bad romtype) and date_error (patch date w/o specifying romtype)
-	echo ""
-        echo "!!!There are only four supported ROMTYPES: 1) cm  2) aokp  3) aosp  4) pa"
-        echo ""
-        echo "Find out which of the above ROMTYPES your rom is based on and try again!"
-        echo "**********************************************"
-        echo ""
-        cleanup
-        printusage_help
+     # From rom_error (bad romtype) and date_error (patch date w/o specifying romtype)
+     echo ""
+     echo "!!!There are only four supported ROMTYPES: 1) cm  2) aokp  3) aosp  4) pa"
+     echo ""
+     echo "Find out which of the above ROMTYPES your rom is based on and try again!"
+     echo "**********************************************"
+     echo ""
+     cleanup
+     printusage_help
 }
 
 cleanup () {
-        [ -d "$TEMP" ] && \rm -rf "$TEMP"
+     [ -d "$TEMP" ] && \rm -rf "$TEMP"
 }
 
 garbage () {
@@ -190,102 +194,102 @@ garbage () {
 
 
 print_error () {
-        # General purpose error. Used for errors in main, as opposed to probe or set-up.
-        echo ""
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	printtask "!!! error: $@"
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo ""	
-	debug_help
+     # General purpose error. Used for errors in main, as opposed to probe or set-up.
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     debug_help
 }
 
 smali_error () {
-        # Smali binary error. Problem often goes away on second run.
-        echo ""
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	printtask "!!! error: $@"
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo ""
-        if [[ `grep 'method index is too large' "$LOG"` != "" ]]; then
-                printtask "!!! Problem with method cap !!!"
-                printtask "... attempting fix ..."
-		. patches/common/framework.jar.sh 2>&1 > ${JAR}.log
-                printtask "... rebuild framework.jar ..."
-                java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
-		[ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
-        else
-                printtask "!!! This error is generally due to an unknown bug in the smali binary!"
-                echo "In our experience, it goes away if you run the patcher a second time."
-                echo " Please run the Auto-Patcher with the same command once again."
-                echo ""
-                echo "If after the third attempt the same thing happens,"
-                echo " please upload your logfile to our support thread!"
-                echo ""
-	        cleanup
-                exit
-        fi
+     # Smali binary error. Problem often goes away on second run.
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     if [[ `grep 'method index is too large' "$LOG"` != "" ]]; then
+          printtask "!!! Problem with method cap !!!"
+          printtask "... attempting fix ..."
+          . patches/common/framework.jar.sh 2>&1 > ${JAR}.log
+          printtask "... rebuild framework.jar ..."
+          java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+          [ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
+     else
+          printtask "!!! This error is generally due to an unknown bug in the smali binary!"
+          echo "In our experience, it goes away if you run the patcher a second time."
+          echo " Please run the Auto-Patcher with the same command once again."
+          echo ""
+          echo "If after the third attempt the same thing happens,"
+          echo " please upload your logfile to our support thread!"
+          echo ""
+          cleanup
+          exit
+    fi
 }
 
 
 mismatch_error () {
-        # Function that exposes attempts to apply a mod to an upsupported Android version
-        echo ""
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	printtask "!!! error: $@"
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo ""
-        cleanup
-	printusage_help
+     # Function that exposes attempts to apply a mod to an upsupported Android version
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     cleanup
+     printusage_help
 }
 date_error () {
-        # Remind users to include a romtype if they are going to specify a patch date
-        echo ""
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	printtask "!!! error: $@"
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo ""
-        echo "Please put a ROMTYPE before the patch date and run again!!"
-        romtype_help
+     # Remind users to include a romtype if they are going to specify a patch date
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     echo "Please put a ROMTYPE before the patch date and run again!!"
+     romtype_help
 }
 
 rom_error () {
-        # For when an unsupported romtype is manually entered on the command-line
-        echo ""
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	printtask "!!! error: $@"
-	printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        romtype_help
+     # For when an unsupported romtype is manually entered on the command-line
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     romtype_help
 }
 
 misspatch_error () {
-        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        printtask "!! error: $@ "
-        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo ""
-        printtask "!! The Auto-Patcher could not find its patches and/or tools!"
-        echo ""
-        echo "* Did you run ./batch.sh first?"
-        echo ""
-        echo "The patch_patches.tgz and patch_tools.tgz need to be in this directory,"
-        echo "  one way or another..."
-        echo ""
-        cleanup
-        printusage_help
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!! error: $@ "
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     printtask "!! The Auto-Patcher could not find its patches and/or tools!"
+     echo ""
+     echo "* Did you run ./batch.sh first?"
+     echo ""
+     echo "The patch_patches.tgz and patch_tools.tgz need to be in this directory,"
+     echo "  one way or another..."
+     echo ""
+     cleanup
+     printusage_help
 }
 
 misstools_error () {
-        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"        
-        printtask "!! error: $@ "
-        printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        printtask "Your set-up is missing a dependency." 
-        echo "We require JDK, patch and cpio."
-        echo ""
-        echo ""
-        echo "Each distro is different"
-        echo "but you must ensure you have them all installed and try again."
-        echo ""
-        cleanup
-        printusage_help
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!! error: $@ "
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "Your set-up is missing a dependency."
+     echo "We require JDK, patch and cpio."
+     echo ""
+     echo ""
+     echo "Each distro is different"
+     echo "but you must ensure you have them all installed and try again."
+     echo ""
+     cleanup
+     printusage_help
 }
 
 printtask () {
@@ -312,20 +316,20 @@ copyfailed () {
 }
 
 askconsent () {
-	sleep 1
-	echo -n "Do you want to proceed ? (YES/no) "
-	read PROCEED
-	echo "askconsent final = ${PROCEED}: for $FAIL" >> "$LOG"
-	case $PROCEED in
-		[Yy] | [Yy][Ee][Ss])
-                        return 0;       # successful:
-                        echo "*** You (or ApG) have elected to use a prepatched copy of $FAIL ***" >> "$LOG"
-			;;
-		*)
-			return 1;	# error
-                        echo "*** You have declined to insert $FAIL by not answering 'yes' at the prompt. ***" >> "$LOG"
-			;;
-	esac
+     sleep 1
+     echo -n "Do you want to proceed ? (YES/no) "
+     read PROCEED
+     echo "askconsent final = ${PROCEED}: for $FAIL" >> "$LOG"
+     case $PROCEED in
+          [Yy] | [Yy][Ee][Ss])
+               return 0;       # successful:
+               echo "*** You (or ApG) have elected to use a prepatched copy of $FAIL ***" >> "$LOG"
+               ;;
+          *)
+               return 1;	# error
+               echo "*** You have declined to insert $FAIL by not answering 'yes' at the prompt. ***" >> "$LOG"
+               ;;
+     esac
 }
 
 replace_updater () {
@@ -480,119 +484,115 @@ ever_check() {
 }
 
 pa_check() {
-        CMID=$(getbuildprop ro.modversion)
-        PAID=$(getbuildprop ro.pa.version)
-        MID=$(getbuildprop ro.build.display.id)
-	[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
-	DID=$(getbuildprop ro.product.device)
-	[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
-        if [[ -n $PAID ]]; then
-                RID=pa
-        else
-                case $CMID in
-                        [Pp][Aa]*)
-                                RID=pa;
-                                ;;
-                        *)
-                                RID=cm;
-                                ;;
-                esac
-        fi
+     CMID=$(getbuildprop ro.modversion)
+     PAID=$(getbuildprop ro.pa.version)
+     MID=$(getbuildprop ro.build.display.id)
+     [[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
+     DID=$(getbuildprop ro.product.device)
+     [[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+          if [[ -n $PAID ]]; then
+              RID=pa
+          else
+               case $CMID in
+                    [Pp][Aa]*)
+                          RID=pa;
+                          ;;
+                     *)
+                          RID=cm;
+                          ;;
+               esac
+          fi
 }
 
 proberom () {
-	VID=$(getbuildprop ro.build.version.release)
+     VID=$(getbuildprop ro.build.version.release)
      ANDR="${VID%.*}" # Cut flavor to 1 significant digit to cover specific range or release.
-	if [ "$ANDR" == "2.3" ]; then
-		FLAVR=gingerbread
-                API=10
-		RID=cm;
-	elif [ "$ANDR" == "4.0" ]; then
-		FLAVR=ics
+     if [ "$ANDR" == "2.3" ]; then
+          FLAVR=gingerbread
+          API=10
+          RID=cm;
+     elif [ "$ANDR" == "4.0" ]; then
+          FLAVR=ics
           API=15
-		MID=$(getbuildprop ro.rommanager.developerid)
-		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
-		DID=$(getbuildprop ro.product.device)
-		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+          MID=$(getbuildprop ro.rommanager.developerid)
+          [[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.modversion))
+          DID=$(getbuildprop ro.product.device)
+          [[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
 
-		case "$MID" in
-		pa|cm9|cm|cyanogenmod*)
-			RID=cm;
-			;;
-		aokp|teamkang)
-			RID=aokp;
-			;;
-		aosp*)
-			RID=aosp;
-               ;;
-          *)
-			echo "!!! $MID is not supported yet, trying generic latest !!!"
-			;;
-		esac
-	elif [ "$ANDR" == "4.1" ]; then
-		FLAVR=jellybean
+          case "$MID" in
+               pa|cm9|cm|cyanogenmod*)
+                    RID=cm;
+                         ;;
+                    aokp|teamkang)
+                         RID=aokp;
+                         ;;
+                    aosp*)
+                         RID=aosp;
+                         ;;
+                    *)
+                         echo "!!! $MID is not supported yet, trying generic latest !!!"
+                         ;;
+          esac
+     elif [ "$ANDR" == "4.1" ]; then
+          FLAVR=jellybean
           API=16
           CMID=$(getbuildprop ro.cm.version)
-                if [[ -n $CMID ]]; then
-                        pa_check
-                else
-		MID=$(getbuildprop ro.build.display.id)
-		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
-		DID=$(getbuildprop ro.product.device)
-		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
-
-		         case "$MID" in
-		         cm10|cm*|cyanogenmod*)
-			         RID=cm;
-			         ;;
-		         aokp*|teamkang)
-			         RID=aokp;
-			         ;;
-                   pa*)
-                        RID=pa;
-                        ;;
-                   ev*)
-                        RID=aosp-ever;
-                        ;;
-                   *)
-			         RID=`aosp_mod_check`;
-			         ;;
-		         esac
-                fi
+               if [[ -n $CMID ]]; then
+                    pa_check
+               else
+		          MID=$(getbuildprop ro.build.display.id)
+		          [[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
+		          DID=$(getbuildprop ro.product.device)
+		          [[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+		          case "$MID" in
+		              cm10|cm*|cyanogenmod*)
+			              RID=cm;
+			              ;;
+		              aokp*|teamkang)
+			              RID=aokp;
+			              ;;
+                        pa*)
+                             RID=pa;
+                             ;;
+                        ev*)
+                             RID=aosp-ever;
+                             ;;
+                        *)
+			              RID=`aosp_mod_check`;
+			              ;;
+		          esac
+               fi
      elif [ "$ANDR" == "4.2" ]; then
-		FLAVR=jellybean
+          FLAVR=jellybean
           API=17
           CMID=$(getbuildprop ro.cm.version)
           if [[ -n $CMID ]]; then
                pa_check
           else
           MID=$(getbuildprop ro.build.display.id)
-		[[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
-		DID=$(getbuildprop ro.product.device)
-		[[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
+          [[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
+          DID=$(getbuildprop ro.product.device)
+          [[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
 
-		     case "$MID" in
-		         cm10|cm*|cyanogenmod*)
-			        RID=cm;
-			        ;;
-		         aokp*|teamkang)
-			        RID=aokp;
-			        ;;
-                   pa*)
-                       RID=pa;
-                       ;;
-                   ev*)
-                       RID=aosp-ever;
-                       ;;
-                   *)
-	                  RID=aosp;
-			        ;;
-		     esac
+               case "$MID" in
+                    cm10|cm*|cyanogenmod*)
+                         RID=cm;
+                         ;;
+                    aokp*|teamkang)
+                         RID=aokp;
+                         ;;
+                    pa*)
+                         RID=pa;
+                         ;;
+                    *)
+	                    RID=aosp;
+			          ;;
+               esac
           fi
      else
-		print_error "unknown ROM version $VID"
-	fi
-	echo "... result of ROM check: version= $VID rom= $RID ..."
+          print_error "unknown ROM version $VID"
+     fi
+     echo "... result of ROM check: version= $VID rom= $RID ..."
 }
 
 # Advanced build date query
@@ -688,8 +688,13 @@ echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
 
 }
+[[ $# -lt 1 || -z $1 ]] && printusage_help
+[[ $1 == "-h" ]] && usage_more_help | less && display_help
 
-[[ $# -lt 1 || $1 == "-h" || -z $1 ]] && printusage_help
+echo ""
+echo "The Auto-Patcher $VERSION"
+echo ""
+# by pastime1971 and mateorod
 
 ROOT=$(abspath `dirname "$0"`)
 TOOL="$ROOT/patch_tools.tgz"
