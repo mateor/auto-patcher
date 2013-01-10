@@ -262,6 +262,17 @@ rom_error () {
      romtype_help
 }
 
+conflict_error () {
+     # For conflicting packages
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     cleanup
+     PID=mods
+     mods_info
+}
+
 misspatch_error () {
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      printtask "!! error: $@ "
@@ -899,14 +910,40 @@ fi
 
 # patch type
 if [ $# -gt 1 ]; then
-	PIL=${2//,/ }
+	PIL=${2//,/ } # If more than one mod, make string separated by spaces
 else
-	#PIL=`ls patches/`
 	PIL="pdroid v6supercharger"
-        echo "No mods selected. Defaulting to the v6 and Pdroid, just because we can."
+     echo "No mods selected. Defaulting to the v6 and Pdroid, just because we can."
 fi
-# a hack to make sure pdroid is the first mod
-[[ ${PIL[@]} == "pdroid" ]] && PID=(pdroid)
+
+PID=(${PIL// / }) # turn string into array
+COPYPID=("${PID[@]}") # working copy to iterate over
+MODS_NUMBER=${#COPYPID[@]} # number of elements (mods)
+
+if [[ $MODS_NUMBER > 1 ]]; then
+INDEX=0
+     for p in ${COPYPID[@]}; do
+          if [ "$p" = "pdroid" ] || [ "$p" = "pd2.0" ] ||[ "$p" = "openpdroid" ]; then
+               SPID[0]=$p
+               unset COPYPID["$INDEX"]
+               break
+          else
+               INDEX=$((INDEX + 1))
+          fi
+     done
+     for p in ${COPYPID[@]}; do
+          if [ "$p" = "pdroid" ] || [ $p = "pd2.0" ] ||[ $p = "openpdroid" ]; then
+               conflict_error "Those mods conflict! Only one pdroid mod at a time!"
+          else
+               i=${#SPID[@]}
+               SPID[i]=$p
+               i+=1
+          fi
+     done
+else
+     SPID=${COPYPID[@]}
+     echo "only one mod found, mod is ${SPID[@]}"
+fi
 for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
