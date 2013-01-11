@@ -1244,11 +1244,12 @@ for P in ${PID[@]}; do
           # substitute failed smali with provisional (a prepatched smali file)
           unset FAILS
           FAILS=(`grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'`)
-          PROVISIONAL="patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL}"
+          echo "Provisional is $PROVISIONAL"
           if [[ -n ${FAILS[@]} ]]; then
                printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
                echo "### replace ${FAILS[@]} ###" > ${JAR}.log
                for FAIL in ${FAILS[@]}; do
+                    PROVISIONAL="patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL}"
                     echo "!!! patch error for $FAIL !!!" >> "$LOG"
                     #cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG" # FOR DEBUGGING
                     [[ ${SID[@]} =~ $FAIL ]] && print_error "$FAIL was already replaced before"
