@@ -369,15 +369,14 @@ replace_updater () {
 # Function for devices that use SDcard installs. Also to be tested for CM7
 #  since CM7 seems to use an updater-script that wipes EMMC. Testing
 
-     UPDIR=META-INF/com/google/android
-     \rm $UPDIR/updater-script
-     \cp patches/common/$UPDIR/updater-script $UPDIR
+     \rm $UPDATER_LOC/updater-script
+     \cp patches/common/$UPDATER_LOC/updater-script $UPDATER_LOC
      echo "run_program(\"/sbin/busybox\", \"umount\", \"/system\");" >> UPDATE.txt
-     cat UPDATE.txt >> $UPDIR/updater-script
+     cat UPDATE.txt >> $UPDATER_LOC/updater-script
      echo ""
      echo "New updater-script being used:" >> "$LOG"
      echo "-----------------------------" >> "$LOG"
-     cat $UPDIR/updater-script >> "$LOG"
+     cat $UPDATER_LOC/updater-script >> "$LOG"
 }
 
 abspath () {
@@ -1050,20 +1049,22 @@ printtask "### unzip rom ###"
 jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_error "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
 
 printtask "### create updater script ###"
-jar -xvf "$ROMX" META-INF/com/google/android/updater-script META-INF/com/google/android/update-binary
+UPDATER_LOC=META-INF/com/google/android
+
+jar -xvf "$ROMX" $UPDATER_LOC/updater-script $UPDATER_LOC/update-binary
 #OSX has no dev/null---change
-jar -xvf "$ROMX" META-INF/com/google/android/update-binary-installer 1> /dev/null 2> /dev/null
+jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
 
 # Determine Installer- Aroma or ClockworkMod
-if [ -f META-INF/com/google/android/update-binary-installer ]; then
+if [ -f $UPDATER_LOC/update-binary-installer ]; then
      printtask "... using Aroma installer ..."
-     \mv META-INF/com/google/android/update-binary-installer META-INF/com/google/android/update-binary
+     \mv $UPDATER_LOC/update-binary-installer $UPDATER_LOC/update-binary
 else
      printtask "... using Clockworkmod installer ..."
 fi
 
 # Create updater-scripts
-cat META-INF/com/google/android/updater-script | grep ^mount | grep "/system" | head -n 1 > updater-script
+cat $UPDATER_LOC/updater-script | grep ^mount | grep "/system" | head -n 1 > updater-script
 [ -s updater-script ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" > updater-script
 for FILE in ${EID[@]}; do
      # restore the original
@@ -1074,18 +1075,17 @@ for FILE in ${CID[@]}; do
      jar -xvf "$ROMX" $FILE 2> /dev/null || echo "delete(\"/$FILE\");" >> updater-script
 done
 echo "package_extract_dir(\"system\", \"/system\");" >> updater-script
-     # add permission management
-cat META-INF/com/google/android/updater-script | grep set_perm | grep "/system" >> updater-script
-     # TODO: remove if we don't need it any more-NB #Why did pastime think may not need this?
+     # permission management for files that need specific perms
+cat $UPDATER_LOC/updater-script | grep set_perm | grep "/system" >> updater-script
 for P in ${PID[@]}; do
      if [ -s patches/$P/$A/set_perm.txt ]; then
           echo "...setting permissions..."
           cat patches/$P/$A/set_perm.txt >> updater-script
      fi
 done
-cat META-INF/com/google/android/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
-[[ ${IID[@]} =~ boot.img ]] && cat META-INF/com/google/android/updater-script | grep "boot.img" >> updater-script
-cat updater-script > META-INF/com/google/android/updater-script
+cat $UPDATER_LOC/updater-script | grep ^unmount | grep "/system" | head -n 1 >> updater-script
+[[ ${IID[@]} =~ boot.img ]] && cat $UPDATER_LOC/updater-script | grep "boot.img" >> updater-script
+cat updater-script > $UPDATER_LOC/updater-script
 echo "# generated updater-script" >> "$LOG"
 cat updater-script >> "$LOG"
 
