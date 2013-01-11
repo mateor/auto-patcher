@@ -437,16 +437,16 @@ mods_info () {
         pd2.0)
              FLOOR=4.1.2
              CEILING=4.1.2
-             DESC="A fork of the open-source PDroid and Pdroid2.0 framework."
+             DESC="An expansion of the PDroid application/framework."
              DEV="CollegeDev"
-             DEPENDENCY="The PDroid2.0 app available at http://forum.xda-developers.com/showthread.php?t=1923576"
+             DEPENDENCY="The free PDroid2.0 app available at http://forum.xda-developers.com/showthread.php?t=1923576"
              ;;
         openpdroid)
              FLOOR=4.1.2
              CEILING=4.2.1
-             DESC="An expansion of the PDroid application/framework."
-             DEV="FFU5y/Community"
-             DEPENDENCY="The PDroidManager app available from Google Play or http://forum.xda-developers.com/showthread.php?t=1994860"
+             DESC="A fork of the open-source PDroid and Pdroid2.0 framework."
+             DEV="FFU5y/wbedard/mateorod/Community"
+             DEPENDENCY="The PDroidManager app freely available from Google Play or http://forum.xda-developers.com/showthread.php?t=1994860"
              ;;
         opendroid)
              echo ""
@@ -682,11 +682,6 @@ esac
 # If patch date is specified on CLI, use that patch date
 if [ $# -gt 3 ]; then
 	BID=${4//,/ };
-
-# Multiple mods all default to latest- this isn't ideal. We should institute $BID array
-# In python, we would use dictionary. Not sure about best for shell. A GUI would fix.
-elif [[ ${#PID[@]} -gt 1 ]];then
-     BID=latest;
 else
      case $ANDR in
           gingerbread)
@@ -728,6 +723,7 @@ else
                          fi
                          echo "... $PID patch date has been set to: $BID..."
                          B=$BID
+                         break
                done
                ;;
      esac
@@ -1172,12 +1168,13 @@ else
           [ -f patches/$P/$A/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/$B/smali.txt)
           MOVE=${SMALI##*/}
           for SMALI in ${SMALI[@]}; do
-               printtask "... overwriting $MOVE ..."
-                     if [ -f patches/$P/$A/$R/provisionals/$SMALI ]; then
-                         \cp -av patches/$P/$ANDR/$R/provisionals/$SMALI tmp/$SMALI >> "$LOG"
-                     else
-                         \cp -av patches/$P/$ANDR/provisionals/$SMALI tmp/$SMALI >> "$LOG"
-                     fi
+                if [ -f patches/$P/$A/$R/provisionals/$SMALI ]; then
+                     printtask "... overwriting $MOVE ..."
+                     \cp -a patches/$P/$ANDR/$R/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+                elif [ -f patches/$P/$A/provisionals/$SMALI ]; then
+                     printtask "... overwriting $MOVE ..."
+                     \cp -a patches/$P/$ANDR/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+                fi
           done
 
           [[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$A/$R/$B ###"
