@@ -110,7 +110,7 @@ CURRENT_ANDROID="4.2.1"
 set -a
 
 printusage_help () {
-     PID="openpdroid,3gdongle"
+     PID="openpdroid,3gdongle" # default example
      brief_help
 }
 
@@ -161,17 +161,6 @@ display_help () {
      exit
 }
 
-debug_help () {
-     # From print_error. For problems decompiling or patching mostly.
-     echo "! please refer to $LOG for any debugging"
-     echo ""
-     echo "! patching failed."
-     echo "! it may be possible to patch $ROM using other patch version"
-     echo ""
-     cleanup
-     printusage_help
-}
-
 romtype_help () {
      # From rom_error (bad romtype) and date_error (patch date w/o specifying romtype)
      echo ""
@@ -181,7 +170,7 @@ romtype_help () {
      echo "**********************************************"
      echo ""
      cleanup
-     printusage_help
+     brief_help
 }
 
 advanced_help () {
@@ -221,7 +210,7 @@ print_error () {
      printtask "!!! error: $@"
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      echo ""
-     debug_help
+     brief_help
 }
 
 smali_error () {
@@ -259,7 +248,7 @@ mismatch_error () {
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      echo ""
      cleanup
-     printusage_help
+     brief_help
 }
 
 date_error () {
@@ -306,7 +295,7 @@ misspatch_error () {
      echo "  one way or another..."
      echo ""
      cleanup
-     printusage_help
+     brief_help
 }
 
 misstools_error () {
@@ -321,7 +310,7 @@ misstools_error () {
      echo "but you must ensure you have them all installed and try again."
      echo ""
      cleanup
-     printusage_help
+     brief_help
 }
 
 printtask () {
@@ -441,7 +430,7 @@ mods_info () {
              cd patches/
              (advanced_help && find -H * -name 2012*) | more -d
              echo ""
-             printusage_help
+             brief_help
              ;;
         voice)
              FLOOR=4.0.0
@@ -713,7 +702,7 @@ proberom () {
 # Advanced build date query
 # This should set the patch date automatically.
 
-buildquery() {
+build_query() {
 UTC=$(getbuildprop ro.build.date.utc)
 
 # Difference in how OS X and Linux/Cygwin handles 'date' utility
@@ -731,6 +720,7 @@ esac
 # If patch date is specified on CLI, use that patch date
 if [ $# -gt 3 ]; then
 	BID=${4//,/ };
+     BDID=$BID
 else
      case $ANDR in
           gingerbread)
@@ -770,7 +760,7 @@ else
                                    fi
                               done
                          fi
-                         echo "... $PID patch date has been set to: $BID..."
+                         echo "... $PID patch date has been set to: $BID ..."
                          B=$BID
                          break
                done
@@ -854,7 +844,7 @@ echo "TOOL= $TOOL" >> "$LOG"
 echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
-\rm -f restore.zip update.zip
+\rm -f $RESTORE.zip $UPDATE.zip
 
 CHK=$(getconf LONG_BIT) 
 if [[ $CHK = "64" ]]; then
@@ -1002,13 +992,19 @@ done
 compat_check
 
 # Build date
-if [ $# -gt 3 ]; then
+if [ $# -gt 3 ]; then # if a date is specified on command line...
+
+     # Set date to match argument and ensure that patches with that date exist
+     BID=$4
+     [ -d patches/$P/$A/$R/$BID ] || print_error  "No $P patches for $RID on $BID!! Try the help menu!!"
+
+     # Run build_query- this overrides the above but gets useful info
+     build_query
+     # Reset patch date to argument
 	BID=$4
-        # even here, we should try and create a function that matches as close to the above
-        # BID as possible. Now, a bad match (user error) defaults to latest
-        echo "... $PID patch date set manually to $BID ..."
+     echo "... $PID patch date set manually to: $BID ..."
 else
-        buildquery
+        build_query # if no date specified, use one from build_query
 fi
 
 # echo ROM info
@@ -1068,10 +1064,13 @@ echo "### TXT FILES= ${TID[@]}" >> "$LOG"
 printtask "### unzip rom ###"
 jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_error "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
 
+
 # Update/Restore.zip scripts and prep 
 printtask "### create updater script ###"
 UPDATER_LOC=META-INF/com/google/android
 UPDS=updater-script
+UPDATE="update-$RID-$BDID-${PIL// /-}"
+RESTORE="restore-$RID-$BDID"
 
 jar -xvf "$ROMX" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
 jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
@@ -1113,7 +1112,7 @@ cat $UPDS >> "$LOG"
 printtask "### create restore.zip ###"
 jar -cvf tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
 java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
-\mv signed.zip restore.zip
+\mv signed.zip $RESTORE.zip
 \rm -f tmp.zip
 
 
@@ -1402,14 +1401,14 @@ for FILE in ${IID[@]}; do
      esac
 done
 
-printtask "### create update.zip ###"
+printtask "### create $UPDATE.zip ###"
 jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
-java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip update.zip 2>> "$LOG"
+java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip $UPDATE.zip 2>> "$LOG"
 
-\mv restore.zip update.zip ..
+\mv $RESTORE.zip $UPDATE.zip ..
 echo "### finished ###"
-echo "flash update.zip to install the modified"
-echo "flash restore.zip to restore the original"
+echo "flash $UPDATE.zip to install the patched files"
+echo "flash $RESTORE.zip to restore the original system"
 
      # add announcement- optional.
 for P in ${PID[@]}; do
