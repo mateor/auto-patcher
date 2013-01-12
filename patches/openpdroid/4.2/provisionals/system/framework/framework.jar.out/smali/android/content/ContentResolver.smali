@@ -3541,8 +3541,8 @@
 
     invoke-virtual {v0, v9}, Landroid/os/CancellationSignal;->setRemote(Landroid/os/ICancellationSignal;)V
     :try_end_1d
-    .catchall {:try_start_a .. :try_end_1d} :catchall_d5
-    .catch Landroid/os/RemoteException; {:try_start_a .. :try_end_1d} :catch_c2
+    .catchall {:try_start_a .. :try_end_1d} :catchall_b9
+    .catch Landroid/os/RemoteException; {:try_start_a .. :try_end_1d} :catch_a6
 
     :cond_1d
     move-object/from16 v4, p1
@@ -3557,39 +3557,25 @@
 
     :try_start_27
     invoke-interface/range {v3 .. v9}, Landroid/content/IContentProvider;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Landroid/os/ICancellationSignal;)Landroid/database/Cursor;
+    :try_end_2a
+    .catchall {:try_start_27 .. :try_end_2a} :catchall_b9
+    .catch Landroid/os/DeadObjectException; {:try_start_27 .. :try_end_2a} :catch_3e
+    .catch Landroid/os/RemoteException; {:try_start_27 .. :try_end_2a} :catch_a6
 
     move-result-object v19
 
-    move-object/from16 v0, p0
-
-    iget-object v4, v0, Landroid/content/ContentResolver;->mContext:Landroid/content/Context;
-
-    move-object/from16 v0, p1
-
-    move-object/from16 v1, p2
-
-    move-object/from16 v2, v19
-
-    invoke-static {v0, v1, v4, v2}, Landroid/privacy/surrogate/PrivacyContentResolver;->enforcePrivacyPermission(Landroid/net/Uri;[Ljava/lang/String;Landroid/content/Context;Landroid/database/Cursor;)Landroid/database/Cursor;
-    :try_end_38
-    .catchall {:try_start_27 .. :try_end_38} :catchall_d5
-    .catch Landroid/os/DeadObjectException; {:try_start_27 .. :try_end_38} :catch_4c
-    .catch Landroid/os/RemoteException; {:try_start_27 .. :try_end_38} :catch_c2
-
-    move-result-object v19
-
-    :goto_39
-    if-nez v19, :cond_88
+    :goto_2b
+    if-nez v19, :cond_6c
 
     const/16 v22, 0x0
 
-    if-eqz v3, :cond_44
+    if-eqz v3, :cond_36
 
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v3}, Landroid/content/ContentResolver;->releaseUnstableProvider(Landroid/content/IContentProvider;)Z
 
-    :cond_44
+    :cond_36
     if-eqz v10, :cond_8
 
     move-object/from16 v0, p0
@@ -3598,32 +3584,32 @@
 
     goto :goto_8
 
-    :catch_4c
+    :catch_3e
     move-exception v18
 
-    :try_start_4d
+    :try_start_3f
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v3}, Landroid/content/ContentResolver;->unstableProviderDied(Landroid/content/IContentProvider;)V
 
     invoke-virtual/range {p0 .. p1}, Landroid/content/ContentResolver;->acquireProvider(Landroid/net/Uri;)Landroid/content/IContentProvider;
-    :try_end_55
-    .catchall {:try_start_4d .. :try_end_55} :catchall_d5
-    .catch Landroid/os/RemoteException; {:try_start_4d .. :try_end_55} :catch_c2
+    :try_end_47
+    .catchall {:try_start_3f .. :try_end_47} :catchall_b9
+    .catch Landroid/os/RemoteException; {:try_start_3f .. :try_end_47} :catch_a6
 
     move-result-object v10
 
-    if-nez v10, :cond_69
+    if-nez v10, :cond_5b
 
     const/16 v22, 0x0
 
-    if-eqz v3, :cond_61
+    if-eqz v3, :cond_53
 
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v3}, Landroid/content/ContentResolver;->releaseUnstableProvider(Landroid/content/IContentProvider;)Z
 
-    :cond_61
+    :cond_53
     if-eqz v10, :cond_8
 
     move-object/from16 v0, p0
@@ -3632,7 +3618,7 @@
 
     goto :goto_8
 
-    :cond_69
+    :cond_5b
     move-object/from16 v11, p1
 
     move-object/from16 v12, p2
@@ -3645,28 +3631,14 @@
 
     move-object/from16 v16, v9
 
-    :try_start_75
+    :try_start_67
     invoke-interface/range {v10 .. v16}, Landroid/content/IContentProvider;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Landroid/os/ICancellationSignal;)Landroid/database/Cursor;
 
     move-result-object v19
 
-    move-object/from16 v0, p0
+    goto :goto_2b
 
-    iget-object v4, v0, Landroid/content/ContentResolver;->mContext:Landroid/content/Context;
-
-    move-object/from16 v0, p1
-
-    move-object/from16 v1, p2
-
-    move-object/from16 v2, v19
-
-    invoke-static {v0, v1, v4, v2}, Landroid/privacy/surrogate/PrivacyContentResolver;->enforcePrivacyPermission(Landroid/net/Uri;[Ljava/lang/String;Landroid/content/Context;Landroid/database/Cursor;)Landroid/database/Cursor;
-
-    move-result-object v19
-
-    goto :goto_39
-
-    :cond_88
+    :cond_6c
     invoke-interface/range {v19 .. v19}, Landroid/database/Cursor;->getCount()I
 
     invoke-static {}, Landroid/os/SystemClock;->uptimeMillis()J
@@ -3689,11 +3661,11 @@
 
     new-instance v22, Landroid/content/ContentResolver$CursorWrapperInner;
 
-    if-eqz v10, :cond_bd
+    if-eqz v10, :cond_a1
 
     move-object v4, v10
 
-    :goto_a3
+    :goto_87
     move-object/from16 v0, v22
 
     move-object/from16 v1, p0
@@ -3701,19 +3673,19 @@
     move-object/from16 v2, v19
 
     invoke-direct {v0, v1, v2, v4}, Landroid/content/ContentResolver$CursorWrapperInner;-><init>(Landroid/content/ContentResolver;Landroid/database/Cursor;Landroid/content/IContentProvider;)V
-    :try_end_ac
-    .catchall {:try_start_75 .. :try_end_ac} :catchall_d5
-    .catch Landroid/os/RemoteException; {:try_start_75 .. :try_end_ac} :catch_c2
+    :try_end_90
+    .catchall {:try_start_67 .. :try_end_90} :catchall_b9
+    .catch Landroid/os/RemoteException; {:try_start_67 .. :try_end_90} :catch_a6
 
     const/4 v10, 0x0
 
-    if-eqz v3, :cond_b4
+    if-eqz v3, :cond_98
 
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v3}, Landroid/content/ContentResolver;->releaseUnstableProvider(Landroid/content/IContentProvider;)Z
 
-    :cond_b4
+    :cond_98
     if-eqz v10, :cond_8
 
     move-object/from16 v0, p0
@@ -3722,29 +3694,29 @@
 
     goto/16 :goto_8
 
-    :cond_bd
-    :try_start_bd
+    :cond_a1
+    :try_start_a1
     invoke-virtual/range {p0 .. p1}, Landroid/content/ContentResolver;->acquireProvider(Landroid/net/Uri;)Landroid/content/IContentProvider;
-    :try_end_c0
-    .catchall {:try_start_bd .. :try_end_c0} :catchall_d5
-    .catch Landroid/os/RemoteException; {:try_start_bd .. :try_end_c0} :catch_c2
+    :try_end_a4
+    .catchall {:try_start_a1 .. :try_end_a4} :catchall_b9
+    .catch Landroid/os/RemoteException; {:try_start_a1 .. :try_end_a4} :catch_a6
 
     move-result-object v4
 
-    goto :goto_a3
+    goto :goto_87
 
-    :catch_c2
+    :catch_a6
     move-exception v18
 
     const/16 v22, 0x0
 
-    if-eqz v3, :cond_cc
+    if-eqz v3, :cond_b0
 
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v3}, Landroid/content/ContentResolver;->releaseUnstableProvider(Landroid/content/IContentProvider;)Z
 
-    :cond_cc
+    :cond_b0
     if-eqz v10, :cond_8
 
     move-object/from16 v0, p0
@@ -3753,23 +3725,23 @@
 
     goto/16 :goto_8
 
-    :catchall_d5
+    :catchall_b9
     move-exception v4
 
-    if-eqz v3, :cond_dd
+    if-eqz v3, :cond_c1
 
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v3}, Landroid/content/ContentResolver;->releaseUnstableProvider(Landroid/content/IContentProvider;)Z
 
-    :cond_dd
-    if-eqz v10, :cond_e4
+    :cond_c1
+    if-eqz v10, :cond_c8
 
     move-object/from16 v0, p0
 
     invoke-virtual {v0, v10}, Landroid/content/ContentResolver;->releaseProvider(Landroid/content/IContentProvider;)Z
 
-    :cond_e4
+    :cond_c8
     throw v4
 .end method
 
