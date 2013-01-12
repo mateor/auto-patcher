@@ -605,7 +605,11 @@ pa_check() {
 
 proberom () {
      VID=$(getbuildprop ro.build.version.release)
-     ANDR="${VID%.*}" # Cut flavor to 1 significant digit to cover specific range or release.
+     if [ ${#VID} -lt 4 ]; then # in case of non-standard versioning in build.prop (defy!)
+          ANDR=$VID
+     else
+          ANDR="${VID%.*}" # Cut to 1 significant digit to cover specific range or release.
+     fi
      if [ "$ANDR" == "2.3" ]; then
           FLAVR=gingerbread
           API=10
@@ -1013,7 +1017,7 @@ rominfo
 # I think I finally may have rendered this VERY long if statement obsolete...CHECK!
 if [[ ( "$PID" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
      #Although this placement may be perfect for romfilter. although it throws the scheme...
-        display_help
+     display_help
 fi
 #Begin cycle
 
