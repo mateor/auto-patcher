@@ -435,12 +435,15 @@ mods_info () {
         voice)
              FLOOR=4.0.0
              DESC="Use on wifi-only tablets to have the software register as 'voice-enabled'. Allows VOIP like Google Voice to function."
+             DESC="bongostl's setup method here: http://forum.xda-developers.com/showthread.php?t=1823701"
+             DEV="bongostl"
+
              ;;
         v6supercharger)
              FLOOR=4.0.0
              CEILING=4.2.1
              DESC="A memory-management tool. It requires smali edits for Android roms 4.0+."
-             DESC1="The Auto-Patcher applies all 56 edits recommended by the dev."
+             DESC1="The Auto-Patcher applies all 50+ edits recommended by the dev."
              DEV="Zeppelinrox"
              DEPENDENCY="The V6 Supercharger Script. Get it at http://forum.xda-developers.com/showthread.php?t=991276/"
                ;;
@@ -1010,7 +1013,6 @@ fi
 # echo ROM info
 rominfo
 
-# I think I finally may have rendered this VERY long if statement obsolete...CHECK!
 if [[ ( "$PID" == "-h" || "$RID" == "-h" || "$BID" == "-h" ) ]]; then
      #Although this placement may be perfect for romfilter. although it throws the scheme...
      display_help
@@ -1069,8 +1071,8 @@ jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_err
 printtask "### create updater script ###"
 UPDATER_LOC=META-INF/com/google/android
 UPDS=updater-script
-UPDATE="update-$RID-$BDID-${PIL// /-}"
-RESTORE="restore-$RID-$BDID"
+UPDATE="update-$RID-$DID-$BDID-${PIL// /-}"
+RESTORE="restore-$RID-$DID-$BDID"
 
 jar -xvf "$ROMX" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
 jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
@@ -1084,8 +1086,9 @@ else
 fi
 
      # Create updater scripts
-cat $UPDATER_LOC/$UPDS | grep ^mount | grep "/system" | head -n 1 > $UPDS
-[ -s $UPDS ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" > $UPDS
+cat patches/common/updater-message.txt >> $UPDS
+cat $UPDATER_LOC/$UPDS | grep ^mount | grep "/system" | head -n 1 >> $UPDS
+[ -s $UPDS ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" >> $UPDS
      # restore the original
 for FILE in ${EID[@]}; do
      jar -xvf "$ROMX" $FILE 2> /dev/null || printtask "!!! warning $FILE cannot be restored !!!"
@@ -1105,6 +1108,9 @@ for P in ${PID[@]}; do
 done
 cat $UPDATER_LOC/$UPDS | grep ^unmount | grep "/system" | head -n 1 >> $UPDS
 [[ ${IID[@]} =~ boot.img ]] && cat $UPDATER_LOC/$UPDS | grep "boot.img" >> $UPDS
+echo "ui_print(\"                                        .\");" >> $UPDS
+echo "ui_print(\"                                            .\");" >> $UPDS
+echo "ui_print(\"                                                done!\");" >> $UPDS
 cat $UPDS > $UPDATER_LOC/$UPDS
 echo "# generated $UPDS" >> "$LOG"
 cat $UPDS >> "$LOG"
