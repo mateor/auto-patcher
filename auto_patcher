@@ -198,7 +198,7 @@ advanced_help () {
 }
 
 cleanup () {
-     [ -d "$TEMP" ] && \rm -rf "$TEMP"
+	rm -rf $ROOT/tmp*
 }
 
 garbage () {
@@ -376,7 +376,7 @@ replace_updater () {
 abspath () {
      case `uname -s` in
      CYGWIN*)
-          echo $(cygpath -ua "$1")
+          echo $(cygpath -ua "$1") | sed 's:/$::g' | sed 's: :\\ :g'
           ;;
      Darwin)
           #[[ $(echo $1 | awk '/^\//') == $1 ]] && echo "$1" || echo "$PWD/$1"
@@ -699,6 +699,7 @@ proberom () {
      echo "... result of ROM check: version= $VID rom= $RID ..."
 }
 
+
 # Advanced build date query
 # This should set the patch date automatically.
 
@@ -827,6 +828,13 @@ echo ""
 ROOT=$(abspath `dirname "$0"`)
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
+cleanup
+# set temporaray directory
+DATE=`date +%Y%m%d%H%M%S`
+TEMP=$ROOT/tmp$DATE
+TMP=$ROOT/tmp$DATE
+TMPDIR=$ROOT/tmp$DATE
+mkdir "$TEMP"
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
 
@@ -835,8 +843,6 @@ if [[ $OSTYPE == "cygwin" ]]; then
 	PGFORM="0x"
 fi
 
-DATE=`date +%Y%m%d%H%M%S`
-TEMP=$(abspath ./tmp$DATE)
 LOG=$(abspath ./log$DATE.txt)
 #echo $ROOT $TOOL $ROM $TEMP "$LOG"
 echo "ROOT= $ROOT" >> "$LOG"
@@ -865,7 +871,6 @@ which cpio >> "$LOG" || misstools_error "Missing \"cpio\" utility"
 printtask "### verify ROM ###"
 [ -f "$ROM" ] || print_error "Cannot find $1!! Make sure you have the location and name right"
 echo "### running $0 $@" >> "$LOG"
-mkdir "$TEMP"
 cd "$TEMP"
 
 PATH="$TEMP:$PATH"
