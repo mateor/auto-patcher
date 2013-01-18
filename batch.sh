@@ -3,7 +3,7 @@
 abspath () {
 	case `uname -s` in
 	CYGWIN*)
-		echo $(cygpath -ua "$1")
+		echo $(cygpath -ua "$1") | sed 's:/$::g'
 		;;
 	Darwin)
 		#[[ $(echo $1 | awk '/^\//') == $1 ]] && echo "$1" || echo "$PWD/$1"
