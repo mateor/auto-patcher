@@ -230,7 +230,7 @@ smali_error () {
      if [[ `grep 'method index is too large' "$LOG"` != "" ]]; then
           printtask "!!! Problem with method cap !!!"
           printtask "... attempting fix ..."
-          . patches/common/framework.jar.sh 2>&1 > ${JAR}.log
+          . patches/.common/framework.jar.sh 2>&1 > ${JAR}.log
           printtask "... rebuild framework.jar ..."
           java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
           [ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
@@ -366,7 +366,7 @@ replace_updater () {
 #  since CM7 seems to use an updater-script that wipes EMMC. Testing
 
      \rm $UPDATER_LOC/$UPDS
-     \cp patches/common/$UPDATER_LOC/$UPDS $UPDATER_LOC
+     \cp patches/.common/$UPDATER_LOC/$UPDS $UPDATER_LOC
      echo "run_program(\"/sbin/busybox\", \"umount\", \"/system\");" >> UPDATE.txt
      cat UPDATE.txt >> $UPDATER_LOC/$UPDS
      echo ""
@@ -566,24 +566,40 @@ aosp_mod_check() {
      if [ -s system/framework/framework2.jar ]; then
           ever_check
      else
-          AOSP=aosp-jb
+          AOSP=aosp
      fi
      echo $AOSP
 }
 
 ever_check() {
      MID=$(getbuildprop ro.build.romversion)
-     if [[ "$MID" == "Evervolv"* ]]; then
-          AOSP=aosp-ever
+     if [[ $MID == "Evervolv"* ]]; then
+          AOSP=".aosp-ever"
      else
           MID=$(getbuildprop ro.build.display.id)
           if [[ "$MID" == "ev"* ]]; then
-               AOSP=aosp-ever
+               AOSP=".aosp-ever"
           else
-               AOSP=aosp
+               slim_check
           fi
      fi
      echo $AOSP
+}
+
+slim_check() {
+     SLMID=$(getbuildprop ro.modversion)
+     SLMMID=$(getbuildprop updateme.name)
+     if [[ "$SLMMID" == "Slim"* ]] || [[ $SLMMID == "slim"* ]]; then
+          AOSP=".aosp-slim"
+     elif [[ "$SLMID" == "Slim"* ]] || [[ $SLMID == "slim"* ]]; then
+          AOSP=".aosp-slim"
+     else
+          if [[ "$ANDR" == "4.1" ]]; then
+               AOSP=.aosp-mod
+          else
+               AOSP="aosp"
+          fi
+     fi
 }
 
 pa_check() {
@@ -605,6 +621,23 @@ pa_check() {
                           ;;
                esac
           fi
+}
+
+romtype_set () {
+     case $RID in
+          cm)
+               ROMTYPE="cm"
+               ;;
+          aokp*)
+               ROMTYPE="aokp"
+               ;;
+          pa)
+               ROMTYPE="pa"
+               ;;
+          *)
+               ROMTYPE="aosp"
+               ;;
+     esac
 }
 
 proberom () {
@@ -662,7 +695,7 @@ proberom () {
                              RID=pa;
                              ;;
                         ev*)
-                             RID=aosp-ever;
+                             RID=".aosp-ever";
                              ;;
                         *)
 			              RID=`aosp_mod_check`;
@@ -689,7 +722,7 @@ proberom () {
                          RID=pa;
                          ;;
                     ev*|Ever*)
-                         RID=aosp-ever;
+                         RID=".aosp-ever";
                          ;;
                     *)
 	                    RID=`ever_check`;
@@ -698,7 +731,8 @@ proberom () {
      else
           print_error "unknown ROM version $VID"
      fi
-     echo "... result of ROM check: version= $VID rom= $RID ..."
+     romtype_set
+     echo "... result of ROM check: version= $VID rom= $ROMTYPE ..."
 }
 
 
@@ -726,7 +760,7 @@ if [ $# -gt 3 ]; then
      BDID=$BID
 else
      case $ANDR in
-          gingerbread)
+          2.3)
                # CM7 roms do not have UTC time stamp- so no build query.
                BID=latest;
                echo "*** CM7 roms default to latest patches. If using an older rom ***"
@@ -788,6 +822,7 @@ echo "# ANDR= $ANDR" >> "$LOG"
 echo "# BDID= $BDID" >> "$LOG"
 echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
+echo "Patches are $PID/$ANDR/$RID/$BID" >> "$LOG"
 
 }
 
@@ -932,7 +967,7 @@ if [ $# -gt 2 ]; then
                RID=pa;
                ;;
           aosp-ever)
-               RID=aosp-ever;
+               RID=".aosp-ever";
                ;;
           aosp*)
 	          case "ANDR" in
@@ -951,7 +986,8 @@ if [ $# -gt 2 ]; then
                rom_error "$RID is not a valid ROMTYPE!!"
                ;;
 	esac
-	echo "... Using $RID patches ..."
+     romtype_set
+	echo "... Using $ROMTYPE patches ..."
 else
 	echo "... Using results of ROM check ..."	
 fi
@@ -1075,8 +1111,8 @@ jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_err
 printtask "### create updater script ###"
 UPDATER_LOC=META-INF/com/google/android
 UPDS=updater-script
-UPDATE="update-$RID-$DID-$BDID-${PIL// /-}"
-RESTORE="restore-$RID-$DID-$BDID"
+UPDATE="update-$ROMTYPE-$DID-$BDID-${PIL// /-}"
+RESTORE="restore-$ROMTYPE-$DID-$BDID"
 
 jar -xvf "$ROMX" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
 jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
@@ -1090,7 +1126,7 @@ else
 fi
 
      # Create updater scripts
-cat patches/common/updater-message.txt >> $UPDS
+cat patches/.common/updater-message.txt >> $UPDS
 cat $UPDATER_LOC/$UPDS | grep ^mount | grep "/system" | head -n 1 >> $UPDS
 [ -s $UPDS ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" >> $UPDS
      # restore the original
@@ -1215,7 +1251,8 @@ for P in ${PID[@]}; do
           esac
      done
 
-     [[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$A/$R/$B ###"
+     [[ -n ${COPY[@]} ]] && echo "### copy patch $P/$A/$ROMTYPE/$B ###"
+     echo "### copy patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${COPY[@]}; do
           printtask "... copying $FILE ..."
           DEST=${FILE%/*}
@@ -1235,21 +1272,23 @@ for P in ${PID[@]}; do
      [ -f patches/$P/$A/$R/$B/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/$B/smali.txt)
      MOVE=${SMALI##*/}
      for SMALI in ${SMALI[@]}; do
-           if [ -f patches/$P/$A/$R/provisionals/$SMALI ]; then
+           if [ -f patches/$P/$A/$R/.provisionals/$SMALI ]; then
                 printtask "... overwriting $MOVE ..."
-                \cp -a patches/$P/$ANDR/$R/provisionals/$SMALI tmp/$SMALI >> "$LOG"
-           elif [ -f patches/$P/$A/provisionals/$SMALI ]; then
+                \cp -a patches/$P/$ANDR/$R/.provisionals/$SMALI tmp/$SMALI >> "$LOG"
+           elif [ -f patches/$P/$A/.provisionals/$SMALI ]; then
                 printtask "... overwriting $MOVE ..."
-                \cp -a patches/$P/$ANDR/provisionals/$SMALI tmp/$SMALI >> "$LOG"
+                \cp -a patches/$P/$ANDR/.provisionals/$SMALI tmp/$SMALI >> "$LOG"
            fi
      done
 
-     [[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$A/$R/$B ###"
+     [[ -n ${DELS[@]} ]] && echo "### delete patch $P/$A/$ROMTYPE/$B ###"
+     echo "### delete patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${DELS[@]}; do
           printtask "... deleting $FILE ..."
           \rm -rf ./$FILE
      done
-     [[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$A/$R/$B ###"
+     [[ -n ${JARS[@]} ]] && echo "### jar patch $P/$A/$ROMTYPE/$B ###"
+     echo "### jar patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${JARS[@]}; do
           JAR=${FILE##*/}
           NAME=${JAR%.jar}
@@ -1277,7 +1316,7 @@ for P in ${PID[@]}; do
                printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
                echo "### replace ${FAILS[@]} ###" > ${JAR}.log
                for FAIL in ${FAILS[@]}; do
-                    PROVISIONAL="patches/$P/$ANDR/provisionals/${FILE}.out/smali/${FAIL}"
+                    PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
                     echo "!!! patch error for $FAIL !!!" >> "$LOG"
                     #cat tmp/$FILE.out/smali/${FAIL}.rej >> "$LOG" # FOR DEBUGGING
                     [[ ${SID[@]} =~ $FAIL ]] && print_error "$FAIL was already replaced before"
@@ -1300,7 +1339,8 @@ for P in ${PID[@]}; do
           fi
      done
 
-     [[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$A/$R/$B ###"
+     [[ -n ${APKS[@]} ]] && echo "### apk patch $P/$A/$ROMTYPE/$B ###"
+     echo "### apk patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${APKS[@]}; do
           APK=${FILE##*/}
           if [ -d "tmp/${FILE}.out" ] ; then
@@ -1314,7 +1354,8 @@ for P in ${PID[@]}; do
                echo "## No $APK in ROM ###" >> "$LOG"
           fi
      done
-     [[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$A/$R/$B ###"
+     [[ -n ${IMGS[@]} ]] && echo "### img patch $P/$A/$ROMTYPE/$B ###"
+     echo "### img patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${IMGS[@]}; do
           IMG=${FILE##*/}
           printtask "... applying $IMG.patch ..."
@@ -1322,7 +1363,8 @@ for P in ${PID[@]}; do
      done
 
 # Text Editing Functions --this can really do just about anything. Needs a working restore!
-     [[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$A/$R/$B ###"
+     [[ -n ${TXTS[@]} ]] && echo "### text patch $P/$A/$ROMTYPE/$B ###"
+     echo "### text patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${TXTS[@]}; do
           TXT=${FILE##*/}
           if [[ -f $PARB/${TXT}.patch ]]; then
@@ -1350,8 +1392,8 @@ for P in ${PID[@]}; do
 done
 
      # Device specific scripts- Placement is up-for-review
-if [ -f patches/devices/$DID/$DID.sh ]; then
-     . patches/devices/$DID/$DID.sh
+if [ -f patches/.devices/$DID/$DID.sh ]; then
+     . patches/.devices/$DID/$DID.sh
 fi
 
      # Replace updater-script for CM7- it formats system -Testing
