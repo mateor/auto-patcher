@@ -154,9 +154,7 @@ display_help () {
      echo "*******************************************************************"
      echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]."
      echo ""
-     #find -H *  \( -name aokp -o -name cm -o -name aosp* -o -name pa -o -name all -o -name generic \) -prune | sed -e 's/-.*//' | column -c 85 | more -d -3
      find -H *  \( -name aokp -o -name cm -o -name aosp -o -name pa -o -name all -o -name generic \) -prune | column -c 85 | more -d -7
-     #-path './src/emacs' -prune
      echo ""
      echo "!!! Do not put Android Version number on command line !!!!"
      echo "*****************************************************************"
@@ -419,9 +417,11 @@ mods_display () {
 }
 
 mods_info () {
-     DEPENDENCY="None" # default
-     DEV="Unknown" # default
-     CEILING=$CURRENT_ANDROID # Default is that everything works...we'll see.
+     # Defaults
+     DEPENDENCY="None"
+     DEV="Unknown"
+     CEILING=$CURRENT_ANDROID
+     ROM_CONFLICTS="None"
      case $PID in
         mods)
              mods_display
@@ -432,6 +432,7 @@ mods_info () {
              echo "**************************************"
              echo "The Auto-Patcher ate a kitten once..."
              echo "**************************************"
+             echo ""
              printusage_help
              ;;
         advanced)
@@ -503,6 +504,7 @@ mods_info () {
         tabletUI)
              FLOOR=4.1.0
              CEILING=4.2.1
+             ROM_CONFLICTS=(pa .aosp-slim)
              DESC="Changes the user interface of Phones and Phablets to the popular Tablet UI."
              DEV="barmullio"
              ;;
@@ -526,6 +528,7 @@ apk_check () {
           print_error "failed patching $APK!!!"
      fi
 }
+
 compat_check () {
      for P in ${PID[@]}; do
           mods_info
@@ -537,6 +540,22 @@ compat_check () {
           fi
      done
 }
+
+rom_compat_check () {
+     for P in ${PID[@]}; do
+     N=${#ROM_CONFLICTS[@]}
+          for ((i=0; i < $N; i++)); do
+               if [[ $RID == ${ROM_CONFLICTS[$i]} ]]; then
+                    rom_compat_error
+               fi
+          done
+     done
+}
+
+rom_compat_error () {
+     print_error "$RID is incompatible with $PID!!!"
+}
+
 extpath () {
      case `uname -s` in
      CYGWIN*)
@@ -1005,19 +1024,22 @@ else
      echo "No mods selected. Defaulting to openpdroid, since that's what you probably want..."
 fi
 
-PID=(${PIL// / }) # turn string into array
+# Ensure only 1 Pdroid mod at a time; PDroid first, so provisional use
+#  does not overwrite other mods...
+
+PID=(${PIL// / }) # turn string of requested mods into array
 COPYPID=("${PID[@]}") # working copy to iterate over
 MODS_NUMBER=${#COPYPID[@]} # number of elements (mods)
 
-if [[ $MODS_NUMBER > 1 ]]; then
-INDEX=0
+if [[ $MODS_NUMBER > 1 ]]; then # cause if only one mod, no point
+INDEX=0 # 'pd2.0' didn't work with unset; regex barred multiple 'pdroid'
      for p in ${COPYPID[@]}; do
           if [ "$p" = "pdroid" ] || [ "$p" = "pd2.0" ] ||[ "$p" = "openpdroid" ]; then
-               SPID[0]=$p
+               SPID[0]=$p               #set pdroid first
                unset COPYPID["$INDEX"]
                break
           else
-               INDEX=$((INDEX + 1))
+               INDEX=$((INDEX + 1))  # if !pdroid, set as 1, 2...
           fi
      done
      for p in ${COPYPID[@]}; do
@@ -1036,8 +1058,13 @@ for P in ${PIL[@]}; do
 	[[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
 done
 
-# Check to make sure selected roms are available for the Android version of patched ROM
+# Check if selected mods are available for rom's Android version.
 compat_check
+
+# Make sure mod and rom don't conflict (e.g. pa and tabletUI)
+if [[ $ROM_CONFLICTS != "None" ]]; then
+     rom_compat_check
+fi
 
 # Build date
 if [ $# -gt 3 ]; then # if a date is specified on command line...
