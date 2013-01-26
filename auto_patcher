@@ -1114,6 +1114,10 @@ for P in ${PID[@]}; do
                     [[ ${JID[@]} =~ $FILE ]] || JID=(${JID[@]} $FILE)
                     echo "set_perm(0, 0, 0644, \"/$FILE\");" >> UPDATE.txt
                     ;;
+               ~system/*apk) # apps to decompile with smali instead of apktool
+                    [[ ${JID[@]} =~ ${FILE:1} ]] || JID=(${JID[@]} ${FILE:1})
+                    echo "set_perm(0, 0, 0644, \"/$FILE\");" >> UPDATE.txt
+                    ;;
                system/*.apk)
                     [[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
                     echo "set_perm(0, 0, 0644, \"/$FILE\");" >> UPDATE.txt
@@ -1271,6 +1275,9 @@ for P in ${PID[@]}; do
                system/*.jar)
                     JARS=(${JARS[@]} $FILE)
                     ;;
+               ~system/*)
+                    JARS=(${JARS[@]} ${FILE:1})
+                    ;;
                system/*.apk)
                     APKS=(${APKS[@]} $FILE)
                     ;;
@@ -1323,7 +1330,11 @@ for P in ${PID[@]}; do
      echo "### jar patch $P/$A/$R/$B ###" >> "$LOG"
      for FILE in ${JARS[@]}; do
           JAR=${FILE##*/}
-          NAME=${JAR%.jar}
+          if [[ $FILE == *".jar" ]]; then # allows for *.apks to be decompiled by baksmali
+               NAME=${JAR%.jar}
+          else
+               NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
+          fi
           printtask "... apply $NAME.patch ..."
           patch -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
           cat ${JAR}.log | tee -a "$LOG"
