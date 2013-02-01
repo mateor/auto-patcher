@@ -288,7 +288,7 @@
 
     move-result-object v0
 
-    const v3, 0x1110033
+    const v3, 0x1110030
 
     invoke-virtual {v0, v3}, Landroid/content/res/Resources;->getBoolean(I)Z
 
@@ -1271,7 +1271,7 @@
     :cond_b
     if-eqz p1, :cond_d8
 
-    const v4, 0x104043e
+    const v4, 0x1040422
 
     :goto_10
     move-object/from16 v0, p2
@@ -1290,7 +1290,7 @@
 
     move-result-object v12
 
-    const v14, 0x104043c
+    const v14, 0x1040420
 
     const/4 v15, 0x2
 
@@ -1404,7 +1404,7 @@
 
     move-result-object v14
 
-    const v15, 0x104043f
+    const v15, 0x1040423
 
     invoke-virtual {v12, v15}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -1414,7 +1414,7 @@
 
     move-result-object v14
 
-    const v15, 0x1040440
+    const v15, 0x1040424
 
     invoke-virtual {v12, v15}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -1461,7 +1461,7 @@
     goto/16 :goto_a
 
     :cond_d8
-    const v4, 0x104043d
+    const v4, 0x1040421
 
     goto/16 :goto_10
 .end method
@@ -1724,7 +1724,7 @@
 
     move-result-object v4
 
-    const v5, 0x1040439
+    const v5, 0x104041d
 
     const/4 v6, 0x1
 
@@ -1754,7 +1754,7 @@
 
     invoke-direct {v5, v6}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
 
-    const v6, 0x1040438
+    const v6, 0x104041c
 
     invoke-virtual {v5, v6}, Landroid/app/AlertDialog$Builder;->setTitle(I)Landroid/app/AlertDialog$Builder;
 
@@ -1770,7 +1770,7 @@
 
     move-result-object v5
 
-    const v6, 0x104043a
+    const v6, 0x104041e
 
     invoke-virtual {v4, v6}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -1780,7 +1780,7 @@
 
     move-result-object v5
 
-    const v6, 0x104043b
+    const v6, 0x104041f
 
     invoke-virtual {v4, v6}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
