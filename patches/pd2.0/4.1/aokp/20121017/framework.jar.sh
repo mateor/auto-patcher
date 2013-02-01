@@ -1,1 +1,1 @@
-../20121016/framework.jar.sh
+../../../common/framework.jar.sh
