@@ -103,6 +103,8 @@
 
 .field protected mSmsCapable:Z
 
+.field private mSmsPseudoMultipart:Z
+
 .field protected mSmsReceiveDisabled:Z
 
 .field protected mSmsSendDisabled:Z
@@ -182,9 +184,9 @@
 .method protected constructor <init>(Lcom/android/internal/telephony/PhoneBase;Lcom/android/internal/telephony/SmsStorageMonitor;Lcom/android/internal/telephony/SmsUsageMonitor;)V
     .registers 9
 
-    const/4 v2, 0x0
-
     const/4 v1, 0x1
+
+    const/4 v2, 0x0
 
     invoke-direct {p0}, Landroid/os/Handler;-><init>()V
 
@@ -288,7 +290,7 @@
 
     move-result-object v0
 
-    const v3, 0x1110030
+    const v3, 0x1110034
 
     invoke-virtual {v0, v3}, Landroid/content/res/Resources;->getBoolean(I)Z
 
@@ -304,7 +306,7 @@
 
     move-result v0
 
-    if-nez v0, :cond_d2
+    if-nez v0, :cond_da
 
     move v0, v1
 
@@ -319,10 +321,18 @@
 
     move-result v0
 
-    if-nez v0, :cond_d4
+    if-nez v0, :cond_dc
 
     :goto_8f
     iput-boolean v1, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsSendDisabled:Z
+
+    const-string v0, "telephony.sms.pseudo_multipart"
+
+    invoke-static {v0, v2}, Landroid/os/SystemProperties;->getBoolean(Ljava/lang/String;Z)Z
+
+    move-result v0
+
+    iput-boolean v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsPseudoMultipart:Z
 
     const-string v0, "SMS"
 
@@ -388,12 +398,12 @@
 
     return-void
 
-    :cond_d2
+    :cond_da
     move v0, v2
 
     goto :goto_83
 
-    :cond_d4
+    :cond_dc
     move v1, v2
 
     goto :goto_8f
@@ -704,6 +714,95 @@
     invoke-virtual/range {v0 .. v5}, Lcom/android/internal/telephony/SMSDispatcher;->sendMultipartText(Ljava/lang/String;Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/ArrayList;Ljava/util/ArrayList;)V
 
     :cond_56
+    return-void
+.end method
+
+.method private sendPseudoMultipartText(Ljava/lang/String;Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/ArrayList;Ljava/util/ArrayList;)V
+    .registers 14
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "(",
+            "Ljava/lang/String;",
+            "Ljava/lang/String;",
+            "Ljava/util/ArrayList",
+            "<",
+            "Ljava/lang/String;",
+            ">;",
+            "Ljava/util/ArrayList",
+            "<",
+            "Landroid/app/PendingIntent;",
+            ">;",
+            "Ljava/util/ArrayList",
+            "<",
+            "Landroid/app/PendingIntent;",
+            ">;)V"
+        }
+    .end annotation
+
+    invoke-virtual {p3}, Ljava/util/ArrayList;->size()I
+
+    move-result v7
+
+    iput v7, p0, Lcom/android/internal/telephony/SMSDispatcher;->mRemainingMessages:I
+
+    const/4 v6, 0x0
+
+    :goto_7
+    if-ge v6, v7, :cond_36
+
+    const/4 v4, 0x0
+
+    if-eqz p4, :cond_18
+
+    invoke-virtual {p4}, Ljava/util/ArrayList;->size()I
+
+    move-result v0
+
+    if-le v0, v6, :cond_18
+
+    invoke-virtual {p4, v6}, Ljava/util/ArrayList;->get(I)Ljava/lang/Object;
+
+    move-result-object v4
+
+    check-cast v4, Landroid/app/PendingIntent;
+
+    :cond_18
+    const/4 v5, 0x0
+
+    if-eqz p5, :cond_27
+
+    invoke-virtual {p5}, Ljava/util/ArrayList;->size()I
+
+    move-result v0
+
+    if-le v0, v6, :cond_27
+
+    invoke-virtual {p5, v6}, Ljava/util/ArrayList;->get(I)Ljava/lang/Object;
+
+    move-result-object v5
+
+    check-cast v5, Landroid/app/PendingIntent;
+
+    :cond_27
+    invoke-virtual {p3, v6}, Ljava/util/ArrayList;->get(I)Ljava/lang/Object;
+
+    move-result-object v3
+
+    check-cast v3, Ljava/lang/String;
+
+    move-object v0, p0
+
+    move-object v1, p1
+
+    move-object v2, p2
+
+    invoke-virtual/range {v0 .. v5}, Lcom/android/internal/telephony/SMSDispatcher;->sendText(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Landroid/app/PendingIntent;)V
+
+    add-int/lit8 v6, v6, 0x1
+
+    goto :goto_7
+
+    :cond_36
     return-void
 .end method
 
@@ -1271,7 +1370,7 @@
     :cond_b
     if-eqz p1, :cond_d8
 
-    const v4, 0x1040422
+    const v4, 0x1040447
 
     :goto_10
     move-object/from16 v0, p2
@@ -1290,7 +1389,7 @@
 
     move-result-object v12
 
-    const v14, 0x1040420
+    const v14, 0x1040445
 
     const/4 v15, 0x2
 
@@ -1340,7 +1439,7 @@
 
     new-instance v9, Lcom/android/internal/telephony/SMSDispatcher$ConfirmDialogListener;
 
-    const v14, 0x1020374
+    const v14, 0x1020375
 
     invoke-virtual {v8, v14}, Landroid/view/View;->findViewById(I)Landroid/view/View;
 
@@ -1354,7 +1453,7 @@
 
     invoke-direct {v9, v0, v1, v14}, Lcom/android/internal/telephony/SMSDispatcher$ConfirmDialogListener;-><init>(Lcom/android/internal/telephony/SMSDispatcher;Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;Landroid/widget/TextView;)V
 
-    const v14, 0x102036e
+    const v14, 0x102036f
 
     invoke-virtual {v8, v14}, Landroid/view/View;->findViewById(I)Landroid/view/View;
 
@@ -1364,7 +1463,7 @@
 
     invoke-virtual {v11, v10}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const v14, 0x102036f
+    const v14, 0x1020370
 
     invoke-virtual {v8, v14}, Landroid/view/View;->findViewById(I)Landroid/view/View;
 
@@ -1372,7 +1471,7 @@
 
     check-cast v5, Landroid/view/ViewGroup;
 
-    const v14, 0x1020371
+    const v14, 0x1020372
 
     invoke-virtual {v5, v14}, Landroid/view/ViewGroup;->findViewById(I)Landroid/view/View;
 
@@ -1382,7 +1481,7 @@
 
     invoke-virtual {v6, v4}, Landroid/widget/TextView;->setText(I)V
 
-    const v14, 0x1020372
+    const v14, 0x1020373
 
     invoke-virtual {v8, v14}, Landroid/view/View;->findViewById(I)Landroid/view/View;
 
@@ -1404,7 +1503,7 @@
 
     move-result-object v14
 
-    const v15, 0x1040423
+    const v15, 0x1040448
 
     invoke-virtual {v12, v15}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -1414,7 +1513,7 @@
 
     move-result-object v14
 
-    const v15, 0x1040424
+    const v15, 0x1040449
 
     invoke-virtual {v12, v15}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -1461,7 +1560,7 @@
     goto/16 :goto_a
 
     :cond_d8
-    const v4, 0x1040421
+    const v4, 0x1040446
 
     goto/16 :goto_10
 .end method
@@ -1724,7 +1823,7 @@
 
     move-result-object v4
 
-    const v5, 0x104041d
+    const v5, 0x1040442
 
     const/4 v6, 0x1
 
@@ -1754,7 +1853,7 @@
 
     invoke-direct {v5, v6}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
 
-    const v6, 0x104041c
+    const v6, 0x1040441
 
     invoke-virtual {v5, v6}, Landroid/app/AlertDialog$Builder;->setTitle(I)Landroid/app/AlertDialog$Builder;
 
@@ -1770,7 +1869,7 @@
 
     move-result-object v5
 
-    const v6, 0x104041e
+    const v6, 0x1040443
 
     invoke-virtual {v4, v6}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -1780,7 +1879,7 @@
 
     move-result-object v5
 
-    const v6, 0x104041f
+    const v6, 0x1040444
 
     invoke-virtual {v4, v6}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
 
@@ -2660,6 +2759,18 @@
         }
     .end annotation
 
+    move-object/from16 v0, p0
+
+    iget-boolean v1, v0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsPseudoMultipart:Z
+
+    if-eqz v1, :cond_a
+
+    invoke-direct/range {p0 .. p5}, Lcom/android/internal/telephony/SMSDispatcher;->sendPseudoMultipartText(Ljava/lang/String;Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/ArrayList;Ljava/util/ArrayList;)V
+
+    :cond_9
+    return-void
+
+    :cond_a
     invoke-static {}, Lcom/android/internal/telephony/SMSDispatcher;->getNextConcatenatedRef()I
 
     move-result v1
@@ -2680,8 +2791,8 @@
 
     const/4 v13, 0x0
 
-    :goto_12
-    if-ge v13, v14, :cond_33
+    :goto_1c
+    if-ge v13, v14, :cond_3d
 
     move-object/from16 v0, p3
 
@@ -2701,29 +2812,29 @@
 
     iget v1, v11, Lcom/android/internal/telephony/GsmAlphabet$TextEncodingDetails;->codeUnitSize:I
 
-    if-eq v6, v1, :cond_2e
+    if-eq v6, v1, :cond_38
 
-    if-eqz v6, :cond_2c
+    if-eqz v6, :cond_36
 
     const/4 v1, 0x1
 
-    if-ne v6, v1, :cond_2e
+    if-ne v6, v1, :cond_38
 
-    :cond_2c
+    :cond_36
     iget v6, v11, Lcom/android/internal/telephony/GsmAlphabet$TextEncodingDetails;->codeUnitSize:I
 
-    :cond_2e
+    :cond_38
     aput-object v11, v12, v13
 
     add-int/lit8 v13, v13, 0x1
 
-    goto :goto_12
+    goto :goto_1c
 
-    :cond_33
+    :cond_3d
     const/4 v13, 0x0
 
-    :goto_34
-    if-ge v13, v14, :cond_99
+    :goto_3e
+    if-ge v13, v14, :cond_9
 
     new-instance v10, Lcom/android/internal/telephony/SmsHeader$ConcatRef;
 
@@ -2749,7 +2860,7 @@
 
     const/4 v1, 0x1
 
-    if-ne v6, v1, :cond_5c
+    if-ne v6, v1, :cond_66
 
     aget-object v1, v12, v13
 
@@ -2763,16 +2874,16 @@
 
     iput v1, v5, Lcom/android/internal/telephony/SmsHeader;->languageShiftTable:I
 
-    :cond_5c
+    :cond_66
     const/4 v7, 0x0
 
-    if-eqz p4, :cond_6d
+    if-eqz p4, :cond_77
 
     invoke-virtual/range {p4 .. p4}, Ljava/util/ArrayList;->size()I
 
     move-result v1
 
-    if-le v1, v13, :cond_6d
+    if-le v1, v13, :cond_77
 
     move-object/from16 v0, p4
 
@@ -2782,16 +2893,16 @@
 
     check-cast v7, Landroid/app/PendingIntent;
 
-    :cond_6d
+    :cond_77
     const/4 v8, 0x0
 
-    if-eqz p5, :cond_7e
+    if-eqz p5, :cond_88
 
     invoke-virtual/range {p5 .. p5}, Ljava/util/ArrayList;->size()I
 
     move-result v1
 
-    if-le v1, v13, :cond_7e
+    if-le v1, v13, :cond_88
 
     move-object/from16 v0, p5
 
@@ -2801,7 +2912,7 @@
 
     check-cast v8, Landroid/app/PendingIntent;
 
-    :cond_7e
+    :cond_88
     move-object/from16 v0, p3
 
     invoke-virtual {v0, v13}, Ljava/util/ArrayList;->get(I)Ljava/lang/Object;
@@ -2812,11 +2923,11 @@
 
     add-int/lit8 v1, v14, -0x1
 
-    if-ne v13, v1, :cond_97
+    if-ne v13, v1, :cond_a1
 
     const/4 v9, 0x1
 
-    :goto_8b
+    :goto_95
     move-object/from16 v1, p0
 
     move-object/from16 v2, p1
@@ -2827,15 +2938,12 @@
 
     add-int/lit8 v13, v13, 0x1
 
-    goto :goto_34
+    goto :goto_3e
 
-    :cond_97
+    :cond_a1
     const/4 v9, 0x0
 
-    goto :goto_8b
-
-    :cond_99
-    return-void
+    goto :goto_95
 .end method
 
 .method protected abstract sendNewSubmitPdu(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/android/internal/telephony/SmsHeader;ILandroid/app/PendingIntent;Landroid/app/PendingIntent;Z)V

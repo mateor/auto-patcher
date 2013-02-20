@@ -670,119 +670,149 @@
 .end method
 
 .method private isRoamingBetweenOperators(ZLandroid/telephony/ServiceState;)Z
-    .registers 16
+    .registers 15
 
-    const/4 v8, 0x1
+    const-string v9, "gsm.sim.operator.alpha"
 
-    const/4 v9, 0x0
+    const-string v10, "empty"
 
-    const-string v10, "gsm.sim.operator.alpha"
+    invoke-static {v9, v10}, Landroid/os/SystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
-    const-string v11, "empty"
-
-    invoke-static {v10, v11}, Landroid/os/SystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v7
+    move-result-object v8
 
     invoke-virtual {p2}, Landroid/telephony/ServiceState;->getOperatorAlphaLong()Ljava/lang/String;
 
-    move-result-object v3
+    move-result-object v4
 
     invoke-virtual {p2}, Landroid/telephony/ServiceState;->getOperatorAlphaShort()Ljava/lang/String;
 
-    move-result-object v4
+    move-result-object v5
 
-    if-eqz v3, :cond_4a
+    if-eqz v4, :cond_60
 
-    invoke-virtual {v7, v3}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    invoke-virtual {v8, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
 
-    move-result v10
+    move-result v9
 
-    if-eqz v10, :cond_4a
+    if-eqz v9, :cond_60
 
-    move v1, v8
+    const/4 v1, 0x1
 
-    :goto_1b
-    if-eqz v4, :cond_4c
+    :goto_19
+    if-eqz v5, :cond_62
 
-    invoke-virtual {v7, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    invoke-virtual {v8, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
 
-    move-result v10
+    move-result v9
 
-    if-eqz v10, :cond_4c
+    if-eqz v9, :cond_62
 
-    move v2, v8
+    const/4 v2, 0x1
 
-    :goto_24
-    const-string v10, "gsm.sim.operator.numeric"
+    :goto_22
+    const-string v9, "gsm.sim.operator.numeric"
 
-    const-string v11, ""
+    const-string v10, ""
 
-    invoke-static {v10, v11}, Landroid/os/SystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    invoke-static {v9, v10}, Landroid/os/SystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
-    move-result-object v6
+    move-result-object v7
 
     invoke-virtual {p2}, Landroid/telephony/ServiceState;->getOperatorNumeric()Ljava/lang/String;
 
-    move-result-object v5
+    move-result-object v6
 
     const/4 v0, 0x1
+
+    const/4 v9, 0x0
+
+    const/4 v10, 0x3
+
+    :try_start_31
+    invoke-virtual {v7, v9, v10}, Ljava/lang/String;->substring(II)Ljava/lang/String;
+
+    move-result-object v9
 
     const/4 v10, 0x0
 
     const/4 v11, 0x3
 
-    :try_start_33
     invoke-virtual {v6, v10, v11}, Ljava/lang/String;->substring(II)Ljava/lang/String;
 
     move-result-object v10
 
-    const/4 v11, 0x0
-
-    const/4 v12, 0x3
-
-    invoke-virtual {v5, v11, v12}, Ljava/lang/String;->substring(II)Ljava/lang/String;
-
-    move-result-object v11
-
-    invoke-virtual {v10, v11}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-    :try_end_40
-    .catch Ljava/lang/Exception; {:try_start_33 .. :try_end_40} :catch_50
+    invoke-virtual {v9, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    :try_end_3e
+    .catch Ljava/lang/Exception; {:try_start_31 .. :try_end_3e} :catch_68
 
     move-result v0
 
-    :goto_41
-    if-eqz p1, :cond_4e
+    :goto_3f
+    iget-object v9, p0, Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;->phone:Lcom/android/internal/telephony/gsm/GSMPhone;
 
-    if-eqz v0, :cond_49
+    invoke-virtual {v9}, Lcom/android/internal/telephony/gsm/GSMPhone;->getContext()Landroid/content/Context;
 
-    if-nez v1, :cond_4e
+    move-result-object v9
 
-    if-nez v2, :cond_4e
+    invoke-virtual {v9}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
 
-    :cond_49
-    :goto_49
-    return v8
+    move-result-object v9
 
-    :cond_4a
-    move v1, v9
+    const-string v10, "mvno_roaming"
 
-    goto :goto_1b
+    const/4 v11, 0x0
 
-    :cond_4c
-    move v2, v9
+    invoke-static {v9, v10, v11}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
 
-    goto :goto_24
+    move-result v9
 
-    :cond_4e
-    move v8, v9
+    const/4 v10, 0x1
 
-    goto :goto_49
+    if-ne v9, v10, :cond_64
 
-    :catch_50
-    move-exception v10
+    const/4 v3, 0x1
 
-    goto :goto_41
+    :goto_54
+    if-eqz p1, :cond_66
+
+    if-eqz v0, :cond_5e
+
+    if-nez v1, :cond_66
+
+    if-nez v2, :cond_66
+
+    if-nez v3, :cond_66
+
+    :cond_5e
+    const/4 v9, 0x1
+
+    :goto_5f
+    return v9
+
+    :cond_60
+    const/4 v1, 0x0
+
+    goto :goto_19
+
+    :cond_62
+    const/4 v2, 0x0
+
+    goto :goto_22
+
+    :cond_64
+    const/4 v3, 0x0
+
+    goto :goto_54
+
+    :cond_66
+    const/4 v9, 0x0
+
+    goto :goto_5f
+
+    :catch_68
+    move-exception v9
+
+    goto :goto_3f
 .end method
 
 .method private onRestrictedStateChanged(Landroid/os/AsyncResult;)V
@@ -3887,7 +3917,7 @@
 
     const-string v1, ""
 
-    const v6, 0x104009a
+    const v6, 0x10400ab
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -3966,7 +3996,7 @@
     :pswitch_97
     const/16 v3, 0x378
 
-    const v6, 0x104009b
+    const v6, 0x10400ac
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -3980,7 +4010,7 @@
     goto :goto_56
 
     :pswitch_a4
-    const v6, 0x104009e
+    const v6, 0x10400af
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -3989,7 +4019,7 @@
     goto :goto_56
 
     :pswitch_ac
-    const v6, 0x104009d
+    const v6, 0x10400ae
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -3998,7 +4028,7 @@
     goto :goto_56
 
     :pswitch_b4
-    const v6, 0x104009c
+    const v6, 0x10400ad
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -5855,7 +5885,7 @@
 
     move-result-object v13
 
-    const v14, 0x1110034
+    const v14, 0x1110039
 
     invoke-virtual {v13, v14}, Landroid/content/res/Resources;->getBoolean(I)Z
 
@@ -6559,7 +6589,7 @@
 
     move-result-object v14
 
-    const v15, 0x111002f
+    const v15, 0x1110033
 
     invoke-virtual {v14, v15}, Landroid/content/res/Resources;->getBoolean(I)Z
 
@@ -7522,7 +7552,7 @@
 
     move-result-object v9
 
-    const v10, 0x1040300
+    const v10, 0x1040325
 
     invoke-virtual {v9, v10}, Landroid/content/res/Resources;->getText(I)Ljava/lang/CharSequence;
 
@@ -7714,7 +7744,7 @@
 
     move-result-object v9
 
-    const v10, 0x10402e6
+    const v10, 0x104030a
 
     invoke-virtual {v9, v10}, Landroid/content/res/Resources;->getText(I)Ljava/lang/CharSequence;
 
