@@ -113,7 +113,7 @@
 # 2013.02.09. (v2.7.5) Add new AOKP, AOSP, CM10.1 and PA (3.0) patches for OPD (Andr. 4.2.2)
 # 2013.02.17. (v2.7.9) 4.2.2 opd 4 evervolv; v6supercharger,3gdongle and all but tabletUI.
 # 2013.02.20. (v2.8.0) New CM10.1 opd patches. Each BID can have own provisionals now.
-# 2013.02.23. (v2.8.15) SlimRom 4.2.2 support (from karamelos) (error catch- build query)
+# 2013.02.23. (v2.8.2) SlimRom 4.2.2 support (from karamelos), APK recompile safety net.
 
 
 # SHELL PROGRAMMING NOTES:
@@ -931,7 +931,6 @@ else [[ $BIT = "32" ]];
 	BIT=32
 fi
 
-
 printtask "### verify tools ###"
 which patch >> "$LOG" || misstools_error "Missing \"patch\" utility."
 which tar >> "$LOG" || misstools_error "Missing \"tar\" utility"
@@ -1479,7 +1478,7 @@ for FILE in ${AID[@]}; do
      APK=${FILE##*/}
      if [ -d tmp/${FILE}.out ]; then
           printtask "... rebuild $APK ..."
-          java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || print_error "failed compiling $FILE !!!"
+          java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || apk_check
           jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
      fi
 done
