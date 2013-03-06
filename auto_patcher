@@ -212,7 +212,7 @@ advanced_help () {
 }
 
 cleanup () {
-	[[ -n $ROOT ]] && \rm -rf "${TEMP}"
+	[[ -n $ROOT ]] && \rm -rf "$ROOT"/tmp*
 }
 
 garbage () {
@@ -596,7 +596,7 @@ getbuildprop () {
 
 
 aosp_mod_check() {
-     jar -xvf "${ROM}" system/framework/framework2.jar >> $LOG
+     jar -xvf "$ROMX" system/framework/framework2.jar >> $LOG
      if [ -s system/framework/framework2.jar ]; then
           ever_check
      else
@@ -903,15 +903,18 @@ echo "The Auto-Patcher $VERSION"
 echo ""
 # by pastime1971 and mateorod
 
-ROM=$(extpath "$1")
 ROOT=$(abspath $(dirname $(readlink -f $(type -p "$0"))))
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
 cleanup
 # set temporaray directory
 DATE=`date +%Y%m%d%H%M%S`
-TEMP=${ROM}.tmp$DATE
+TEMP=$ROOT/tmp$DATE
+TMP=$ROOT/tmp$DATE
+TMPDIR=$ROOT/tmp$DATE
 mkdir "$TEMP"
+ROM=$(abspath "$1")
+ROMX=$(extpath "$1")
 
 if [[ $OSTYPE == "cygwin" ]]; then
 	EXE=".exe"
@@ -922,7 +925,8 @@ LOG=$(abspath ./log$DATE.txt)
 #echo $ROOT $TOOL $ROM $TEMP "$LOG"
 echo "ROOT= $ROOT" >> "$LOG"
 echo "TOOL= $TOOL" >> "$LOG"
-echo "ROM= ${ROM}" >> "$LOG"
+echo "ROM=  $ROM" >> "$LOG"
+echo "ROMX= $ROMX" >> "$LOG"
 
 \rm -f $RESTORE.zip $UPDATE.zip
 
@@ -942,7 +946,7 @@ which cpio >> "$LOG" || misstools_error "Missing \"cpio\" utility"
 [ -f "$TOOL" ] || misspatch_error "patch_tool.tgz is missing"
 [ -f "$PTCH" ] || misspatch_error "patch_patches.tgz is missing"
 printtask "### verify ROM ###"
-[ -f "${ROM}" ] || print_error "Cannot find $1!! Make sure you have the location and name right"
+[ -f "$ROM" ] || print_error "Cannot find $1!! Make sure you have the location and name right"
 echo "### running $0 $@" >> "$LOG"
 cd "$TEMP"
 
@@ -977,7 +981,7 @@ printtask "### unzip patch patches ###"
 tar xzf "$PTCH" > /dev/null || print_error "failed extracting patches !!!"
 
 # we need build.prop for both RIL probing and ROM probing
-jar -xvf "${ROM}" system/build.prop 2>> "$LOG" || print_error "failed extracting build.prop from ${ROM} !!!"
+jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || print_error "failed extracting build.prop from $ROMX !!!"
 
 # rom + ril type
 proberil
@@ -1159,7 +1163,7 @@ echo "### TXT FILES= ${TID[@]}" >> "$LOG"
 
 # extract system files
 printtask "### unzip rom ###"
-jar -xvf "${ROM}" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_error "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from ${ROM} !!!"
+jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_error "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
 
 
 # Update/Restore.zip scripts and prep 
@@ -1169,8 +1173,8 @@ UPDS=updater-script
 UPDATE="update-$ROMTYPE-$DID-$BDID-${PIL// /-}"
 RESTORE="restore-$ROMTYPE-$DID-$BDID"
 
-jar -xvf "${ROM}" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
-jar -xvf "${ROM}" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
+jar -xvf "$ROMX" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
+jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
 
      # Determine Installer- Aroma or ClockworkMod
 if [ -f $UPDATER_LOC/update-binary-installer ]; then
@@ -1186,11 +1190,11 @@ cat $UPDATER_LOC/$UPDS | grep ^mount | grep "/system" | head -n 1 >> $UPDS
 [ -s $UPDS ] || echo "run_program(\"/sbin/busybox\", \"mount\", \"/system\");" >> $UPDS
      # restore the original
 for FILE in ${EID[@]}; do
-     jar -xvf "${ROM}" $FILE 2> /dev/null || printtask "!!! warning $FILE cannot be restored !!!"
+     jar -xvf "$ROMX" $FILE 2> /dev/null || printtask "!!! warning $FILE cannot be restored !!!"
 done
      # replace with the original or delete it
 for FILE in ${CID[@]}; do
-     jar -xvf "${ROM}" $FILE 2> /dev/null || echo "delete(\"/$FILE\");" >> $UPDS
+     jar -xvf "$ROMX" $FILE 2> /dev/null || echo "delete(\"/$FILE\");" >> $UPDS
 done
 echo "package_extract_dir(\"system\", \"/system\");" >> $UPDS
      # permission management for files that need specific perms
@@ -1234,7 +1238,7 @@ done
 
      # install framework-files for APK...
 if [ ${#AID[@]} -gt 0 ]; then
-     jar -xvf "${ROM}" system/framework/framework-res.apk >> "$LOG"
+     jar -xvf "$ROMX" system/framework/framework-res.apk >> "$LOG"
      printtask "... installing framework files ..."
      java -jar apktool.jar if system/framework/framework-res.apk
    # Decompile APKs
