@@ -614,10 +614,24 @@ ever_check() {
           if [[ "$MID" == "ev"* ]]; then
                AOSP=".aosp-ever"
           else
-               slim_check
+               pac_check
           fi
      fi
      echo $AOSP
+}
+
+pac_check() {
+     MID=$(getbuildprop ro.build.romversion)
+     if [[ "$MID" == "pac"* ]] || [[ "$MID" == "PAC"* ]]; then
+          AOSP=".aosp-pac"
+     else
+          MID=$(getbuildprop ro.build.display.id)
+     if [[ "$MID" == "pac"* ]] || [[ "$MID" == "PAC"* ]]; then
+         AOSP=".aosp-pac"
+          else
+               slim_check
+          fi
+     fi
 }
 
 slim_check() {
@@ -764,11 +778,11 @@ proberom () {
                          RID=".aosp-ever";
                          ;;
                     *)
-	                    RID=`ever_check`;
+	                    RID="`ever_check`";
 			          ;;
                esac
      else
-          print_error "unknown ROM version $VID"
+          print_error "unknown ROM version $VID: generally means cannot find/read build.prop"
      fi
      romtype_set
      echo "... result of ROM check: version= $VID rom= $ROMTYPE ..."
@@ -808,12 +822,21 @@ else
           *)
                for P in ${PID[@]}; do
                     [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
-                    [ -d patches/$P/$A/$RID ] && R=$RID || R=generic
+                    [ -d patches/$P/$A/"$RID" ] && R=$RID || R=generic
+            #        OPTIONS=`ls -a patches/$PID/$ANDR`
+            #        for o in $OPTIONS; do
+            #             if [ "$RID"=="o" ]; then
+            #                  R="$RID"
+            #                  break
+            #             else
+            #                  R=generic
+            #             fi
+            #        done
                     [ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
                     PAR=patches/$P/$A/$R
                     PARB=patches/$P/$A/$R/$B
-                    DATES=`ls patches/$P/$A/$R/ | grep '201*'`
-             # Intialize variable - High so as to determine lowest in first loop.
+                    DATES=`ls patches/$P/$A/"$R" | grep '201*'`
+             # Intialize variable - an upperbound to determine lowest in first loop.
                     BID=20201231
                          # find earliest available patch date
                          for i in $DATES; do
@@ -836,14 +859,14 @@ else
                                    fi
                               done
                          fi
+                         # Error catch if query fails.
+                         [[ $BID == "20201231" ]] && BID=latest && echo "Build Query Failed!! Default to latest!" >> "$LOG"
                          echo "... $PID patch date has been set to: $BID ..."
                          B=$BID
                          break
                done
                ;;
      esac
-     # Error Catch. If build query failed, it was breaking down through missing symlinks
-     [[ $BID == "20201231" ]] && BID=latest && echo "Build Query Failed!! Default to latest!" >> "$LOG"
 fi
 }
         
