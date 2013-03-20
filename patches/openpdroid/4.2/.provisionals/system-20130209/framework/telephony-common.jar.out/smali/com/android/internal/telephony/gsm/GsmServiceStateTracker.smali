@@ -3917,7 +3917,7 @@
 
     const-string v1, ""
 
-    const v6, 0x10400ab
+    const v6, 0x10400c1
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -3996,7 +3996,7 @@
     :pswitch_97
     const/16 v3, 0x378
 
-    const v6, 0x10400ac
+    const v6, 0x10400c2
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -4010,7 +4010,7 @@
     goto :goto_56
 
     :pswitch_a4
-    const v6, 0x10400af
+    const v6, 0x10400c5
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -4019,7 +4019,7 @@
     goto :goto_56
 
     :pswitch_ac
-    const v6, 0x10400ae
+    const v6, 0x10400c4
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -4028,7 +4028,7 @@
     goto :goto_56
 
     :pswitch_b4
-    const v6, 0x10400ad
+    const v6, 0x10400c3
 
     invoke-virtual {v0, v6}, Landroid/content/Context;->getText(I)Ljava/lang/CharSequence;
 
@@ -7552,7 +7552,7 @@
 
     move-result-object v9
 
-    const v10, 0x1040325
+    const v10, 0x104032b
 
     invoke-virtual {v9, v10}, Landroid/content/res/Resources;->getText(I)Ljava/lang/CharSequence;
 
@@ -7744,7 +7744,7 @@
 
     move-result-object v9
 
-    const v10, 0x104030a
+    const v10, 0x1040311
 
     invoke-virtual {v9, v10}, Landroid/content/res/Resources;->getText(I)Ljava/lang/CharSequence;
 
