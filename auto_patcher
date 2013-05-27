@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: beta v2.9.6, patches 2013.05.20.
+# version: beta v2.9.7, patches 2013.05.20.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -127,14 +127,15 @@
 # 2013.04.18. (V2.9.3) Added missing framework2.jar opd aosp 4.1
 # 2013.05.08. (v2.9.4) Updates to TabletUI (from Caldair)
 # 2013.05.18. (v2.9.5) New AOKP openpdroid patches (0514)
-# 2013.05.20. (v2.9.6)New CM and PAC-man (aosp) openpdroid patches.
+# 2013.05.20. (v2.9.6) New CM and PAC-man (aosp) openpdroid patches.
+# 2013.05.27. (v2.9.7) $INCREMENTAL patches for bugs/updates and GPS fix for opd (credits to phillipberndt)
 
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ] 
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
-VERSION="v2.9.6"
+VERSION="v2.9.7"
 CURRENT_ANDROID="4.2.2"
 
 # pass variables to children
@@ -1396,9 +1397,9 @@ for P in ${PID[@]}; do
           fi
           printtask "... apply $NAME.patch ..."
           patch -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
-          for ADDITIONAL in `ls $PARB/${NAME}-*.patch 2>/dev/null`; do
-               printtask "... apply `basename $ADDITIONAL` ..."
-               patch -Nls -p1 -d tmp/${FILE}.out < $ADDITIONAL 2>&1 > ${JAR}.log
+          for INCREMENTAL in `ls $PARB/${NAME}-*.patch 2>/dev/null`; do
+               printtask "... apply `basename $INCREMENTAL` ..."
+               patch -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 > ${JAR}.log
           done
           cat ${JAR}.log | tee -a "$LOG"
           case "$NAME" in
