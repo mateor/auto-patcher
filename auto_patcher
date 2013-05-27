@@ -1396,6 +1396,10 @@ for P in ${PID[@]}; do
           fi
           printtask "... apply $NAME.patch ..."
           patch -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
+          for ADDITIONAL in `ls $PARB/${NAME}-*.patch 2>/dev/null`; do
+               printtask "... apply `basename $ADDITIONAL` ..."
+               patch -Nls -p1 -d tmp/${FILE}.out < $ADDITIONAL 2>&1 > ${JAR}.log
+          done
           cat ${JAR}.log | tee -a "$LOG"
           case "$NAME" in
                framework)
