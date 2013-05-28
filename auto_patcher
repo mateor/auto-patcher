@@ -141,6 +141,9 @@ CURRENT_ANDROID="4.2.2"
 # pass variables to children
 set -a
 
+#declare some variables
+apk_was_copied=false
+
 printusage_help () {
      PID="openpdroid,3gdongle" # default example
      brief_help
@@ -553,8 +556,9 @@ mods_info () {
 
 apk_check () {
      if [ -f patches/$P/$A/$R/$B/$FILE ]; then
-          echo "... Patching $APK failed, but we will copy over a prepatched file ..."
           \cp -av patches/$P/$A/$R/$B/$FILE $FILE >> "$LOG"
+          echo "... Patching $APK failed, but we have successfuly copied over a prepatched file ..."
+          apk_was_copied=true
      else
           print_error "failed patching $APK!!!"
      fi
@@ -1522,15 +1526,18 @@ for FILE in ${JID[@]}; do
      fi
 done
 
-[[ -n ${AID[@]} ]] && printtask "### rebuild apk ###"
-for FILE in ${AID[@]}; do
-     APK=${FILE##*/}
-     if [ -d tmp/${FILE}.out ]; then
-          printtask "... rebuild $APK ..."
-          java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || apk_check
-          jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
-     fi
-done
+# Check if prepatched app was copied over in apk_check before rebuilding
+if !("$apk_was_copied"); then
+     [[ -n ${AID[@]} ]] && printtask "### rebuild apk ###"
+     for FILE in ${AID[@]}; do
+         APK=${FILE##*/}
+         if [ -d tmp/${FILE}.out ]; then
+              printtask "... rebuild $APK ..."
+             java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || apk_check
+             [[ !("$apk_was_copied") ]] && jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
+         fi
+     done
+fi
 
 [[ -n ${IID[@]} ]] && printtask "### rebuild img ###"
 for FILE in ${IID[@]}; do
