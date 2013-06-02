@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: beta v2.9.78, patches 2013.05.29.
+# version: beta v2.9.8, patches 2013.05.29.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -129,21 +129,18 @@
 # 2013.05.18. (v2.9.5) New AOKP openpdroid patches (0514)
 # 2013.05.20. (v2.9.6) New CM and PAC-man (aosp) openpdroid patches.
 # 2013.05.27. (v2.9.7) $INCREMENTAL patches for bugs/updates and GPS fix for opd (credits to phillipberndt)
-# 2013.05.30. (v2.9.78) Improve apk handling...test for disappearing apks. New evervolv
+# 2013.05.30. (v2.9.8) Improve apk handling: fix disappearing apks. New opd: evervolv,slim
 
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ] 
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
-VERSION="v2.9.78"
+VERSION="v2.9.8"
 CURRENT_ANDROID="4.2.2"
 
 # pass variables to children
 set -a
-
-#declare some variables
-apk_was_copied=false
 
 printusage_help () {
      PID="openpdroid,3gdongle" # default example
@@ -555,7 +552,7 @@ mods_info () {
      COMPATC=${CEILING//[.]/}
 }
 
-apk_check () {
+apk_copy () {
      if [ -f patches/$P/$A/$R/$B/$FILE ]; then
           \cp -av patches/$P/$A/$R/$B/$FILE $FILE >> "$LOG"
           echo "... Patching $APK failed, but we have successfuly copied over a prepatched file ..."
@@ -1181,6 +1178,8 @@ for P in ${PID[@]}; do
           system/*.apk)
                [[ ${AID[@]} =~ $FILE ]] || AID=(${AID[@]} $FILE)
                echo "set_perm(0, 0, 0644, \"/$FILE\");" >> UPDATE.txt
+               # $APKID will have elements removed sometimes--$AID is the master list for the update.zip
+               declare -a APKID=( "${AID[@]}" )
                ;;
           *.img)
                [[ ${IID[@]} =~ $FILE ]] || IID=(${IID[@]} $FILE)
@@ -1459,7 +1458,10 @@ for P in ${PID[@]}; do
                printtask "... apply $APK.patch ..."
                patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log
                cat ${APK}.log | tee -a "$LOG"
-               [[ `grep FAILED ${APK}.log` != "" ]] && apk_check
+               if [[ `grep FAILED ${APK}.log` != "" ]]; then
+                    apk_copy
+                    declare -a APKID=( ${APKID[@]/$FILE/} )
+               fi
                garbage tmp/${FILE}.out
           else
                echo "No $APK in your ROM. Not able to patch this file."
@@ -1527,18 +1529,18 @@ for FILE in ${JID[@]}; do
      fi
 done
 
-# Check if prepatched app was copied over in apk_check before rebuilding
-if !("$apk_was_copied"); then
-     [[ -n ${AID[@]} ]] && printtask "### rebuild apk ###"
-     for FILE in ${AID[@]}; do
-         APK=${FILE##*/}
-         if [ -d tmp/${FILE}.out ]; then
-              printtask "... rebuild $APK ..."
-             java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || apk_check
-             [[ !("$apk_was_copied") ]] && jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
-         fi
-     done
-fi
+[[ -n ${APKID[@]} ]] && printtask "### rebuild apk ###"
+for FILE in ${APKID[@]}; do
+     APK=${FILE##*/}
+     if [ -d tmp/${FILE}.out ]; then
+          apk_was_copied=false
+          printtask "... rebuild $APK ..."
+          java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || apk_copy
+          if !("$apk_was_copied"); then
+             jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
+          fi
+     fi
+done
 
 [[ -n ${IID[@]} ]] && printtask "### rebuild img ###"
 for FILE in ${IID[@]}; do
