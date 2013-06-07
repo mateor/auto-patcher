@@ -253,7 +253,7 @@ smali_error () {
      printtask "!!! error: $@"
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      echo ""
-     if [[ `grep 'method index is too large' "$LOG"` != "" ]]; then
+     if [[ $(grep 'method index is too large' "$LOG") != "" ]]; then
           printtask "!!! Problem with method cap !!!"
           printtask "... attempting fix ..."
           . patches/.common/framework.jar.sh 2>&1 > ${JAR}.log
@@ -402,7 +402,7 @@ replace_updater () {
 }
 
 abspath () {
-     case `uname -s` in
+     case $(uname -s) in
      CYGWIN*)
           echo $(cygpath -ua "$1") | sed 's:/$::g'
           ;;
@@ -590,7 +590,7 @@ rom_compat_error () {
 }
 
 extpath () {
-     case `uname -s` in
+     case $(uname -s) in
      CYGWIN*)
           echo $(cygpath -da "$1")
           ;;
@@ -606,7 +606,7 @@ parse () { echo "${1%%_*}"; }
 
 getbuildprop () {
      if [ -f system/build.prop ]; then
-          result=(`grep $1 system/build.prop | tr -d '\r' | tr '=' ' '`)
+          result=($(grep $1 system/build.prop | tr -d '\r' | tr '=' ' '))
           echo "${result[1]}"
      else
           echo ""
@@ -766,7 +766,7 @@ proberom () {
                          RID=".aosp-ever";
                          ;;
                     *)
-                         RID=`aosp_mod_check`;
+                         RID=$(aosp_mod_check);
                          ;;
                     esac
                fi
@@ -797,7 +797,7 @@ proberom () {
                     RID=".aosp-ever";
                     ;;
                *)
-                    RID="`ever_check`";
+                    RID="$(ever_check)";
                     ;;
                esac
      else
@@ -816,13 +816,13 @@ build_query() {
 UTC=$(getbuildprop ro.build.date.utc)
 
 # Difference in how OS X and Linux/Cygwin handles 'date' utility
-case `uname -s` in
+case $(uname -s) in
         [Dd]arwin)
-             BDID=`date -r $UTC +%Y%m%d`
+             BDID=$(date -r $UTC +%Y%m%d)
              echo "#### Darwin Build Query used ####" >> "$LOG"
              ;;
         *)
-             BDID=`date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d"`
+             BDID=$(date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d")
              echo "#### Standard Build Query ####" >> "$LOG"
              ;;
 esac
@@ -846,7 +846,7 @@ else
                     [ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
                     PAR=patches/$P/$A/$R
                     PARB=patches/$P/$A/$R/$B
-                    DATES=`ls patches/$P/$A/"$R" | grep '201*'`
+                    DATES=$(ls patches/$P/$A/"$R" | grep '201*')
              # Intialize variable - an upperbound to determine lowest in first loop.
                     BID=20201231
                          # find earliest available patch date
@@ -942,7 +942,7 @@ TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
 cleanup
 # set temporaray directory
-DATE=`date +%Y%m%d%H%M%S`
+DATE=$(date +%Y%m%d%H%M%S)
 TEMP="$ROOT/tmp$DATE"
 TMP="$ROOT/tmp$DATE"
 TMPDIR="$ROOT/tmp$DATE"
@@ -992,7 +992,7 @@ printtask "### unzip patch tools ###"
 tar xzf "$TOOL" > /dev/null || print_error "failed extracting tools !!!"
 
 # Get OS specific tools
-     case `uname -s` in
+     case $(uname -s) in
      CYGWIN*)
           \mv cygwin/aapt.exe .
           \mv cygwin/*.exe boot/
@@ -1054,10 +1054,10 @@ if [ $# -gt 2 ]; then
     aosp*)
           case "ANDR" in
           4.1)
-               RID=`aosp_mod_check`;
+               RID=$(aosp_mod_check);
                ;;
           *)
-               RID=`ever_check`
+               RID=$(ever_check)
                ;;
           esac
           ;;
@@ -1401,8 +1401,8 @@ for P in ${PID[@]}; do
           fi
           printtask "... apply $NAME.patch ..."
           patch -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
-          for INCREMENTAL in `ls $PARB/${NAME}-*.patch 2>/dev/null`; do
-               printtask "... apply `basename $INCREMENTAL` ..."
+          for INCREMENTAL in $(ls $PARB/${NAME}-*.patch 2>/dev/null); do
+               printtask "... apply $(basename $INCREMENTAL) ..."
                patch -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 > ${JAR}.log
           done
           cat ${JAR}.log | tee -a "$LOG"
@@ -1413,7 +1413,7 @@ for P in ${PID[@]}; do
                          printtask "... apply preloaded.patch ..."
                          patch -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
                          cat preloaded.log | tee -a "$LOG"
-                         [[ `grep FAILED preloaded.log` != "" ]] && print_error "failed preloaded.patch"
+                         [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
                     fi
                     ;;
                *)
@@ -1422,7 +1422,7 @@ for P in ${PID[@]}; do
           esac
           # substitute failed smali with provisional (a prepatched smali file)
           unset FAILS
-          FAILS=(`grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'`)
+          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
           if [[ -n ${FAILS[@]} ]]; then
                printtask "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
                echo "### replace ${FAILS[@]} ###" > ${JAR}.log
@@ -1439,7 +1439,7 @@ for P in ${PID[@]}; do
                     SID=(${SID[@]} $FAIL)
                done
           fi
-          [[ `grep FAILED ${JAR}.log` != "" ]] &&  print_error "failed $NAME.patch"
+          [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
           garbage tmp/${FILE}.out
 
      # run special $JAR.sh scripts if any JAR needs special attention 
@@ -1458,7 +1458,7 @@ for P in ${PID[@]}; do
                printtask "... apply $APK.patch ..."
                patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log
                cat ${APK}.log | tee -a "$LOG"
-               if [[ `grep FAILED ${APK}.log` != "" ]]; then
+               if [[ $(grep FAILED ${APK}.log) != "" ]]; then
                     apk_copy
                     declare -a APKID=( ${APKID[@]/$FILE/} )
                fi
@@ -1485,7 +1485,7 @@ for P in ${PID[@]}; do
                printtask "... apply $TXT.patch ..."
                patch -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
                #cat ${TXT}.log | tee -a "$LOG"
-               [[ `grep FAILED ${TXT}.log` != "" ]] && print_error "failed $TXT.patch"
+               [[ $(grep FAILED ${TXT}.log) != "" ]] && print_error "failed $TXT.patch"
           fi
           if [[ -f $PAR/${TXT}.awk ]]; then
                printtask "... apply $TXT.awk ..."
