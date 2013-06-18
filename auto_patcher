@@ -965,7 +965,6 @@ echo ""
 echo "The Auto-Patcher $VERSION"
 # by pastime1971 and mateorod
 if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
-     echo ""
      echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
 fi
 echo ""
@@ -1019,15 +1018,16 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
                printtask "Updater: Script is already up to date"
                ;;
           *)
-               echo "... Updater: update found, now updating Auto-Patcher ..."
+               printtask "... Updater: update found ..."
+               echo "... Updating Auto-Patcher ..."
                git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
                AUTO_PATCHER_OLD_VERSION=$VERSION
                AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
                AUTO_PATCHER_WAS_UPDATED=true
                printtask "### Rerunning script with latest version ###"
-               cp -av "$LOG" .updated.log
+               cp -a "$LOG" .updated.log
                $0 "$@" # runs script with same parameters
-               exit 0  # ends current run
+               exit 0  # ends current run of script
                ;;
           esac
           echo ""
