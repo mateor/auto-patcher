@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Look after changelog for version information.
+# Look after changelog for script/patch version info.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -133,8 +133,8 @@
 
 
 # SHELL PROGRAMMING NOTES:
-# [ -s FILE ]
-# [[ -n STRING ]] or [[ -z STRING ]]
+# [ -s FILE ] 
+# [[ -n STRING ]] or [[ -z STRING ]] 
 
 VERSION="v2.9.8"
 # PATCHES_VERSION needs to be incremented anytime ANY changes occur to patches.
@@ -391,18 +391,20 @@ askconsent () {
 no_network_access () {
      printtask "Check for update failed, probably because of no internet access."
      echo "The autopatcher will continue with current local version: $VERSION"
-     ping -c1 www.github.com >> "$LOG" # test site for debugging
-     ping -c1 www.google.com >> "$LOG" # test for internet in general
+     ping -c1 www.github.com &>> "$LOG" # test site for debugging
+     ping -c1 www.google.com &>> "$LOG" # test for internet in general
      NETWORK=false
+     echo ""
+     sleep 2
 }
 
 auto_update_error () {
      echo ""
      printtask "### Update failed ###"
-     echo ""
-     echo "It appears you may have made some changes to the script that prevent automatic updating."
-     echo "You need to either run 'git reset --hard' to return the autopatcher to its original form"
-     echo " or set AUTO_UPDATE to false in the .config file to stop getting this message."
+     printtask ""
+     printtask "It appears you may have made some changes to the script that prevent automatic updating."
+     printtask "You need to either run 'git reset --hard' to return the autopatcher to its original form"
+     printtask " or set AUTO_UPDATE to false in the .config file to stop getting this message."
      echo ""
      printusage_help
 }
@@ -957,7 +959,8 @@ echo ""
 echo "The Auto-Patcher $VERSION"
 # by pastime1971 and mateorod
 if [[ -n "$UPDATED" ]]; then
-     echo "    ...updated from $AUTO_PATCHER_OLD_VERSION"
+     echo ""
+     echo "     ...updated from $AUTO_PATCHER_OLD_VERSION"
 fi
 echo ""
 
@@ -1001,10 +1004,17 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      echo ""
      git fetch origin &>> "$LOG" || no_network_access
      COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
-     echo "you are $COMMITS_BEHIND commits behind" #debug
-     if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
+     #if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
+     #     printtask "Updater: Script is already up to date"
+     !("$NETWORK") && COMMITS_BEHIND=unknown
+     case "$COMMITS_BEHIND" in
+     0)
           printtask "Updater: Script is already up to date"
-     else
+          ;;
+     unknown)
+          printtask "Updater: not able to run auto_update."
+          ;;
+     *)
           export AUTO_PATCHER_OLD_VERSION=$VERSION
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
           echo "... Updater: update found, now updating Auto-Patcher ..."
@@ -1013,7 +1023,8 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           echo "### Rerunning script with latest version ###"
           $0 "$@" # runs script with same parameters
           exit 0  # ends current run
-     fi
+     ;;
+     esac
      echo ""
 fi
 
