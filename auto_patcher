@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: beta v2.9.8, patches 2013.05.29.
+# Look after changelog for script/patch version info.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -136,13 +136,19 @@
 # [ -s FILE ] 
 # [[ -n STRING ]] or [[ -z STRING ]] 
 
-VERSION="v2.9.8"
+VERSION="v2.9.8320"
+# PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
+PATCHES_VERSION="20130618"
 CURRENT_ANDROID="4.2.2"
 
 # pass variables to children
 set -a
 
-PATCHES_VERSION="20130617"
+# Config file: For now hosting AUTO_UPDATE and PRODUCTION(currently unused). Not under version control.
+if [ ! -f .config ]; then
+     cp -v patch_tools/ap_scripts/config_template .config >> "$LOG"
+fi
+source .config
 
 printusage_help () {
      PID="openpdroid,3gdongle" # default example
@@ -386,6 +392,27 @@ askconsent () {
                echo "*** You have declined to insert $FAIL by not answering 'yes' at the prompt. ***" >> "$LOG"
                ;;
      esac
+}
+
+no_network_access () {
+     printtask "Check for update failed, probably because of no internet access."
+     echo "The autopatcher will continue with current local version: $VERSION"
+     ping -c1 www.github.com &>> "$LOG" # test for the site
+     ping -c1 www.google.com &>> "$LOG" # test for internet in general
+     NETWORK=false
+     echo ""
+     sleep 2
+}
+
+auto_update_error () {
+     echo ""
+     printtask "### Update failed ###"
+     printtask ""
+     printtask "It appears you may have made some changes to the script that prevent automatic updating."
+     printtask "You could run 'git reset --hard' to return the autopatcher to its original form"
+     printtask " or set AUTO_UPDATE to false in the .config file to stop getting this message."
+     echo ""
+     printusage_help
 }
 
 replace_updater () {
@@ -936,8 +963,11 @@ fi
 
 echo ""
 echo "The Auto-Patcher $VERSION"
-echo ""
 # by pastime1971 and mateorod
+if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
+     echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
+fi
+echo ""
 
 ROOT="$(abspath "$(dirname "$(abspath "$(type -p "$0")")")")"
 TOOL="$ROOT/patch_tools.tgz"
@@ -955,6 +985,7 @@ ROMX=$(extpath "$1")
 if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
+     AUTO_UPDATE=false # CYGWIN AUTO_UPDATE TESTERS COMMENT THIS LINE HERE!
 fi
 
 LOG=$(abspath ./log$DATE.txt)
@@ -964,6 +995,54 @@ echo "TOOL= $TOOL" >> "$LOG"
 echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
+# Check for upstream updates          # excluding ApG/cygwin for now until I talk with kobik.
+
+# add auto_updating information to current log
+if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
+     cat .updated.log >> "$LOG"
+     rm -If .updated.log
+fi
+
+# To turn off auto updating, set AUTO_UPDATE in .config to false
+if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
+     printtask "### Checking for Auto-Patcher updates ###"
+     echo ""
+     NETWORK=true # assumed for tactical reasons
+     git fetch origin &>> "$LOG" || no_network_access
+     if !("$NETWORK"); then
+          printtask "Updater: not able to run auto_update."
+     else
+          COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
+          case "$COMMITS_BEHIND" in
+          0)
+               printtask "Updater: Script is already up to date"
+               ;;
+          *)
+               printtask "... Updater: update found ..."
+               echo "... Updating Auto-Patcher ..."
+               git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
+               AUTO_PATCHER_OLD_VERSION=$VERSION
+               AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
+               AUTO_PATCHER_WAS_UPDATED=true
+               printtask "### Rerunning script with latest version ###"
+               cp -a "$LOG" .updated.log
+               rm -If "$LOG"
+               $0 "$@" # runs script with same parameters
+               exit 0  # ends current run of script
+               ;;
+          esac
+          echo ""
+     fi
+fi
+
+if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
+     if [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]]; then
+          echo "... Integrating new patches ..."
+          sh batch.sh >> /dev/null 2>> "$LOG"
+     fi
+fi
+
+#remove old zips, if built under identical parameters.
 \rm -f $RESTORE.zip $UPDATE.zip
 
 CHK=$(getconf LONG_BIT) 
