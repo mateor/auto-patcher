@@ -962,6 +962,8 @@ echo "The Auto-Patcher $VERSION"
 if [[ -n "$UPDATED" ]]; then
      echo ""
      echo "     ...updated from $AUTO_PATCHER_OLD_VERSION"
+     cat updated.log >> "$LOG"
+     rm -If updated.log
 fi
 echo ""
 
@@ -1004,14 +1006,15 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      printtask "### Checking for Auto-Patcher updates ###"
      echo ""
      git fetch origin &>> "$LOG" || no_network_access
-     COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
+     if !("$NETWORK"); then
+          COMMITS_BEHIND=unknown
+     else
+          COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
+     fi
      #if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
      #     printtask "Updater: Script is already up to date"
      echo "network is $NETWORK" #debug
-     echo "commit behind is $COMMITS_BEHIND" #debug
-     #if !("$NETWORK"); then
-     #     COMMITS_BEHIND=unknown
-     #fi
+     echo "commits behind is $COMMITS_BEHIND" #debug
      case "$COMMITS_BEHIND" in
      0)
           printtask "Updater: Script is already up to date"
@@ -1023,9 +1026,9 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           if !("$NETWORK"); then
                echo ""
                printtask "You do have some unapplied updates, probably from an interrupted auto update."
-               echo "These changes are now being applied"
+               echo "We are attempting to apply these changes"
                echo ""
-               git merge --no-edit origin/auto_update >> "$LOG" || auto_update_error
+               git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
           else
                echo "... Updater: update found, now updating Auto-Patcher ..."
                git pull origin auto_update &>> "$LOG" || auto_update_error
@@ -1033,8 +1036,8 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           export AUTO_PATCHER_OLD_VERSION=$VERSION
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
           UPDATED=true
-
           echo "### Rerunning script with latest version ###"
+          cp -a "$LOG" updated.log
           $0 "$@" # runs script with same parameters
           exit 0  # ends current run
      ;;
