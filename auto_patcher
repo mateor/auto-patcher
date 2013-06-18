@@ -964,7 +964,7 @@ fi
 echo ""
 echo "The Auto-Patcher $VERSION"
 # by pastime1971 and mateorod
-if [[ -n "$UPDATED" ]]; then
+if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      echo ""
      echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
      cat .updated.log >> "$LOG" || echo "Couldn't find .updated.log, something isn't working" 2>&1 >> "$LOG"
@@ -1000,6 +1000,9 @@ echo "ROMX= $ROMX" >> "$LOG"
 
 # Check for upstream updates          # excluding ApG/cygwin for now until I talk with kobik.
 
+# debug
+echo "did the variables need to be exported: old version is: $AUTO_PATCHER_OLD_VERSION"
+
 # To turn off auto updating, set AUTO_UPDATE in .config to false
 if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      printtask "### Checking for Auto-Patcher updates ###"
@@ -1017,9 +1020,9 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           *)
                echo "... Updater: update found, now updating Auto-Patcher ..."
                git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
-               export AUTO_PATCHER_OLD_VERSION=$VERSION
+               AUTO_PATCHER_OLD_VERSION=$VERSION #debug check w/o export
                export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
-               UPDATED=true
+               export AUTO_PATCHER_WAS_UPDATED=true
                printtask "### Rerunning script with latest version ###"
                cp -a "$LOG" .updated.log
                $0 "$@" # runs script with same parameters
@@ -1030,7 +1033,7 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      fi
 fi
 
-if [[ -n "$UPDATED" ]]; then
+if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      if [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]]; then
           echo "... Integrating new patches ..."
           echo ""
@@ -1038,6 +1041,7 @@ if [[ -n "$UPDATED" ]]; then
      fi
      unset AUTO_PATCHER_OLD_PATCHES_VERSION
      unset AUTO_PATCHER_OLD_VERSION
+     unset AUTO_PATCHER_WAS_UPDATED
 fi
 
 #remove old zips, if built under identical parameters.
