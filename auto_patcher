@@ -1005,14 +1005,13 @@ source .config
 if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      printtask "### Checking for Auto-Patcher updates ###"
      echo ""
+     NETWORK=true # assumed
      git fetch origin &>> "$LOG" || no_network_access
      if !("$NETWORK"); then
           COMMITS_BEHIND=unknown
      else
           COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
      fi
-     #if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
-     #     printtask "Updater: Script is already up to date"
      echo "network is $NETWORK" #debug
      echo "commits behind is $COMMITS_BEHIND" #debug
      case "$COMMITS_BEHIND" in
@@ -1024,6 +1023,7 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           ;;
      *)
           if !("$NETWORK"); then
+               # Hopefully a corner case of interrupted auto_update...will usually still result in error
                echo ""
                printtask "You do have some unapplied updates, probably from an interrupted auto update."
                echo "We are attempting to apply these changes"
