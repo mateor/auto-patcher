@@ -138,7 +138,7 @@
 
 VERSION="v2.9.83"
 # PATCHES_VERSION needs to be incremented anytime ANY changes occur to patches.
-PATCHES_VERSION="20130613"
+PATCHES_VERSION="20130614"
 CURRENT_ANDROID="4.2.2"
 
 # pass variables to children
@@ -961,7 +961,7 @@ echo "The Auto-Patcher $VERSION"
 # by pastime1971 and mateorod
 if [[ -n "$UPDATED" ]]; then
      echo ""
-     echo "     ...updated from $AUTO_PATCHER_OLD_VERSION"
+     echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
      cat updated.log >> "$LOG"
      rm -If updated.log
 fi
@@ -1024,15 +1024,16 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      *)
           if !("$NETWORK"); then
                # Hopefully a corner case of interrupted auto_update...will usually still result in error
+               # I believe it is no longer necessary, but let's keep it as a temp error-catch.
                echo ""
                printtask "You do have some unapplied updates, probably from an interrupted auto update."
                echo "We are attempting to apply these changes"
                echo ""
-               git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
           else
                echo "... Updater: update found, now updating Auto-Patcher ..."
-               git pull origin auto_update &>> "$LOG" || auto_update_error
+               # git pull origin auto_update &>> "$LOG" || auto_update_error
           fi
+          git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
           export AUTO_PATCHER_OLD_VERSION=$VERSION
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
           UPDATED=true
@@ -1048,6 +1049,7 @@ fi
 if [[ -n "$UPDATED" ]]; then
      if [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]]; then
           echo "... Integrating new patches ..."
+          echo ""
           sh batch.sh >> /dev/null 2>> "$LOG"
      fi
 fi
