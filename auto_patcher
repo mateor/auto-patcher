@@ -1025,12 +1025,15 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
                printtask "You do have some unapplied updates, probably from an interrupted auto update."
                echo "These changes are now being applied"
                echo ""
+               git merge --no-edit origin/auto_update >> "$LOG" || auto_update_error
+          else
+               echo "... Updater: update found, now updating Auto-Patcher ..."
+               git pull origin auto_update &>> "$LOG" || auto_update_error
           fi
           export AUTO_PATCHER_OLD_VERSION=$VERSION
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
-          echo "... Updater: update found, now updating Auto-Patcher ..."
-          git pull origin auto_update &>> "$LOG" || auto_update_error
           UPDATED=true
+
           echo "### Rerunning script with latest version ###"
           $0 "$@" # runs script with same parameters
           exit 0  # ends current run
