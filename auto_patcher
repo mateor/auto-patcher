@@ -402,7 +402,6 @@ no_network_access () {
      NETWORK=false
      echo ""
      sleep 2
-     declare -r COMMITS_BEHIND=unknown
 }
 
 auto_update_error () {
@@ -968,8 +967,8 @@ echo "The Auto-Patcher $VERSION"
 if [[ -n "$UPDATED" ]]; then
      echo ""
      echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
-     cat .updated.log >> "$LOG"
-     #rm -If .updated.log
+     cat .updated.log >> "$LOG" || echo "Couldn't find .updated.log, something isn't working" 2>&1 >> "$LOG"
+     rm -If .updated.log
 fi
 echo ""
 
@@ -989,9 +988,7 @@ ROMX=$(extpath "$1")
 if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
-     AUTO_UPDATE=false # provisional. I want to test this before unleashing on ApG.
-else
-     AUTO_UPDATE=false #debug test
+     AUTO_UPDATE=false # CYGWIN AUTO_UPDATE TESTERS COMMENT THIS LINE HERE!
 fi
 
 LOG=$(abspath ./log$DATE.txt)
@@ -1001,40 +998,36 @@ echo "TOOL= $TOOL" >> "$LOG"
 echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
-# Check for upstream updates          # excluding cygwin for now until I talk with kobik.
+# Check for upstream updates          # excluding ApG/cygwin for now until I talk with kobik.
 
 # To turn off auto updating, set AUTO_UPDATE in .config to false
-
 if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      printtask "### Checking for Auto-Patcher updates ###"
      echo ""
-     NETWORK=true # assumed
+     NETWORK=true # assumed for tactical reasons
      git fetch origin &>> "$LOG" || no_network_access
      if !("$NETWORK"); then
-          COMMITS_BEHIND=unknown
+          printtask "Updater: not able to run auto_update."
      else
           COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
+          case "$COMMITS_BEHIND" in
+          0)
+               printtask "Updater: Script is already up to date"
+               ;;
+          *)
+               echo "... Updater: update found, now updating Auto-Patcher ..."
+               git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
+               export AUTO_PATCHER_OLD_VERSION=$VERSION
+               export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
+               UPDATED=true
+               printtask "### Rerunning script with latest version ###"
+               cp -a "$LOG" .updated.log
+               $0 "$@" # runs script with same parameters
+               exit 0  # ends current run
+               ;;
+          esac
+          echo ""
      fi
-     case "$COMMITS_BEHIND" in
-     0)
-          printtask "Updater: Script is already up to date"
-          ;;
-     unknown)
-          printtask "Updater: not able to run auto_update."
-          ;;
-     *)
-          echo "... Updater: update found, now updating Auto-Patcher ..."
-          git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
-          export AUTO_PATCHER_OLD_VERSION=$VERSION
-          export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
-          UPDATED=true
-          printtask "### Rerunning script with latest version ###"
-          cp -a "$LOG" .updated.log
-          $0 "$@" # runs script with same parameters
-          exit 0  # ends current run
-          ;;
-     esac
-     echo ""
 fi
 
 if [[ -n "$UPDATED" ]]; then
