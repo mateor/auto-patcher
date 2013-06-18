@@ -144,6 +144,12 @@ CURRENT_ANDROID="4.2.2"
 # pass variables to children
 set -a
 
+# Config file
+if [ ! -f .config ]; then
+     cp -v patch_tools/ap_scripts/config_template .config >> "$LOG"
+fi
+source .config
+
 printusage_help () {
      PID="openpdroid,3gdongle" # default example
      brief_help
@@ -404,7 +410,7 @@ auto_update_error () {
      printtask "### Update failed ###"
      printtask ""
      printtask "It appears you may have made some changes to the script that prevent automatic updating."
-     printtask "You need to either run 'git reset --hard' to return the autopatcher to its original form"
+     printtask "You could either run 'git reset --hard' to return the autopatcher to its original form"
      printtask " or set AUTO_UPDATE to false in the .config file to stop getting this message."
      echo ""
      printusage_help
@@ -984,6 +990,8 @@ if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
      AUTO_UPDATE=false # provisional. I want to test this before unleashing on ApG.
+else
+     AUTO_UPDATE=false #debug test
 fi
 
 LOG=$(abspath ./log$DATE.txt)
@@ -993,15 +1001,10 @@ echo "TOOL= $TOOL" >> "$LOG"
 echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
-# Config file
-if [ ! -f .config ]; then
-     cp -v patch_tools/ap_scripts/config_template .config >> "$LOG"
-fi
-source .config
-
 # Check for upstream updates          # excluding cygwin for now until I talk with kobik.
 
 # To turn off auto updating, set AUTO_UPDATE in .config to false
+
 if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      printtask "### Checking for Auto-Patcher updates ###"
      echo ""
