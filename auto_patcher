@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: beta v2.9.8, patches 2013.05.29.
+# Look after changelog for version information.
 
 # PDroid created by svyat. Official PDroid thread is 
 # http://forum.xda-developers.com/showthread.php?t=1357056
@@ -133,10 +133,12 @@
 
 
 # SHELL PROGRAMMING NOTES:
-# [ -s FILE ] 
-# [[ -n STRING ]] or [[ -z STRING ]] 
+# [ -s FILE ]
+# [[ -n STRING ]] or [[ -z STRING ]]
 
 VERSION="v2.9.8"
+# PATCHES_VERSION needs to be incremented anytime ANY changes occur to patches.
+PATCHES_VERSION="20130529"
 CURRENT_ANDROID="4.2.2"
 
 # pass variables to children
@@ -384,6 +386,25 @@ askconsent () {
                echo "*** You have declined to insert $FAIL by not answering 'yes' at the prompt. ***" >> "$LOG"
                ;;
      esac
+}
+
+no_network_access () {
+     printtask "Check for update failed, probably because of no internet access."
+     echo "The autopatcher will continue with current local version: $VERSION"
+     ping -c1 www.github.com >> "$LOG" # test site for debugging
+     ping -c1 www.google.com >> "$LOG" # test for internet in general
+     NETWORK=false
+}
+
+auto_update_error () {
+     echo ""
+     printtask "### Update failed ###"
+     echo ""
+     echo "It appears you may have made some changes to the script that prevent automatic updating."
+     echo "You need to either run 'git reset --hard' to return the autopatcher to its original form"
+     echo " or set AUTO_UPDATE to false in the .config file to stop getting this message."
+     echo ""
+     printusage_help
 }
 
 replace_updater () {
@@ -934,8 +955,11 @@ fi
 
 echo ""
 echo "The Auto-Patcher $VERSION"
-echo ""
 # by pastime1971 and mateorod
+if [[ -n "$UPDATED" ]]; then
+     echo "    ...updated from $AUTO_PATCHER_OLD_VERSION"
+fi
+echo ""
 
 ROOT="$(abspath "$(dirname "$(abspath "$(type -p "$0")")")")"
 TOOL="$ROOT/patch_tools.tgz"
@@ -953,6 +977,7 @@ ROMX=$(extpath "$1")
 if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
+     AUTO_UPDATE=false # provisional. I want to test this before unleashing on ApG.
 fi
 
 LOG=$(abspath ./log$DATE.txt)
@@ -962,6 +987,44 @@ echo "TOOL= $TOOL" >> "$LOG"
 echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
+# Config file
+if [ ! -f .config ]; then
+     cp -v patch_tools/ap_scripts/config_template .config >> "$LOG"
+fi
+source .config
+
+# Check for upstream updates          # excluding cygwin for now until I talk with kobik.
+
+# To turn off auto updating, set AUTO_UPDATE in .config to false
+if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
+     printtask "### Checking for Auto-Patcher updates ###"
+     echo ""
+     git fetch origin &>> "$LOG" || no_network_access
+     COMMITS_BEHIND=$(git rev-list HEAD...origin/master --count)
+     if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
+          printtask "Updater: Script is already up to date"
+     else
+          export AUTO_PATCHER_OLD_VERSION=$VERSION
+          export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
+          echo "... Update found, now updating Auto-Patcher ..."
+          git pull origin master &>> "$LOG" || auto_update_error
+          #auto_update_error
+          UPDATED=true
+          echo "### Rerunning script with latest version ###"
+          $0 "$@"
+          exit 0
+     fi
+     echo ""
+fi
+
+if [[ -n "$UPDATED" ]]; then
+     if [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]]; then
+          echo "... Integrating new patches ..."
+          sh batch.sh >> /dev/null 2>> "$LOG"
+     fi
+fi
+
+#remove old zips, if built under identical parameters.
 \rm -f $RESTORE.zip $UPDATE.zip
 
 CHK=$(getconf LONG_BIT) 
