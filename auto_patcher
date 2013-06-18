@@ -144,8 +144,6 @@ CURRENT_ANDROID="4.2.2"
 # pass variables to children
 set -a
 
-PATCHES_VERSION="20130617"
-
 printusage_help () {
      PID="openpdroid,3gdongle" # default example
      brief_help
@@ -1002,14 +1000,15 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      printtask "### Checking for Auto-Patcher updates ###"
      echo ""
      git fetch origin &>> "$LOG" || no_network_access
-     COMMITS_BEHIND=$(git rev-list HEAD...origin/master --count)
+     COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
+     # echo "you are $COMMITS_BEHIND commits behind" #debug
      if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
           printtask "Updater: Script is already up to date"
      else
           export AUTO_PATCHER_OLD_VERSION=$VERSION
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
           echo "... Update found, now updating Auto-Patcher ..."
-          git pull origin master &>> "$LOG" || auto_update_error
+          git pull origin auto_update &>> "$LOG" || auto_update_error
           #auto_update_error
           UPDATED=true
           echo "### Rerunning script with latest version ###"
