@@ -396,6 +396,7 @@ no_network_access () {
      NETWORK=false
      echo ""
      sleep 2
+     declare -r COMMITS_BEHIND=unknown
 }
 
 auto_update_error () {
@@ -1006,9 +1007,11 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
      COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
      #if [[ "$COMMITS_BEHIND" -eq 0 ]]; then
      #     printtask "Updater: Script is already up to date"
-     if !("$NETWORK"); then
-          COMMITS_BEHIND=unknown
-     fi
+     echo "network is $NETWORK" #debug
+     echo "commit behind is $COMMITS_BEHIND" #debug
+     #if !("$NETWORK"); then
+     #     COMMITS_BEHIND=unknown
+     #fi
      case "$COMMITS_BEHIND" in
      0)
           printtask "Updater: Script is already up to date"
@@ -1017,6 +1020,12 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           printtask "Updater: not able to run auto_update."
           ;;
      *)
+          if !("$NETWORK"); then
+               echo ""
+               printtask "You do have some unapplied updates, probably from an interrupted auto update."
+               echo "These changes are now being applied"
+               echo ""
+          fi
           export AUTO_PATCHER_OLD_VERSION=$VERSION
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
           echo "... Updater: update found, now updating Auto-Patcher ..."
