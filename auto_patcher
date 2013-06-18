@@ -138,7 +138,7 @@
 
 VERSION="v2.9.83"
 # PATCHES_VERSION needs to be incremented anytime ANY changes occur to patches.
-PATCHES_VERSION="20130614"
+PATCHES_VERSION="20130616"
 CURRENT_ANDROID="4.2.2"
 
 # pass variables to children
@@ -962,8 +962,8 @@ echo "The Auto-Patcher $VERSION"
 if [[ -n "$UPDATED" ]]; then
      echo ""
      echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
-     cat updated.log >> "$LOG"
-     rm -If updated.log
+     cat .updated.log >> "$LOG"
+     #rm -If .updated.log
 fi
 echo ""
 
@@ -1038,7 +1038,7 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
           UPDATED=true
           echo "### Rerunning script with latest version ###"
-          cp -a "$LOG" updated.log
+          cp -av "$LOG" .updated.log #-v is debug
           $0 "$@" # runs script with same parameters
           exit 0  # ends current run
      ;;
@@ -1052,6 +1052,8 @@ if [[ -n "$UPDATED" ]]; then
           echo ""
           sh batch.sh >> /dev/null 2>> "$LOG"
      fi
+     unset AUTO_PATCHER_OLD_PATCHES_VERSION
+     unset AUTO_PATCHER_OLD_VERSION
 fi
 
 #remove old zips, if built under identical parameters.
