@@ -397,7 +397,7 @@ askconsent () {
 no_network_access () {
      printtask "Check for update failed, probably because of no internet access."
      echo "The autopatcher will continue with current local version: $VERSION"
-     ping -c1 www.github.com &>> "$LOG" # test site for debugging
+     ping -c1 www.github.com &>> "$LOG" # test for the site 
      ping -c1 www.google.com &>> "$LOG" # test for internet in general
      NETWORK=false
      echo ""
@@ -964,12 +964,9 @@ fi
 echo ""
 echo "The Auto-Patcher $VERSION"
 # by pastime1971 and mateorod
-echo "was it updated: $AUTO_PATCHER_WAS_UPDATED" #debug
 if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      echo ""
      echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
-     cat .updated.log >> "$LOG" || echo "Couldn't find .updated.log, something isn't working" 2>&1 >> "$LOG"
-     rm -If .updated.log
 fi
 echo ""
 
@@ -1001,8 +998,11 @@ echo "ROMX= $ROMX" >> "$LOG"
 
 # Check for upstream updates          # excluding ApG/cygwin for now until I talk with kobik.
 
-# debug
-echo "did the variables need to be exported: old version is: $AUTO_PATCHER_OLD_VERSION"
+# add auto_updating information to current log
+if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
+     cat .updated.log >> "$LOG" || echo "Couldn't find .updated.log, something isn't working" 2>&1 >> "$LOG"
+     rm -If .updated.log
+fi
 
 # To turn off auto updating, set AUTO_UPDATE in .config to false
 if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
@@ -1021,11 +1021,10 @@ if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
           *)
                echo "... Updater: update found, now updating Auto-Patcher ..."
                git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
-               AUTO_PATCHER_OLD_VERSION=$VERSION #debug check w/o export
-               export AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
-               export AUTO_PATCHER_WAS_UPDATED=true
+               AUTO_PATCHER_OLD_VERSION=$VERSION
+               AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
+               AUTO_PATCHER_WAS_UPDATED=true
                printtask "### Rerunning script with latest version ###"
-               echo "moving log to .updated.log " #debug
                cp -av "$LOG" .updated.log
                $0 "$@" # runs script with same parameters
                exit 0  # ends current run
@@ -1041,9 +1040,6 @@ if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
           echo ""
           sh batch.sh >> /dev/null 2>> "$LOG"
      fi
-     unset AUTO_PATCHER_OLD_PATCHES_VERSION
-     unset AUTO_PATCHER_OLD_VERSION
-     unset AUTO_PATCHER_WAS_UPDATED
 fi
 
 #remove old zips, if built under identical parameters.
