@@ -460,6 +460,19 @@ export_log_and_variables () {
      AUTO_PATCHER_WAS_UPDATED=true
 }
 
+print_changelog () {
+     CHANGELOG="changelog.txt"
+     echo "" > "$CHANGELOG"
+     CURRENT_HEAD=$(git rev-parse HEAD)
+     echo "Changelog from Autopatcher$AUTO_PATCHER_OLD_VERSION to Autopatcher$VERSION" >> "$CHANGELOG"
+     echo "---------------------------------------------------------------------------" >> "$CHANGELOG"
+     echo "" >> "$CHANGELOG"
+     echo "    Get more info about any individual commit by entering 'git show \$NUMBER'" >> "$CHANGELOG"
+     echo "" >> "$CHANGELOG"
+     git log --pretty=oneline $ORIGINAL_HEAD...$CURRENT_HEAD >> changelog.txt
+     printtask "... "$CHANGELOG" has been updated ..."
+}
+
 replace_updater () {
 
 # Function for devices that use SDcard installs. Also to be tested for CM7
@@ -1028,6 +1041,7 @@ echo "The Auto-Patcher $VERSION"
 # by pastime1971 and mateorod
 if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      echo "     (auto-updated from $AUTO_PATCHER_OLD_VERSION)"
+     print_changelog
 fi
 echo ""
 
@@ -1093,6 +1107,7 @@ if [[ "$AUTO_UPDATE" == true ]]; then
                     printtask "Updater: Auto-Patcher is already up to date"
                     ;;
                *)
+                    ORIGINAL_HEAD=$(git rev-parse HEAD)
                     printtask "... Updater: update found ..."
                     backup_script
                     printtask "... Updating Auto-Patcher ..."
