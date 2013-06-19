@@ -45,4 +45,4 @@ cd "$ROOT"
 
 tar cvzf patch_patches.tgz patches
 
-zip autopatcher.zip auto_patcher patch_tools.tgz patch_patches.tgz
+zip autopatcher.zip auto_patcher patch_tools.tgz patch_patches.tgz ap_scripts
