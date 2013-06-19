@@ -151,7 +151,7 @@ LANG=C
 
 # Config file: For now hosting AUTO_UPDATE and PRODUCTION(currently unused). Not under version control.
 if [ ! -f .config ]; then
-     cp -a ap_scripts/config_template .config
+     cp -av patch_tools/ap_scripts/config_template .config >> "$LOG"
 fi
 source .config
 
@@ -400,13 +400,17 @@ askconsent () {
 }
 
 no_network_access () {
-     printtask "Check for update failed, probably because of no internet access."
-     echo "The autopatcher will continue with current local version: $VERSION"
-     ping -c1 www.github.com &>> "$LOG" # test for the site
-     ping -c1 www.google.com &>> "$LOG" # test for internet in general
-     NETWORK=false
-     echo ""
-     sleep 2
+     ping -c1 www.github.com >> "$LOG" 2>&1 && NETWORK=true # second try and check github
+     ping -c1 www.google.com >> "$LOG" 2>&1 # test for internet in general
+     if [[ "$NETWORK" == true ]]; then
+          return
+     else
+          printtask "Check for update failed, probably because of no internet access."
+          echo "The autopatcher will continue with current local version: $VERSION"
+          NETWORK=false
+          echo ""
+          sleep 2
+     fi
 }
 
 auto_update_error () {
@@ -418,6 +422,42 @@ auto_update_error () {
      printtask " or set AUTO_UPDATE to false in the .config file to stop getting this message."
      echo ""
      printusage_help
+}
+
+backup_script () {
+     printtask "... backing up auto_patcher to auto_patcher.bak ..."
+     cp -av auto_patcher auto_patcher.bak >> "$LOG" #backup for user in case of changes
+     echo ""
+}
+
+warn_of_overwrite () {
+     # Only seen once, by users without ".git" directories
+     # Only users who got program @ download page see this, all others (ApG included) use git
+     echo "This is a one time set-up process that will overwrite all local changes!"
+     echo "If this is not ok with you press ctrl-C and set AUTO_UPDATE to false in .config"
+     echo ""
+}
+
+establish_repo() {
+          printtask "### establishing the repo ###"
+          echo "... please be patient, this should only be needed once ..."
+          echo ""
+          git clone https://github.com/mateor/auto-patcher >> "$LOG" || no_network_access
+          if ($NETWORK); then
+               mv -v auto-patcher/".git" . >> "$LOG"
+               rm -rf auto-patcher
+               git checkout -q master || auto_update_error
+               git reset --hard 2>&1 >> "$LOG"
+               echo ""
+          fi
+}
+
+export_log_and_variables () {
+     cp -a "$LOG" .updated.log
+     rm -If "$LOG"
+     AUTO_PATCHER_OLD_VERSION=$VERSION
+     AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
+     AUTO_PATCHER_WAS_UPDATED=true
 }
 
 replace_updater () {
@@ -663,7 +703,7 @@ getbuildprop () {
 
 
 aosp_mod_check() {
-     jar -xvf "$ROMX" system/framework/framework2.jar >> $LOG
+     jar -xvf "$ROMX" system/framework/framework2.jar >> "$LOG"
      if [ -s system/framework/framework2.jar ]; then
           ever_check
      else
@@ -1017,49 +1057,60 @@ echo "TOOL= $TOOL" >> "$LOG"
 echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
-# Check for upstream updates          # excluding ApG/cygwin for now until I talk with kobik.
 
-# add auto_updating information to current log
+# Auto-Update                           # excluding ApG/cygwin for now until I talk with kobik.
+# To turn off auto updating, set AUTO_UPDATE in .config to false
+
+# If program was updated, merge the logs
 if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      cat .updated.log >> "$LOG"
      rm -If .updated.log
 fi
 
-# To turn off auto updating, set AUTO_UPDATE in .config to false
-if [ -z "$NETWORK" ] && ($AUTO_UPDATE); then
-     printtask "### Checking for Auto-Patcher updates ###"
-     echo ""
-     NETWORK=true # assumed for tactical reasons
-     git fetch origin &>> "$LOG" || no_network_access
-     if !("$NETWORK"); then
-          printtask "Updater: not able to run auto_update."
-     else
-          COMMITS_BEHIND=$(git rev-list HEAD..origin/auto_update --count)
-          case "$COMMITS_BEHIND" in
-          0)
-               printtask "Updater: Script is already up to date"
-               ;;
-          *)
-               printtask "... Updater: update found ..."
-               echo "... Updating Auto-Patcher ..."
-               git merge --no-edit origin/auto_update 2>&1 >> "$LOG" || auto_update_error
-               AUTO_PATCHER_OLD_VERSION=$VERSION
-               AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
-               AUTO_PATCHER_WAS_UPDATED=true
-               printtask "### Rerunning script with latest version ###"
-               cp -a "$LOG" .updated.log
-               rm -If "$LOG"
-               $0 "$@" # runs script with same parameters
-               exit 0  # ends current run of script
-               ;;
-          esac
-          echo ""
+if [[ "$AUTO_UPDATE" == true ]]; then
+     ping -c1 www.github.com > /dev/null 2>&1 && NETWORK=true || no_network_access
+     if [[ "$NETWORK" == true ]]; then
+          printtask "### checking for updates ###"
+
+          # establish the repo if not already present- one time operation.
+          if [ ! -d ".git" ]; then
+               printtask "... initial setup to allow automatic updating ..."
+               backup_script && warn_of_overwrite
+               establish_repo && export_log_and_variables
+               printtask "### rerunning script with latest version ###"
+               $0 "$@"
+               exit 0
+          fi
+
+          # Here is the regular update process
+          git fetch origin &>> "$LOG" || no_network_access
+          if !("$NETWORK"); then
+               printtask "Updater: not able to run auto_update."
+          else
+               COMMITS_BEHIND=$(git rev-list HEAD..origin/master --count)
+               case "$COMMITS_BEHIND" in
+               0)
+                    printtask "Updater: Auto-Patcher is already up to date"
+                    ;;
+               *)
+                    printtask "... Updater: update found ..."
+                    backup_script
+                    printtask "... Updating Auto-Patcher ..."
+                    git merge --no-edit origin/master 2>&1 >> "$LOG" || auto_update_error
+                    export_log_and_variables
+                    printtask "### updated, now rerunning script with latest version ###"
+                    $0 "$@"
+                    exit 0
+                    ;;
+               esac
+               echo ""
+          fi
      fi
 fi
 
 if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      if [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]]; then
-          echo "... Integrating new patches ..."
+          echo "... integrating new patches ..."
           sh batch.sh >> /dev/null 2>> "$LOG"
      fi
 fi
