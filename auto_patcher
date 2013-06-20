@@ -144,6 +144,15 @@ VERSION="v2.9.859"
 PATCHES_VERSION="20130619"
 CURRENT_ANDROID="4.2.2"
 
+# Available ROMTYPES.
+# ROMTYPES that are hidden can be forced on the command line. But they are best left
+# blank to be  automatically parsed by our romprobe or by just entering the parent...usually AOSP.
+
+#Non-obvious ROMTYPE legend
+# @.aosp-slim: SlimRom             @.aosp-pac: PAC-man
+# @.aosp-ever: Evervolv            @pa: ParanoidAndroid (official jellybean branch only for now)
+declare -a AVAILABLE_ROMTYPES=('aokp' 'aosp' 'cm' 'pa' '.aosp-slim' '.aosp-pac' '.aosp-ever')
+
 # pass variables to children
 set -a
 
@@ -294,8 +303,7 @@ unknown_mod_error () {
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      echo ""
      cleanup
-     PID=openpdroid # for the brief help example
-     brief_help
+     printusage_help
 }
 
 mismatch_error () {
@@ -677,11 +685,34 @@ apk_copy () {
      fi
 }
 
+forgot_mod_error () {
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     printtask "You need to enter a MOD before you try and specify the ROMTYPE."
+     printtask "Check the help menu for the mods list"
+     echo ""
+     printusage_help
+}
+
+check_against_rom_types () {
+     # this checks to see if the user has entered a ROMTYPE in the MOD spot and outputs advice if so.
+     NUMBER_OF_AVAILABLE_ROMTYPES=${#AVAILABLE_ROMTYPES[@]}
+     for ((i=0; i < $NUMBER_OF_AVAILABLE_ROMTYPES; i++)); do
+          if [[ ${AVAILABLE_ROMTYPES[i]} == "$P" ]]; then
+               forgot_mod_error "\"$P\" is a ROMTYPE not a MOD"
+          fi
+     done
+}
+
 compat_check () {
      for P in ${PID[@]}; do
           mods_info
           if ($UNKNOWN_MOD); then
-               unknown_mod_error "$P is not a valid mod. Check your spelling or the mod list!!!"
+               check_against_rom_types
+               unknown_mod_error "\"$P\" is not a valid mod. Check your spelling or the mod list!!!"
           elif [[ "$NVID" -lt "$COMPATF" ]]; then
                mismatch_error "Your Android $VID rom is too old! The minimum for $P is \n !!! Android $FLOOR!"
           elif [[ "$NVID" -gt "$COMPATC" ]]; then
