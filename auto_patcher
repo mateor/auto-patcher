@@ -287,6 +287,17 @@ smali_error () {
      fi
 }
 
+unknown_mod_error () {
+     echo ""
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!! error: $@"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     echo ""
+     cleanup
+     PID=openpdroid # for the brief help example
+     brief_help
+}
+
 mismatch_error () {
      # Function that exposes attempts to apply a mod to an upsupported Android version
      echo ""
@@ -537,6 +548,7 @@ mods_info () {
      DEV="Unknown"
      CEILING=$CURRENT_ANDROID
      ROM_CONFLICTS="None"
+     UNKNOWN_MOD=false
      case $PID in
      mods)
           mods_display
@@ -642,6 +654,7 @@ mods_info () {
           WEBSITE="http://forum.xda-developers.com/showthread.php?t=2154075"
           ;;
      *)
+          UNKNOWN_MOD=true
           FLOOR=?????
           CEILING=?????
           DESC="??? Unknown modtype ??? Check your spelling or the mod list!"
@@ -667,10 +680,11 @@ apk_copy () {
 compat_check () {
      for P in ${PID[@]}; do
           mods_info
-          if [[ "$NVID" -lt "$COMPATF" ]]; then
+          if ($UNKNOWN_MOD); then
+               unknown_mod_error "$P is not a valid mod. Check your spelling or the mod list!!!"
+          elif [[ "$NVID" -lt "$COMPATF" ]]; then
                mismatch_error "Your Android $VID rom is too old! The minimum for $P is \n !!! Android $FLOOR!"
-          fi
-          if [[ "$NVID" -gt "$COMPATC" ]]; then
+          elif [[ "$NVID" -gt "$COMPATC" ]]; then
                mismatch_error "Sorry, $P has not been made available for Android $VID yet!"
           fi
      done
