@@ -165,6 +165,22 @@ if [ ! -f .config ]; then
 fi
 source .config
 
+# Colorize and add text parameters
+red=$(tput setaf 1)              # red
+grn=$(tput setaf 2)              # green
+cyan=$(tput setaf 6)             # cyan
+txtBold=$(tput bold)             # Bold
+txtReset=$(tput sgr0)              # Reset
+
+colorize () {
+     # pass color and then reset
+     echo -e $@${txtReset}
+}
+
+colorize_bold () {
+     echo -e ${txtBold}$@${txtReset}
+}
+
 printusage_help () {
      PID="openpdroid,3gdongle" # default example
      brief_help
@@ -1798,10 +1814,10 @@ java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip $UPDATE.zip 2>> "$LOG
 \mv $RESTORE.zip $UPDATE.zip ..
 printtask "### finished ###"
 printtask ""
-printtask "Congratulations, the patching was successful."
+printtask "$(colorize_bold ${red}Congratulations), the patching was $(colorize_bold ${red}successful)."
 printtask "Any errors you may have seen were succesfully handled!"
 printtask ""
-printtask "!!! This message means you only need file bug reports if the software is not behaving as expected !!!"
+printtask "!!! You only need to file bug reports if the software is $(colorize_bold ${grn}not) behaving as expected !!!"
 printtask ""
 printtask "flash $UPDATE.zip to install the patched files"
 printtask "flash $RESTORE.zip to restore the original system"
