@@ -400,39 +400,27 @@ printtask () {
     echo -e $@ | tee -a "$LOG"
 }
 
-copyfailed () {
-    echo ""
-    printtask "File for which patching failed:"
-    printtask "---------------------------------------------"
-    echo ""
-    printtask "${FAIL##*/}"
-    echo ""
-    echo "---------------------------------------------"
-    echo ""
-    echo "We can try to add a premade copy of those files."
-    echo "This sometimes works."
-    echo ""
-    printtask "You only need to report this if running the program gives you problems!!!"
-    echo ""
-    echo ""
-    askconsent && return 0 || return 1
+print_to_log () {
+     echo "$@" >> "$LOG"
 }
 
-askconsent () {
-     sleep 1
-     echo -n "Do you want to proceed ? (YES/no) "
-     read PROCEED
-     echo "askconsent final = ${PROCEED}: for $FAIL" >> "$LOG"
-     case $PROCEED in
-     [Yy] | [Yy][Ee][Ss])
-          return 0;       # successful:
-          echo "*** You (or ApG) have elected to use a prepatched copy of $FAIL ***" >> "$LOG"
-          ;;
-     *)
-          return 1;    # error
-          echo "*** You have declined to insert $FAIL by not answering 'yes' at the prompt. ***" >> "$LOG"
-          ;;
-     esac
+copyfailed () {
+     printtask "... attempting to fix failed patch ..."
+     print_to_log "File for which patching failed:"
+     print_to_log "---------------------------------------------"
+     print_to_log ""
+     print_to_log "${FAIL##*/}"
+     print_to_log ""
+     print_to_log "---------------------------------------------"
+     print_to_log ""
+     print_to_log "We are adding a pre-patched copy of those files."
+     print_to_log ""
+     print_to_log "Please only file a bug report if running the program gives you problems!!!"
+     printtask "... replace $FAIL ..."
+     \rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
+     \cp -av  "$PROVISIONAL" tmp/${FILE}.out/smali/${FAIL} >> "$LOG"
+     SID=(${SID[@]} $FAIL)
+     printtask "... Patched file sucessfully resolved ..."
 }
 
 no_network_access () {
@@ -1643,14 +1631,14 @@ for P in ${PID[@]}; do
                printtask "... apply $(basename $INCREMENTAL) ..."
                patch -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 > ${JAR}.log
           done
-          cat ${JAR}.log | tee -a "$LOG"
+          cat ${JAR}.log >> "$LOG"
           case "$NAME" in
           framework)
                # patch preloaded-classes only if a patch exists
                if [ -f $PARB/preloaded.patch ]; then
                     printtask "... apply preloaded.patch ..."
                     patch -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
-                    cat preloaded.log | tee -a "$LOG"
+                    cat preloaded.log >> "$LOG"
                     [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
                fi
                ;;
@@ -1671,10 +1659,6 @@ for P in ${PID[@]}; do
                     [[ ${SID[@]} =~ $FAIL ]] && print_error "$FAIL was already replaced before"
                     [ -f "$PROVISIONAL" ] || print_error "failed $FAIL in $JAR cannot be remedied"
                     copyfailed
-                    printtask "... replace $FAIL ..."
-                    \rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
-                    \cp -av  "$PROVISIONAL" tmp/${FILE}.out/smali/${FAIL} >> "$LOG" 
-                    SID=(${SID[@]} $FAIL)
                done
           fi
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
@@ -1695,7 +1679,8 @@ for P in ${PID[@]}; do
           if [ -d "tmp/${FILE}.out" ] ; then
                printtask "... apply $APK.patch ..."
                patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 >> ${APK}.log
-               cat ${APK}.log | tee -a "$LOG"
+               cat ${APK}.log >> "$LOG"
+
                if [[ $(grep FAILED ${APK}.log) != "" ]]; then
                     apk_copy
                     declare -a APKID=( ${APKID[@]/$FILE/} )
@@ -1817,10 +1802,13 @@ printtask ""
 printtask "$(colorize_bold ${red}Congratulations), the patching was $(colorize_bold ${red}successful)."
 printtask "Any errors you may have seen were succesfully handled!"
 printtask ""
-printtask "!!! You only need to file bug reports if the software is $(colorize_bold ${grn}not) behaving as expected !!!"
+printtask "!!! Only file a bug report if the software is $(colorize_bold ${grn}not) behaving as expected !!!"
 printtask ""
-printtask "flash $UPDATE.zip to install the patched files"
-printtask "flash $RESTORE.zip to restore the original system"
+echo "to install patched files, flash:"
+printtask "---$(colorize_bold ${grn}$UPDATE.zip)"
+echo ""
+printtask "to restore original system, flash:"
+printtask "---$(colorize_bold ${grn}$RESTORE.zip)"
 echo ""
 
      # add announcement- optional.
