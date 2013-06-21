@@ -418,9 +418,22 @@ copy_prepatched_provisional () {
      print_to_log "Please only file a bug report if running the program gives you problems!!!"
      print_to_log "... replace $FAIL ..."
      \rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
-     \cp -av  "$PROVISIONAL" tmp/${FILE}.out/smali/${FAIL} >> "$LOG"
+     \cp -av  "$PROVISIONAL" tmp/${FILE}.out/smali/${FAIL} >> "$LOG" 2>&1
      SID=(${SID[@]} $FAIL)
      print_to_log "... failed patch sucessfully resolved ..."
+}
+
+prep_alternate_patch () {
+     # Use alt.patch, if exists. Increment in case there are multiple alternates.
+     mv -v $ALTERNATIVE_PATCH $PARB/${NAME}.patch >> "$LOG"
+     ALT_PATCH_NUMBER=$((PATCH_NUMBER + 1))
+
+     # Get fresh files/variables + decompile again (use rm b/c privacy files wouldn't get overwritten)
+     rm -rf tmp/${FILE}.out/smali
+     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+     unset FAILS && unset SID
+     current_jar=$(($current_jar - 1))
+     break
 }
 
 no_network_access () {
@@ -502,8 +515,8 @@ replace_updater () {
 # Function for devices that use SDcard installs. Also to be tested for CM7
 #  since CM7 seems to use an updater-script that wipes EMMC. Testing
 
-     \rm $UPDATER_LOC/$UPDS
-     \cp patches/.common/$UPDATER_LOC/$UPDS $UPDATER_LOC
+     \rm $UPDATER_LOC/$UPDS 2>&1
+     \cp patches/.common/$UPDATER_LOC/$UPDS $UPDATER_LOC >> "$LOG" 2>&1
      echo "run_program(\"/sbin/busybox\", \"umount\", \"/system\");" >> UPDATE.txt
      cat UPDATE.txt >> $UPDATER_LOC/$UPDS
      echo ""
@@ -681,7 +694,7 @@ mods_info () {
 
 apk_copy () {
      if [ -f patches/$P/$A/$R/$B/$FILE ]; then
-          \cp -av patches/$P/$A/$R/$B/$FILE $FILE >> "$LOG"
+          \cp -av patches/$P/$A/$R/$B/$FILE $FILE >> "$LOG" 2>&1
           echo "... Patching $APK failed, but we have successfuly copied over a prepatched file ..."
           apk_was_copied=true
      else
@@ -1583,28 +1596,15 @@ for P in ${PID[@]}; do
           mkdir -p ./$DEST
           if [ -e patches/$P/$A/$R/$B/$FILE ]; then
                printtask "... overwriting $FILE from $P ..."
-               \cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG"
+               \cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG" 2>&1
           elif [ -e patches/$P/common/$FILE ]; then
                printtask "... overwriting $FILE from $P ..."
                echo " ### SOMETHING WENT WRONG!! Could not find file-- using common. ###" >> "$LOG"
-               \cp -av patches/$P/common/$FILE ./$DEST >> "$LOG"
+               \cp -av patches/$P/common/$FILE ./$DEST >> "$LOG" 2>&1
           else
                print_error "$FILE is missing in the patch. Please upload your logfile to the support thread!"
           fi
      done
-
-alternate_patch_loop () {
-     # Use alt.patch, if exists. Increment in case there are multiple alternates.
-     mv -v $ALTERNATIVE_PATCH $PARB/${NAME}.patch >> "$LOG"
-     ALT_PATCH_NUMBER=$((PATCH_NUMBER + 1))
-
-     # Get fresh files/variables and repatch (use rm b/c privacy files won't get overwritten by decompile)
-     rm -rf tmp/${FILE}.out/smali
-     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
-     unset FAILS && unset SID
-     current_jar=$(($current_jar - 1))
-     break
-}
 
      # unconditional smali copying- For particularly troublesome files
      [ -f patches/$P/smali.txt ] && SMALI=$(cat patches/$P/smali.txt)
@@ -1615,7 +1615,7 @@ alternate_patch_loop () {
      for SMALI in ${SMALI[@]}; do
            if [ -f patches/$P/$A/$R/$B/$SMALI ]; then
                 printtask "... overwriting $MOVE ..."
-                \cp -a patches/$P/$ANDR/$R/$B/$SMALI tmp/$SMALI >> "$LOG"
+                \cp -a patches/$P/$ANDR/$R/$B/$SMALI tmp/$SMALI >> "$LOG" 2>&1
 # This lower area should be deprecated now...wait and see. Each BID has own link to provisionals now.
            elif [ -f patches/$P/$A/.provisionals/$SMALI ]; then
                 printtask "... overwriting $MOVE ..."
@@ -1675,7 +1675,7 @@ alternate_patch_loop () {
                     if [ ! -f "$PROVISIONAL" ]; then
                          if [ -f "$ALTERNATIVE_PATCH" ]; then
                               printtask "## trying alternative ${NAME} patch ###"
-                              alternate_patch_loop
+                              prep_alternate_patch
                          else
                               print_error "failed $FAIL in $JAR cannot be remedied"
                          fi
