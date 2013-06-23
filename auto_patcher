@@ -398,6 +398,14 @@ misstools_error () {
      brief_help
 }
 
+miss_git_error () {
+     echo "Updater: disabled"
+     echo ""
+     printtask "You will not be able to get automatic updates because we could not find 'git'."
+     printtask "Find out how to install git for your system and that feature should work automatically"
+     echo ""
+}
+
 printtask () {
     echo "" >> "$LOG"
     echo -e $@ | tee -a "$LOG"
@@ -1065,7 +1073,7 @@ echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
 echo "Patches are $PID/$ANDR/$RID/$BID" >> "$LOG"
 
-if [ ! -d ".git" ]; then
+if [ -d ../".git" ]; then
      echo "" >> "$LOG"
      echo -n "Current HEAD: " >> "$LOG"
      git log --pretty=oneline HEAD^..HEAD >> "$LOG"
@@ -1147,13 +1155,16 @@ echo "ROMX= $ROMX" >> "$LOG"
 # Auto-Update                           # excluding ApG/cygwin for now until I talk with kobik.
 # To turn off auto updating, set AUTO_UPDATE in .config to false
 
+# Check for git
+(which git >> "$LOG" && GIT=true) || (miss_git_error "Missing \"git\" utility" && GIT=false)
+
 # If program was updated, merge the logs
 if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
      cat .updated.log >> "$LOG"
      rm -If .updated.log
 fi
 
-if [[ "$AUTO_UPDATE" == true ]]; then
+if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
      ping -c1 www.github.com > /dev/null 2>&1 && NETWORK=true || no_network_access
      if [[ "$NETWORK" == true ]]; then
           printtask "### checking for updates ###"
@@ -1169,7 +1180,7 @@ if [[ "$AUTO_UPDATE" == true ]]; then
           fi
 
           # Here is the regular update process
-          git fetch origin &>> "$LOG" || no_network_access
+          git fetch origin 2>&1 >> "$LOG" || no_network_access
           if !("$NETWORK"); then
                printtask "Updater: not able to run auto_update."
           else
