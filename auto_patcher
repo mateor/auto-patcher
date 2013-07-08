@@ -709,6 +709,12 @@ mods_info () {
 
 apk_copy () {
      if [ -f patches/$P/$A/$R/$B/$FILE ]; then
+          mkdir apk_staging
+          cd apk_staging
+          # Move the certs and manifests from the ROM's apk into the prepatched copy
+          jar -xvf ../"$FILE" META-INF AndroidManifest.xml >> "$LOG"
+          jar -ufv ../patches/$P/$A/$R/$B/$FILE META-INF/CERT* AndroidManifest.xml >> "$LOG" 2>> "$LOG"
+          cd ..
           \cp -av patches/$P/$A/$R/$B/$FILE $FILE >> "$LOG" 2>&1
           echo "... Patching $APK failed, but we have successfuly copied over a prepatched file ..."
           apk_was_copied=true
@@ -1809,7 +1815,7 @@ for FILE in ${APKID[@]}; do
           printtask "... rebuild $APK ..."
           java -jar apktool.jar b tmp/${FILE}.out >> "$LOG" 2>> "$LOG" || apk_copy
           if !("$apk_was_copied"); then
-             jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
+               jar -uvf $FILE -C tmp/${FILE}.out/build/apk/ . > /dev/null 2>> "$LOG"
           fi
      fi
 done
