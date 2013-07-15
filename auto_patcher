@@ -147,7 +147,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v2.9.926"
+VERSION="v2.9.9265"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130715"
 CURRENT_ANDROID="4.2.2"
@@ -965,8 +965,13 @@ proberom () {
           [[ "$DID" == "" ]] && DID=$(getbuildprop ro.build.product)
 
                case "$MID" in
-               cm10|cm*|cyanogenmod*)
+               cm*|cyanogenmod*)
                     RID=cm;
+                    # hack to account for Final builds with old code and current build dates. Huge hack, but if there
+                    # is one thing I don't believe in, it's "educating the user-base". Not happening. So hack it is.
+                    if [[ "$CMID"=="10.1."* ]]; then
+                         BID_OVERRIDE=20130516
+                    fi
                     ;;
                aokp*|teamkang)
                     RID=aokp;
@@ -1057,6 +1062,9 @@ else
                     fi
                     # Error catch if query fails.
                     [[ $BID == "20201231" ]] && BID=latest && echo "Build Query Failed!! Default to latest!" >> "$LOG"
+                    if [[ -n "$BID_OVERRIDE" ]]; then
+                         BID="$BID_OVERRIDE"
+                    fi
                     echo "... $PID patch date has been set to: $BID ..."
                     B=$BID
                     break
