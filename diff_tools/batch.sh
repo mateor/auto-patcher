@@ -13,6 +13,7 @@ for mod in ${mods[@]}; do
 		cd $ROOT
 		STOCK=(`ls -dt built/$mod/$rom/stock.$DATE*`) || continue
 		MODED=built/$mod/$rom/$mod${STOCK##*stock}
+          echo "moded is $MODED"
 		if [ -d $MODED ]; then
 			echo "### processing $mod $rom $DATE ###"
 			$ROOT/mkdiff.sh $STOCK $MODED
