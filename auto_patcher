@@ -1367,8 +1367,9 @@ COPYPID=("${PID[@]}")                  # working copy to iterate over
 MODS_NUMBER=${#COPYPID[@]}             # number of elements (mods)
 
 if [[ $MODS_NUMBER > 1 ]]; then        # because if only one mod, not needed
-INDEX=0                                # 'pd2.0' didn't work with unset; regex use bars multiple 'pdroid's
+INDEX=0
      for p in ${COPYPID[@]}; do
+          # this first loop detects presence of any pdroid mod and sets it to be first applied (SPID[0])
           if [ "$p" = "pdroid" ] || [ "$p" = "pd2.0" ] ||[ "$p" = "openpdroid" ]; then
                SPID[0]=$p              #set pdroid first
                unset COPYPID["$INDEX"]
@@ -1378,20 +1379,21 @@ INDEX=0                                # 'pd2.0' didn't work with unset; regex u
           fi
      done
      for p in ${COPYPID[@]}; do
+          # the second loop ensures they aren't trying to apply more than one pdroid mod, and slots in any other mods.
           if [ "$p" = "pdroid" ] || [ $p = "pd2.0" ] ||[ $p = "openpdroid" ]; then
                conflict_error "Those mods conflict! Only one pdroid mod at a time!"
           else
                i=${#SPID[@]}
-               SPID[i]=$p
+               SPID[$i]=$p
                i+=1
           fi
      done
 else
-     SPID=${COPYPID[@]}
+     SPID=("${COPYPID[@]}")
 fi
-for P in ${PIL[@]}; do
-     [[ ${PID[@]} =~ $P ]] || PID=(${PID[@]} $P)
-done
+# reset the mod list, with the pdroid-type mod applied first (for provisional use's sake)
+PID=("${SPID[@]}")
+
 
 # Check if selected mods are available for rom's Android version.
 compat_check
