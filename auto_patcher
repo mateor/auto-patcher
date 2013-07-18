@@ -141,13 +141,14 @@
 # 2013.06.28. (2.9.89) revert baksmali changes for now (still needs work), add new PACman OPD 6/26
 # 2013.07.02. (2.9.91) Switch to SlimRom team's aapt and apktool for OSX+Windows (Need OSX builder!)
 # 2013.07.07. (2.9.92) New opd patches for Slim/PA; some fixes to tabletUi by Caldair
-# 2013.07.17. (2.9.927) Fix missing Mms (finally), support for CM Final, many bugfixes
+# 2013.07.17. (2.9.927) Fix missing Mms (finally), support for CM Final, many bugfixes (conflicts, mod ordering, etc.)
+
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v2.9.927"
+VERSION="v2.9.9271"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130718"
 CURRENT_ANDROID="4.2.2"
@@ -587,7 +588,7 @@ mods_info () {
      DEPENDENCY="None"
      DEV="Unknown"
      CEILING=$CURRENT_ANDROID
-     ROM_CONFLICTS="None"
+     ROM_CONFLICTS=(None)
      UNKNOWN_MOD=false
      case $PID in
      mods)
@@ -685,7 +686,7 @@ mods_info () {
           FLOOR=4.1.0
           CEILING=4.2.2
           if [[ $ANDR == "4.2" ]]; then
-               ROM_CONFLICTS=(pa .aosp-ever aokp)
+               ROM_CONFLICTS=(.aosp-ever aokp pa)
           else
                ROM_CONFLICTS=(pa .aosp-slim)
           fi
@@ -746,7 +747,7 @@ check_against_rom_types () {
 }
 
 compat_check () {
-     for P in ${PID[@]}; do
+     for G in ${PID[@]}; do
           mods_info
           if ($UNKNOWN_MOD); then
                check_against_rom_types
@@ -760,14 +761,12 @@ compat_check () {
 }
 
 rom_compat_check () {
-     for P in ${PID[@]}; do
      N=${#ROM_CONFLICTS[@]}
           for ((i=0; i < $N; i++)); do
                if [[ $RID == ${ROM_CONFLICTS[$i]} ]]; then
                     rom_compat_error
                fi
           done
-     done
 }
 
 rom_compat_error () {
@@ -1394,14 +1393,19 @@ fi
 # reset the mod list, with the pdroid-type mod applied first (for provisional use's sake)
 PID=("${SPID[@]}")
 
-
 # Check if selected mods are available for rom's Android version.
 compat_check
 
 # Make sure mod and rom don't conflict (e.g. pa and tabletUI)
-if [[ $ROM_CONFLICTS != "None" ]]; then
-     rom_compat_check
-fi
+for T in ${PID[@]}; do
+     PID=$T                  #Set PID so mods_info function returns different values for each mod
+     mods_info
+     if [[ ${ROM_CONFLICTS[@]} != "None" ]]; then
+          rom_compat_check
+     fi
+done
+# reset to original ordered list
+PID=("${SPID[@]}")
 
 # Build date
 if [ $# -gt 3 ]; then # if a date is specified on command line...
