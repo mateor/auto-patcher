@@ -148,7 +148,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v2.9.931"
+VERSION="v2.9.9315"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130721"
 CURRENT_ANDROID="4.2.2"
@@ -453,8 +453,8 @@ prep_alternate_patch () {
 }
 
 no_network_access () {
-     ping -c1 www.github.com >> "$LOG" 2>&1 && NETWORK=true # second try and check github
-     ping -c1 www.google.com >> "$LOG" 2>&1 # test for internet in general
+     ping www.github.com $PINGCOUNT >> "$LOG" 2>&1 && NETWORK=true # second try and check github
+     ping www.google.com $PINGCOUNT >> "$LOG" 2>&1 # test for internet in general
      if [[ "$NETWORK" == true ]]; then
           return
      else
@@ -1156,11 +1156,13 @@ TMPDIR="$ROOT/tmp$DATE"
 mkdir "$TEMP"
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
+PINGCOUNT=" -c1 "
 
 if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
      AUTO_UPDATE=false # CYGWIN AUTO_UPDATE TESTERS COMMENT THIS LINE HERE!
+     PINGCOUNT=" 1 1 "
 fi
 
 LOG=$(abspath ./log$DATE.txt)
@@ -1190,7 +1192,7 @@ if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
 fi
 
 if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
-     ping -c1 www.github.com > /dev/null 2>&1 && NETWORK=true || no_network_access
+     ping www.github.com $PINGCOUNT > /dev/null 2>&1 && NETWORK=true || no_network_access
      if [[ "$NETWORK" == true ]]; then
           printtask "### checking for updates ###"
 
