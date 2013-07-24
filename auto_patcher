@@ -1680,7 +1680,6 @@ for P in ${PID[@]}; do
      echo "### jar patch $P/$A/$R/$B ###" >> "$LOG"
 
      # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
-     ALT_PATCH_NUMBER=2
      for (( current_jar=0; current_jar < ${#JARS[@]}; current_jar++)); do
           FILE=${JARS[$current_jar]}
           JAR=${FILE##*/}
@@ -1720,6 +1719,7 @@ for P in ${PID[@]}; do
           # substitute failed smali with provisional (a prepatched smali file)
           unset FAILS
           FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
+          ALT_PATCH_NUMBER=2
           if [[ -n ${FAILS[@]} ]]; then
                print_to_log "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
                echo "### replace ${FAILS[@]} ###" > ${JAR}.log
