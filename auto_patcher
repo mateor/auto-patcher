@@ -150,9 +150,9 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v2.9.935"
+VERSION="v2.9.9355"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20130724"
+PATCHES_VERSION="20130725"
 CURRENT_ANDROID="4.2.2"
 
 # Available ROMTYPES.
@@ -1150,7 +1150,7 @@ ROOT="$(abspath "$(dirname "$(abspath "$(type -p "$0")")")")"
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
 cleanup
-# set temporaray directory
+# set temporary directory
 DATE=$(date +%Y%m%d%H%M%S)
 TEMP="$ROOT/tmp$DATE"
 TMP="$ROOT/tmp$DATE"
@@ -1159,12 +1159,15 @@ mkdir "$TEMP"
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
 PINGCOUNT=" -c1 "
+PATCH_BINARY=patch
 
 if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
-     AUTO_UPDATE=false # CYGWIN AUTO_UPDATE TESTERS COMMENT THIS LINE HERE!
      PINGCOUNT=" -n 1 "
+     PATCH_BINARY="./patch$EXE "
+     AUTO_UPDATE=false # CYGWIN AUTO_UPDATE TESTERS COMMENT THIS LINE HERE!
+
 fi
 
 LOG=$(abspath ./log$DATE.txt)
@@ -1276,6 +1279,7 @@ tar xzf "$TOOL" > /dev/null || print_error "failed extracting tools !!!"
      case $(uname -s) in
      CYGWIN*)
           \mv cygwin/aapt.exe .
+          \mv cygwin/patch.exe .
           \mv cygwin/*.exe boot/
           \rm -rf cygwin # why? If you want to we can keep/add it to mac/linux, though.
           ;;
@@ -1382,7 +1386,7 @@ INDEX=0
           fi
      done
      for p in ${COPYPID[@]}; do
-          # the second loop ensures they aren't trying to apply more than one pdroid mod, and slots in any other mods.
+          # ensures they aren't applyingy more than one pdroid mod and slots in any remaining mods.
           if [ "$p" = "pdroid" ] || [ $p = "pd2.0" ] ||[ $p = "openpdroid" ]; then
                conflict_error "Those mods conflict! Only one pdroid mod at a time!"
           else
@@ -1698,10 +1702,10 @@ for P in ${PID[@]}; do
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
           printtask "... apply $NAME.patch ..."
-          patch -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
+          $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
           for INCREMENTAL in $(ls $PARB/${NAME}-*.patch 2>/dev/null); do
                printtask "... apply $(basename $INCREMENTAL) ..."
-               patch -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 >> ${JAR}.log
+               $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 >> ${JAR}.log
           done
           cat ${JAR}.log >> "$LOG"
           case "$NAME" in
@@ -1709,7 +1713,7 @@ for P in ${PID[@]}; do
                # patch preloaded-classes only if a patch exists
                if [ -f $PARB/preloaded.patch ]; then
                     printtask "... apply preloaded.patch ..."
-                    patch -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
+                    $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
                     cat preloaded.log >> "$LOG"
                     [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
                fi
@@ -1759,7 +1763,7 @@ for P in ${PID[@]}; do
           APK=${FILE##*/}
           if [ -d "tmp/${FILE}.out" ] ; then
                printtask "... apply $APK.patch ..."
-               patch -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 > ${APK}.log
+               $PATCH_BINARY -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 > ${APK}.log
                cat ${APK}.log >> "$LOG"
 
                if [[ $(grep FAILED ${APK}.log) != "" ]]; then
@@ -1777,7 +1781,7 @@ for P in ${PID[@]}; do
      for FILE in ${IMGS[@]}; do
           IMG=${FILE##*/}
           printtask "... applying $IMG.patch ..."
-          patch -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
+          $PATCH_BINARY -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
      done
 
 # Text Editing Functions --this can really do just about anything. Needs a working restore!
@@ -1787,7 +1791,7 @@ for P in ${PID[@]}; do
           TXT=${FILE##*/}
           if [[ -f $PARB/${TXT}.patch ]]; then
                printtask "... apply $TXT.patch ..."
-               patch -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
+               $PATCH_BINARY -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
                #cat ${TXT}.log | tee -a "$LOG"
                [[ $(grep FAILED ${TXT}.log) != "" ]] && print_error "failed $TXT.patch"
           fi
