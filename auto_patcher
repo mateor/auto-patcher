@@ -455,8 +455,8 @@ prep_alternate_patch () {
 }
 
 no_network_access () {
-     ping www.github.com $PINGCOUNT >> "$LOG" 2>&1 && NETWORK=true # second try and check github
-     ping www.google.com $PINGCOUNT >> "$LOG" 2>&1 # test for internet in general
+     PING_CHECK "www.github.com" >> "$LOG" 2>&1 && NETWORK=true # second try and check github
+     PING_CHECK "www.google.com" >> "$LOG" 2>&1 # test for internet in general
      if [[ "$NETWORK" == true ]]; then
           return
      else
@@ -1158,17 +1158,28 @@ TMPDIR="$ROOT/tmp$DATE"
 mkdir "$TEMP"
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
-PINGCOUNT=" -c1 "
 PATCH_BINARY=patch
+PINGCOUNT="-c1"
 
 if [[ $OSTYPE == "cygwin" ]]; then
      EXE=".exe"
      PGFORM="0x"
-     PINGCOUNT=" -n 1 "
+     PINGCOUNT="-n 1"
      PATCH_BINARY="./patch$EXE "
      AUTO_UPDATE=false # CYGWIN AUTO_UPDATE TESTERS COMMENT THIS LINE HERE!
-
 fi
+
+PING_CHECK() {
+     case $(uname -s) in
+     [Dd]arwin*)
+          (ping "$@" "$PINGCOUNT")
+          ;;
+     *)
+          (ping "$PINGCOUNT" "$@")
+          ;;
+     esac
+}
+
 
 LOG=$(abspath ./log$DATE.txt)
 #echo $ROOT $TOOL $ROM $TEMP "$LOG"
@@ -1197,7 +1208,7 @@ if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
 fi
 
 if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
-     ping www.github.com $PINGCOUNT > /dev/null 2>&1 && NETWORK=true || no_network_access
+     PING_CHECK "www.github.com" > /dev/null 2>&1 && NETWORK=true || no_network_access
      if [[ "$NETWORK" == true ]]; then
           printtask "### checking for updates ###"
 
