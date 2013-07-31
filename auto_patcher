@@ -169,6 +169,7 @@ set -a
 
 # Set any environmental variables
 LANG=C
+CYGWIN=false
 
 # Config file: For now hosting AUTO_UPDATE and PRODUCTION(currently unused). Not under version control.
 if [ ! -f .config ]; then
@@ -1162,6 +1163,7 @@ PATCH_BINARY=patch
 PINGCOUNT="-c1"
 
 if [[ $OSTYPE == "cygwin" ]]; then
+     CYGWIN=true
      EXE=".exe"
      PGFORM="0x"
      PINGCOUNT="-n 1"
@@ -1267,7 +1269,10 @@ else [[ $BIT = "32" ]];
 fi
 
 printtask "### verify tools ###"
-which patch >> "$LOG" || misstools_error "Missing \"patch\" utility."
+
+if [[ $CYGWIN == false ]];then
+     which patch >> "$LOG" || misstools_error "Missing \"patch\" utility."
+fi
 which tar >> "$LOG" || misstools_error "Missing \"tar\" utility"
 which jar >> "$LOG" || misstools_error "Missing \"Java Development Kit\" (JDK)"
 which java >> "$LOG" || misstools_error "Missing \"Java Development Kit\" (JDK)"
