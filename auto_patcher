@@ -170,6 +170,8 @@ set -a
 # Set any environmental variables
 LANG=C
 CYGWIN=false
+BAKSMALI_BINARY=baksmali.jar
+SMALI_BINARY=smali.jar
 
 # Config file: For now hosting AUTO_UPDATE and PRODUCTION(currently unused). Not under version control.
 if [ ! -f .config ]; then
@@ -309,7 +311,7 @@ smali_error () {
           printtask "... attempting fix ..."
           . patches/.common/framework.jar.sh 2>&1 > ${JAR}.log
           printtask "... rebuild framework.jar ..."
-          java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+          java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
           [ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
      else
           printtask "!!! This error is generally due to an unknown bug in the smali binary!"
@@ -449,7 +451,7 @@ prep_alternate_patch () {
 
      # Get fresh files/variables + decompile again (use rm b/c privacy files wouldn't get overwritten)
      rm -rf tmp/${FILE}.out/smali
-     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+     java -jar $BAKSMALI_BINARY -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
      unset FAILS && unset SID
      current_jar=$(($current_jar - 1))
      break
@@ -709,6 +711,9 @@ mods_info () {
      NVID=${VID//[.]/}
      COMPATF=${FLOOR//[.]/}
      COMPATC=${CEILING//[.]/}
+     if [[ ${#NVID} -lt 3 ]]; then
+          NVID="$NVID"0
+     fi
 }
 
 apk_copy () {
@@ -756,6 +761,7 @@ compat_check () {
                check_against_rom_types
                unknown_mod_error "\"$G\" is not a valid mod. Check your spelling or the mod list!!!"
           elif [[ "$NVID" -lt "$COMPATF" ]]; then
+
                mismatch_error "Your Android $VID rom is too old! The minimum for $G is \n !!! Android $FLOOR!"
           elif [[ "$NVID" -gt "$COMPATC" ]]; then
                mismatch_error "Sorry, $G has not been made available for Android $VID yet!"
@@ -957,9 +963,14 @@ proberom () {
                          ;;
                     esac
                fi
-     elif [ "$ANDR" == "4.2" ]; then
+     elif [ "$ANDR" == "4.2" ] || [ "$ANDR" == "4.3" ]; then
           FLAVR=jellybean
-          API=17
+          [ "$ANDR" == "4.2" ] && API=17
+          if [ "$ANDR" == "4.3" ]; then
+               API=18
+               BAKSMALI_BINARY="baksmali.jar"
+               SMALI_BINARY="smali.jar"
+          fi
           CMID=$(getbuildprop ro.cm.version)
           MID=$(getbuildprop ro.build.display.id)
           [[ "$MID" == "" ]] && MID=$(parse $(getbuildprop ro.build.display.id))
@@ -1573,7 +1584,7 @@ printtask "### decompile system files ###"
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... decompile $JAR ..."
-     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+     java -jar $BAKSMALI_BINARY -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
      if [ $FILE == "system/framework/framework.jar" ]; then
           printtask "... extract preloaded-classes ..."
           jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
@@ -1846,7 +1857,7 @@ fi
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... rebuild $JAR ..."
-     java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+     java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
      [ -f tmp/${FILE}.out/classes.dex ] || smali_error "failed compiling $JAR !!!"
      jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
      if [ $FILE == "system/framework/framework.jar" ]; then
