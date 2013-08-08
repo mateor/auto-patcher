@@ -152,7 +152,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.0.05"
+VERSION="v3.0.06"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130807"
 CURRENT_ANDROID="4.3.0"
@@ -172,6 +172,7 @@ set -a
 # Set any environmental variables
 LANG=C
 CYGWIN=false
+# unused for now...for experiments with "-s" flag and new patches made with it.
 BAKSMALI_BINARY=baksmali.jar
 SMALI_BINARY=smali.jar
 
@@ -313,7 +314,7 @@ smali_error () {
           printtask "... attempting fix ..."
           . patches/.common/framework.jar.sh 2>&1 > ${JAR}.log
           printtask "... rebuild framework.jar ..."
-          java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+          java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
           [ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
      else
           printtask "!!! This error is generally due to an unknown bug in the smali binary!"
@@ -452,8 +453,9 @@ prep_alternate_patch () {
      ALT_PATCH_NUMBER=$((PATCH_NUMBER + 1))
 
      # Get fresh files/variables + decompile again (use rm b/c privacy files wouldn't get overwritten)
+     # TODO: test patch -R instead of re-decompiling. Should work.
      rm -rf tmp/${FILE}.out/smali
-     java -jar $BAKSMALI_BINARY -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
      unset FAILS && unset SID
      current_jar=$(($current_jar - 1))
      break
@@ -1587,7 +1589,7 @@ printtask "### decompile system files ###"
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... decompile $JAR ..."
-     java -jar $BAKSMALI_BINARY -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
+     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
      if [ $FILE == "system/framework/framework.jar" ]; then
           printtask "... extract preloaded-classes ..."
           jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
@@ -1860,7 +1862,7 @@ fi
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... rebuild $JAR ..."
-     java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+     java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
      [ -f tmp/${FILE}.out/classes.dex ] || smali_error "failed compiling $JAR !!!"
      jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
      if [ $FILE == "system/framework/framework.jar" ]; then
