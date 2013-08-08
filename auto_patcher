@@ -477,7 +477,8 @@ auto_update_error () {
      echo ""
      printtask "### Update failed ###"
      printtask ""
-     printtask "It appears you may have made some changes to the script that prevent automatic updating."
+     printtask "It appears you may have made some changes that prevent automatic updating."
+     echo ""
      printtask "You could run 'git reset --hard' to return the autopatcher to its original form"
      printtask " or set AUTO_UPDATE to false in the .config file to stop getting this message."
      echo ""
@@ -513,11 +514,12 @@ establish_repo() {
 }
 
 export_log_and_variables () {
-     cp -a "$LOG" .updated.log
-     rm -f "$LOG"
      AUTO_PATCHER_OLD_VERSION=$VERSION
      AUTO_PATCHER_OLD_PATCHES_VERSION=$PATCHES_VERSION
      AUTO_PATCHER_WAS_UPDATED=true
+     UPDATED_LOG="$PATCHES_VERSION".updated.log
+     cp -a "$LOG" "$UPDATED_LOG"
+     rm -f "$LOG"
 }
 
 print_changelog () {
@@ -1215,12 +1217,6 @@ else
      GIT=false
 fi
 
-# If program was updated, merge the logs
-if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
-     cat .updated.log >> "$LOG"
-     rm -f .updated.log
-fi
-
 if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
      PING_CHECK "www.github.com" > /dev/null 2>&1 && NETWORK=true || no_network_access
      if [[ "$NETWORK" == true ]]; then
@@ -1263,11 +1259,18 @@ if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
      fi
 fi
 
-if [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]]; then
-     if [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]]; then
+if ( [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]] || [ -f *".updated.log" ] ); then
+     ORIGINAL_PATCHES_VERSION=$( ls *.updated.log | sed -e 's/\.updated.log//' )
+     if ( [[ $PATCHES_VERSION -gt $AUTO_PATCHER_OLD_PATCHES_VERSION ]] || [[ $PATCHES_VERSION -gt $ORIGINAL_PATCHES_VERSION ]] ); then
           echo "... integrating new patches ..."
           sh batch.sh >> /dev/null 2>> "$LOG"
      fi
+fi
+
+# If program was updated, merge the logs
+if ( [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]] || [ -f *".updated.log" ] ); then
+     cat *".updated.log" >> "$LOG"
+     rm -f *".updated.log"
 fi
 
 #remove old zips, if built under identical parameters.
