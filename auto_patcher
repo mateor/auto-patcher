@@ -146,25 +146,17 @@
 # 2013.07.20. (v2.9.935) New PA, AOKP patches. gitattribute. FIx PING for cygwin. (h/t: gcydtmkq)
 # 2013.08.05. (v2.9.941) Bundle patchv2.6.1 for cygwin.
 # 2013.08.07. (v3.0.0) Support for Android-4.3 (Opendproid only- CM and AOSP).
+# 2013.08.09. (v3.0.1) Build date and patch date matching for multiple mods- all mods will now use best available match.
 
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.0.07"
+VERSION="v3.0.1"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130808"
 CURRENT_ANDROID="4.3.0"
-
-# Available ROMTYPES.
-# ROMTYPES that are hidden can be forced on the command line. But they are best left
-# blank to be  automatically parsed by our romprobe or by just entering the parent...usually AOSP.
-
-#Non-obvious ROMTYPE legend
-# @.aosp-slim: SlimRom             @.aosp-pac: PAC-man
-# @.aosp-ever: Evervolv            @pa: ParanoidAndroid (official jellybean branch only for now)
-declare -a AVAILABLE_ROMTYPES=('aokp' 'aosp' 'cm' 'pa' '.aosp-slim' '.aosp-pac' '.aosp-ever')
 
 # pass variables to children
 set -a
@@ -175,6 +167,17 @@ CYGWIN=false
 # unused for now...for experiments with "-s" flag and new patches made with it.
 BAKSMALI_BINARY=baksmali.jar
 SMALI_BINARY=smali.jar
+declare -a MODS_LIST
+declare -a PATCH_DATE_LIST
+
+# Available ROMTYPES.
+# ROMTYPES that are hidden can be forced on the command line. But they are best left
+# blank to be  automatically parsed by our romprobe or by just entering the parent...usually AOSP.
+
+#Non-obvious ROMTYPE legend
+# @.aosp-slim: SlimRom             @.aosp-pac: PAC-man
+# @.aosp-ever: Evervolv            @pa: ParanoidAndroid (official jellybean branch only for now)
+declare -a AVAILABLE_ROMTYPES=('aokp' 'aosp' 'cm' 'pa' '.aosp-slim' '.aosp-pac' '.aosp-ever')
 
 # Config file: For now hosting AUTO_UPDATE and PRODUCTION(currently unused). Not under version control.
 if [ ! -f .config ]; then
@@ -1051,6 +1054,7 @@ else
           echo "*** specify patch date on command line. Use -h to see available patches ***"
           ;;
      *)
+          PATCH_COUNTER=0
           for P in ${PID[@]}; do
                [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
                [ -d patches/$P/$A/"$RID" ] && R=$RID || R=generic
@@ -1086,9 +1090,10 @@ else
                     if [[ -n "$BID_OVERRIDE" ]]; then
                          BID="$BID_OVERRIDE"
                     fi
-                    echo "... $PID patch date has been set to: $BID ..."
-                    B=$BID
-                    break
+                    printtask "... $P patch date has been set to: $BID ..."
+                    MODS_LIST[$PATCH_COUNTER]=$P
+                    PATCH_DATE_LIST[$PATCH_COUNTER]=$BID
+                    PATCH_COUNTER=$(($PATCH_COUNTER + 1))
           done
           ;;
      esac
@@ -1111,7 +1116,6 @@ echo "# ANDR= $ANDR" >> "$LOG"
 echo "# BDID= $BDID" >> "$LOG"
 echo "# DID= $DID" >> "$LOG"
 echo "# BID= $BID" >> "$LOG"
-echo "Patches are $PID/$ANDR/$RID/$BID" >> "$LOG"
 
 if [ -d ../".git" ]; then
      echo "" >> "$LOG"
@@ -1459,7 +1463,7 @@ if [ $# -gt 3 ]; then # if a date is specified on command line...
      build_query
      # Reset patch date to argument (basically undo the effects of the build_query call)
      BID=$4
-     echo "... $PID patch date set manually to: $BID ..."
+     printtask "... $PID patch date set manually to: $BID ..."
 else
      build_query # if no date specified, use one from build_query
 fi
@@ -1638,7 +1642,9 @@ done
 
 # apply system modification
 
-for P in ${PID[@]}; do
+for ((i=0; i < ${#PID[@]}; i++)); do
+     P=${MODS_LIST[$i]}
+     BID=${PATCH_DATE_LIST[$i]}
      [ -d patches/$P/$ANDR ] && A=$ANDR || A=all
      [ -d patches/$P/$A/$RID ] && R=$RID || R=generic
      [ -d patches/$P/$A/$R/$BID ] && B=$BID || B=latest
