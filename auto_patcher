@@ -454,7 +454,7 @@ copy_prepatched_provisional () {
 prep_alternate_patch () {
      # Use alt.patch, if exists. Increment in case there are multiple alternates.
      mv -v $ALTERNATIVE_PATCH $PARB/${NAME}.patch >> "$LOG"
-     ALT_PATCH_NUMBER=$((PATCH_NUMBER + 1))
+     ALT_PATCH_NUMBER=$(($ALT_PATCH_NUMBER + 1))
 
      # Get fresh files/variables + decompile again (use rm b/c privacy files wouldn't get overwritten)
      # TODO: test patch -R instead of re-decompiling. Should work.
@@ -1774,10 +1774,10 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                echo "### replace ${FAILS[@]} ###" > ${JAR}.log
                for FAIL in ${FAILS[@]}; do
                     PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
-                    ALTERNATIVE_PATCH=$(ls $PARB/${NAME}$ALT_PATCH_NUMBER*.patch 2>/dev/null)
+                    ALTERNATIVE_PATCH=$(ls $PARB/${NAME}*.patch$ALT_PATCH_NUMBER 2>/dev/null)
                     if [ ! -f "$PROVISIONAL" ]; then
                          if [ -f "$ALTERNATIVE_PATCH" ]; then
-                              printtask "## trying alternative ${NAME} patch ###"
+                              printtask "## trying alternative ${NAME} patch #$ALT_PATCH_NUMBER ###"
                               prep_alternate_patch
                          else
                               print_error "failed $FAIL in $JAR cannot be remedied"
