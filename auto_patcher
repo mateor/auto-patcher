@@ -1748,19 +1748,19 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                     # use globbing for the whole bit.
                echo "name is $NAME" #debug
                echo "full jar_patches is patches{/$P/$A/$R/$B/$NAME}"
-               declare -a JAR_PATCH=("patches/$P/$A/$R/$B/$NAME"_*patch)
-               echo "JAR_PATCH is ${JAR_PATCH[@]}" #debug
+               declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
+               echo "JAR_PATCH is ${PATCH_QUEUE[@]}" #debug
                [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && echo "DEBUGBUDEBUDE" && declare -a INCREMENTAL="patches/$P/$A/$R/$B/$NAME"-*
-               echo "incremental is ${INCREMENTAL[@]}"
+               #echo "incremental is ${INCREMENTAL[@]}"
                declare -a FAILED_PATCH_QUEUE
-               declare -a PATCH_QUEUE=(${JAR_PATCH[@]} ${INCREMENTAL[@]})
+               #declare -a PATCH_QUEUE=(${JAR_PATCH[@]} ${INCREMENTAL[@]})
                # add preloaded to PATCH_QUEUE ### I think we can rename to framework_preloaded.patch
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     echo "DEBUG *** Applying ${PATCH_QUEUE[$k]} ***"
                     # let's use dry-run until we build a completely succesful patch queue.
-                    $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} #2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/$PATCH_QUEUE[$k]/} )
-                    echo "DEBUG *** ${FAILED_PATCH_QUEUE[@]}"
+                    $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]} ${PATCH_QUEUE[$k]} )
                done
+                    echo "DEBUG *** YOYOY FAILED_PATCH_QUEUE IS ${FAILED_PATCH_QUEUE[@]} YOYOY"
                     # Lets note, FAILS is the name of the patch's name + target, so match from the patch.
                     # unset FAILS # still needed? Test
                     # also need to test if FAILS is set to usable output after changes.
@@ -1790,6 +1790,10 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                     done
                fi
                rm -rf ${JAR}.log # needs to be cleared!
+               for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log
+               done
+               # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
           garbage tmp/${FILE}.out
 
