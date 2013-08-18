@@ -1745,50 +1745,51 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
           printtask "... apply $NAME.patch ..."
-          $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
-          for INCREMENTAL in $(ls $PARB/${NAME}-*.patch 2>/dev/null); do
-               printtask "... apply $(basename $INCREMENTAL) ..."
-               $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 >> ${JAR}.log
-          done
-          cat ${JAR}.log >> "$LOG"
-          case "$NAME" in
-          framework)
-               # patch preloaded-classes only if a patch exists
-               if [ -f $PARB/preloaded.patch ]; then
-                    printtask "... apply preloaded.patch ..."
-                    $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
-                    cat preloaded.log >> "$LOG"
-                    [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
-               fi
-               ;;
-          *)
-               echo -n ""     # do nothing else
-               ;;
-          esac
-          # substitute failed smali with provisional (a prepatched smali file)
-          unset FAILS
-          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
-          ALT_PATCH_NUMBER=2
-          if [[ -n ${FAILS[@]} ]]; then
-               print_to_log "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
-               echo "### replace ${FAILS[@]} ###" > ${JAR}.log
-               for FAIL in ${FAILS[@]}; do
-                    PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
-                    ALTERNATIVE_PATCH=$(ls $PARB/${NAME}*.patch$ALT_PATCH_NUMBER 2>/dev/null)
-                    if [ ! -f "$PROVISIONAL" ]; then
-                         if [ -f "$ALTERNATIVE_PATCH" ]; then
-                              printtask "## trying alternative ${NAME} patch #$ALT_PATCH_NUMBER ###"
-                              prep_alternate_patch
-                         else
-                              print_error "failed $FAIL in $JAR cannot be remedied"
-                         fi
-                    else
-                         echo "!!! patch error for $FAIL !!!" >> "$LOG"
-                         [[ ${SID[@]} =~ $FAIL ]] && print_error "$FAIL was already replaced before"
-                         copy_prepatched_provisional
-                    fi
+                    # use globbing for the whole bit.
+               echo "name is $NAME" #debug
+               echo "full jar_patches is patches{/$P/$A/$R/$B/$NAME}"
+               declare -a JAR_PATCH=("patches/$P/$A/$R/$B/$NAME"_*patch)
+               echo "JAR_PATCH is ${JAR_PATCH[@]}" #debug
+               [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && echo "DEBUGBUDEBUDE" && declare -a INCREMENTAL="patches/$P/$A/$R/$B/$NAME"-*
+               echo "incremental is ${INCREMENTAL[@]}"
+               declare -a FAILED_PATCH_QUEUE
+               declare -a PATCH_QUEUE=(${JAR_PATCH[@]} ${INCREMENTAL[@]})
+               # add preloaded to PATCH_QUEUE ### I think we can rename to framework_preloaded.patch
+               for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    echo "DEBUG *** Applying ${PATCH_QUEUE[$k]} ***"
+                    # let's use dry-run until we build a completely succesful patch queue.
+                    $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} #2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/$PATCH_QUEUE[$k]/} )
+                    echo "DEBUG *** ${FAILED_PATCH_QUEUE[@]}"
                done
-          fi
+                    # Lets note, FAILS is the name of the patch's name + target, so match from the patch.
+                    # unset FAILS # still needed? Test
+                    # also need to test if FAILS is set to usable output after changes.
+               FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
+               for ff in ${FAILS[@]}; do echo $ff; done # debug
+               # patch_matcher needs to determine which unique string is in the failed patch
+               for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+                    patch_matcher || printerror "No patches for $FAILED_PATCH! Please upload the autopatcher log and a link to your rom!"
+               done
+               ALT_PATCH_NUMBER=2
+               if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then
+                    for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+                         PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAILED_PATCH}"
+                         ALTERNATIVE_PATCH=$(ls $PARB/${NAME}*.patch$ALT_PATCH_NUMBER 2>/dev/null)
+                         if [ ! -f "$PROVISIONAL" ]; then
+                              if [ -f "$ALTERNATIVE_PATCH" ]; then
+                                   printtask "## trying alternative ${NAME} patch #$ALT_PATCH_NUMBER ###"
+                                   prep_alternate_patch
+                              else
+                                  print_error "failed $FAILED_PATCH in $JAR cannot be remedied"
+                              fi
+                         else
+                              echo "!!! patch error for $FAILED_PATCH !!!" >> "$LOG"
+                              [[ ${SID[@]} =~ $FAILED_PATCH ]] && print_error "$FAILED_PATCH was already replaced before"
+                              copy_prepatched_provisional
+                         fi
+                    done
+               fi
+               rm -rf ${JAR}.log # needs to be cleared!
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
           garbage tmp/${FILE}.out
 
