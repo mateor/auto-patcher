@@ -1729,6 +1729,32 @@ for ((i=0; i < ${#PID[@]}; i++)); do
      echo "### jar patch $P/$A/$R/$B ###" >> "$LOG"
 
      # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
+
+context_editor (){
+
+CONTEXTS_CUTOFF=45
+     # I have lots of cleaner ways to do this...but I am unsure if cygwin/OSX support them.
+     # This could (and perhaps should) be done when making patches, but this just calls it when problems arise
+
+     # These extra patches are related to the FM radio addition. Since we add the same code to all AOSP-base roms
+     # I am making an executive decision to use the least additions we can once encountering patching failures.
+
+     CONTEXT_FILES=(tmp/framework.out/smali/android/app/"*ContextImpl*")\
+
+     if [[ $CONTEXT_FILES == $CONTEXT_CUTOFF ]]; then
+
+          # these are not really needed AFAIK. We'll see. 
+
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/*'ContextImpl$41'*/} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/*'ContextImpl$42'*/} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/*'ContextImpl$43'*/} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/*'ContextImpl$44'*/} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/*'ContextImpl$45'*/} )
+          # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
+          PATCH_QUEUE+=(patches/$P/$A/.common/'ContextImpl$45')
+          printtask ${PATCH_QUEUE[@]}
+     fi
+}
      for (( current_jar=0; current_jar < ${#JARS[@]}; current_jar++)); do
           FILE=${JARS[$current_jar]}
           JAR=${FILE##*/}
@@ -1758,17 +1784,33 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     echo "DEBUG *** Applying ${PATCH_QUEUE[$k]} ***"
                     # let's use dry-run until we build a completely succesful patch queue.
-                    $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]} ${PATCH_QUEUE[$k]} )
+                    $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
                done
-                    echo "DEBUG *** YOYOY FAILED_PATCH_QUEUE IS ${FAILED_PATCH_QUEUE[@]} YOYOY"
+                    echo "DEBUG *** YOYOY FAILED_PATCH_QUEUE IS ${FAILED_PATCH_QUEUE[@]} YOYOY" #debug
                     # Lets note, FAILS is the name of the patch's name + target, so match from the patch.
                     # unset FAILS # still needed? Test
                     # also need to test if FAILS is set to usable output after changes.
                FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
-               for ff in ${FAILS[@]}; do echo $ff; done # debug
                # patch_matcher needs to determine which unique string is in the failed patch
                for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
-                    patch_matcher || printerror "No patches for $FAILED_PATCH! Please upload the autopatcher log and a link to your rom!"
+                    echo "here is the call for $FAILED_PATCH!!"
+                         if [ $FAILED_PATCH==*ContextImpl* ]; then
+                              # FILE_CONTENT=$(grep -E -o string1|string2|string3|string4 "$FAILED_PATCH")
+                              # POSSIBLE_MATCHES=$( find patches/BID/ANDR -name ContextI* | xargs grep -Hl "$FILE_CONTENT" )
+                              context_editor
+                         fi
+                         FAILED_FILE=${FAILED_PATCH##*/}
+                         MATCH_FILE=${FAILED_FILE##*_/}
+                         echo "Now looking for $MATCHED_FILE!!"
+                         POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name $MATCHED_FILE )
+                         echo "${POSSIBLE_MATCHES[@]} is possible matchesz!"
+                         POSSIBLE_MATCHES_LENGTH=${#POSSIBLE_MATCHES[@]}
+                         for ((p=0; p < $POSSIBLE_MATCHES_LENGTH; p++)); do
+                              if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${POSSIBLE_MATCHES[$p]} 2>&1 >> ${JAR}.log ); then
+                                   cp -av ${POSSIBLE_MATCHES[$p]} $FAILED_PATCH
+                                   FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/$FAILED_PATCH}/ )
+                              fi
+                         done
                done
                ALT_PATCH_NUMBER=2
                if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then
