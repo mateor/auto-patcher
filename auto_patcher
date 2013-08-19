@@ -1794,21 +1794,29 @@ CONTEXTS_CUTOFF=45
                # patch_matcher needs to determine which unique string is in the failed patch
                for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
                     echo "here is the call for $FAILED_PATCH!!"
-                         if [ $FAILED_PATCH==*ContextImpl* ]; then
+                         if [ $FAILED_PATCH=="*ContextImpl*" ]; then
                               # FILE_CONTENT=$(grep -E -o string1|string2|string3|string4 "$FAILED_PATCH")
                               # POSSIBLE_MATCHES=$( find patches/BID/ANDR -name ContextI* | xargs grep -Hl "$FILE_CONTENT" )
                               context_editor
                          fi
-                         FAILED_FILE=${FAILED_PATCH##*/}
-                         MATCH_FILE=${FAILED_FILE##*_/}
-                         echo "Now looking for $MATCHED_FILE!!"
-                         POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name $MATCHED_FILE )
+                         FAILED_FILE=${FAILED_PATCH##*/}    #strip path from file
+                         MATCHED_FILE=${FAILED_FILE##*_}     #strip headers from file name
+                         #echo "$FAILED_PATCH is failed patch. $FAILED_FILE is failed_file and $MATCHED_FILE is matched_file"
+                         echo "Now looking for "$MATCHED_FILE"!!"
+                         POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" ) # index? (update: expansion seems to hold for now...)
                          echo "${POSSIBLE_MATCHES[@]} is possible matchesz!"
-                         POSSIBLE_MATCHES_LENGTH=${#POSSIBLE_MATCHES[@]}
-                         for ((p=0; p < $POSSIBLE_MATCHES_LENGTH; p++)); do
-                              if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${POSSIBLE_MATCHES[$p]} 2>&1 >> ${JAR}.log ); then
-                                   cp -av ${POSSIBLE_MATCHES[$p]} $FAILED_PATCH
+                         # Somewhere here we need to test for empty and test for too large (100?)
+                         #POSSIBLE_MATCHES_LENGTH=${#POSSIBLE_MATCHES[@]}
+                         #POSSIBLE_MATCHES_LENGTH=(${POSSIBLE_MATCHES_LENGTH// / }) # turn into array
+                         #echo "match length is ${#POSSIBLE_MATCHES_LENGTH[@]}"                              
+                        # for ((p=0; p < $POSSIBLE_MATCHES_LENGTH; p++)); do
+                         #     if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${POSSIBLE_MATCHES[$p]} 2>&1 >> ${JAR}.log ); then
+                         for p in $POSSIBLE_MATCHES; do
+                              echo "$p is P my friend."
+                              if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 >> ${JAR}.log ); then
+                                   cp -av $p $FAILED_PATCH
                                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]/$FAILED_PATCH}/ )
+                                   break
                               fi
                          done
                done
