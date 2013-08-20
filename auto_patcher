@@ -1790,7 +1790,8 @@ patch_matcher () {
                               rm -rf ${JAR}.log # needs to be cleared (AND moved to a useful function)
                               if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 >> ${JAR}.log ); then
                                    echo "Succesful patching for $p!!"
-                                   cp -av $p $FAILED_PATCH
+                                   PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
+                                   PATCH_QUEUE+=( $p )
                                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
                                    break
                               fi
@@ -1902,6 +1903,7 @@ patch_matcher () {
                rm -rf ${JAR}.log # needs to be cleared!
                # Actual application of patches occurs here!
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    printtask " ...applying ${PATCH_QUEUE[$k]} ..."
                     $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log
                done
                # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
