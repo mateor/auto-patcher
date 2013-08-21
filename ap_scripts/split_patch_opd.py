@@ -2,7 +2,7 @@ import sys,os,re
  
 rx = re.compile('^diff -Npru.*/(.*)\.smali$')
  
-patches = [ 'framework', 'services', 'telephony-common', 'Mms.apk']
+patches = [ 'core', 'framework', 'services', 'telephony-common', 'Mms.apk']
  
 for p in patches:
     name_in = p + '.patch'

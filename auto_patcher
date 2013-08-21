@@ -1758,7 +1758,7 @@ echo "Running the ContextEditor!!!"
           PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$44'*} )
           PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$45'*} )
           # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
-          PATCH_QUEUE+=(patches/$P/$A/.common/'ContextImpl$45')
+          PATCH_QUEUE+=(patches/$P/$A/.common/'ContextImpl$45'.patch)
           printtask ${PATCH_QUEUE[@]}
      fi
 }
@@ -1785,6 +1785,7 @@ patch_matcher () {
                          #echo "match length is ${#POSSIBLE_MATCHES_LENGTH[@]}"                              
                         # for ((p=0; p < $POSSIBLE_MATCHES_LENGTH; p++)); do
                          #     if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${POSSIBLE_MATCHES[$p]} 2>&1 >> ${JAR}.log ); then
+                         MATCH_SUCCESS=false
                          for p in $POSSIBLE_MATCHES; do
                               echo "$p is P my friend."
                               rm -rf ${JAR}.log # needs to be cleared (AND moved to a useful function)
@@ -1793,9 +1794,11 @@ patch_matcher () {
                                    PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
                                    PATCH_QUEUE+=( $p )
                                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
+                                   MATCH_SUCCESS=true
                                    break
                               fi
                          done
+                         [ $MATCH_SUCCESS == true ] || echo "We did not find a working patch for $p...looking for other solutions!"
                          #run_patches
                          
 }
@@ -1865,16 +1868,23 @@ patch_matcher () {
                          #echo "This is one of the failed patches $FAILED_PATCH" #debug
                          #echo "This is one of the failed patches $MATCHED_FILE" #debug
                          echo  "FAILS is ${FAILS[@]}"
-
+                              for ITEM in ${FAILS[@]}; do
+                                   echo "STARGATE $ITEM !!!!" #debug duh.
+                                   [[ "$ITEM" =~ "${MATCH_PATTERN}" ]] && FAIL=$ITEM && echo "$FAIL is matched" 
+                              done
                          #nest two lines are currently pointless
-                         FAIL=($(grep ${MATCH_PATTERN} ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
+                         #FAIL=($(grep ${MATCH_PATTERN} ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
                          echo "FAIL is $FAIL"
-                         PROVISIONAL=$(find patches/$P/$ANDR/.provisionals/ -name "*${MATCH_PATTERN}*")
+                    PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
+                         # PROVISIONAL=$(find patches/$P/$ANDR/.provisionals/ -name "*${MATCH_PATTERN}*")
                          echo "This attempt at Provisional is $PROVISIONAL"
                          #echo patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}
+
                          # change this to glob
                          ALTERNATIVE_PATCH=$(ls $PARB/${NAME}*.patch$ALT_PATCH_NUMBER 2>/dev/null)
+
                          if [ ! -f "$PROVISIONAL" ]; then
+                              echo "boBOMBS AWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYyyy"
                               if [ -f "$ALTERNATIVE_PATCH" ]; then
                                    printtask "## trying alternative ${NAME} patch #$ALT_PATCH_NUMBER ###"
                                    prep_alternate_patch
@@ -1884,10 +1894,7 @@ patch_matcher () {
                               fi
                          else
                               echo "Provisional resolver in cordon BBBBBBB"
-                              for ITEM in ${FAILS[@]}; do
-                                   echo "STARGATE $ITEM !!!!"
-                                   [[ "$ITEM" =~ "${MATCH_PATTERN}" ]] && FAIL=$ITEM && echo "$FAIL is matched" 
-                              done
+
                               echo "!!! patch error for $FAIL !!!" #>> "$LOG"
                               [[ ${SID[@]} =~ $MATCHED_FILE ]] && print_error "$MATCHED_FILE was already replaced before"
                               copy_prepatched_provisional
@@ -1903,6 +1910,8 @@ patch_matcher () {
                rm -rf ${JAR}.log # needs to be cleared!
                # Actual application of patches occurs here!
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    echo $k
+                    # This printtask is sending misleading info to log, at minimum.
                     printtask " ...applying ${PATCH_QUEUE[$k]} ..."
                     $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log
                done
