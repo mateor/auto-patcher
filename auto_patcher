@@ -1812,33 +1812,26 @@ context_editor (){
 
 
 patch_matcher () {
-     FAILED_FILE=${FAILED_PATCH##*/}    #strip path from file
-     MATCHED_FILE=${FAILED_FILE##*_}     #strip headers from file name
-                         echo "Now looking for "$MATCHED_FILE"!!"
-                         POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" ) # index? (update: expansion seems to hold for now...)
-                         echo "${POSSIBLE_MATCHES[@]} is possible matchesz!"
-                         # Somewhere here we need to test for empty and test for too large (100?)
-                         #POSSIBLE_MATCHES_LENGTH=${#POSSIBLE_MATCHES[@]}
-                         #POSSIBLE_MATCHES_LENGTH=(${POSSIBLE_MATCHES_LENGTH// / }) # turn into array
-                         #echo "match length is ${#POSSIBLE_MATCHES_LENGTH[@]}"                              
-                        # for ((p=0; p < $POSSIBLE_MATCHES_LENGTH; p++)); do
-                         #     if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${POSSIBLE_MATCHES[$p]} 2>&1 >> ${JAR}.log ); then
-                         MATCH_SUCCESS=false
-                         for p in $POSSIBLE_MATCHES; do
-                              echo "$p is P my friend."
-                              rm -rf ${JAR}.log # needs to be cleared (AND moved to a useful function)
-                              if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 >> ${JAR}.log ); then
-                                   echo "Succesful patching for $p!!"
-                                   PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
-                                   PATCH_QUEUE+=( $p )
-                                   FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
-                                   MATCH_SUCCESS=true
-                                   break
-                              fi
-                         done
-                         [ $MATCH_SUCCESS == true ] || echo "We did not find a working patch for $p...looking for other solutions!"
-                         #run_patches
-                         
+     FAILED_FILE=${FAILED_PATCH##*/}     # strip path from file
+     MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
+     POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" )
+
+     # Somewhere here we need to test for empty and test for too large (100?)
+
+     # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
+     MATCH_SUCCESS=false
+     for p in $POSSIBLE_MATCHES; do
+          rm -rf ${JAR}.log # needs to be cleared (AND moved to a useful function)
+               if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 >> ${JAR}.log ); then
+                    echo "Succesful patching for $p!!"
+                    PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
+                    PATCH_QUEUE+=( "$p" )
+                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
+                    MATCH_SUCCESS=true
+                    break
+               fi
+     done
+     [ $MATCH_SUCCESS == true ] || print_to_log "We did not find a working patch for $p...looking for other solutions!"                       
 }
 
      for (( current_jar=0; current_jar < ${#JARS[@]}; current_jar++)); do
@@ -1847,7 +1840,7 @@ patch_matcher () {
           if [[ $FILE == *".jar" ]]; then # allows for *.apks to be decompiled by baksmali
                NAME=${JAR%.jar}
           else
-               # check for abscense of any apks decompiled by baksmali (~* in files.txt). Missing jars will still error
+          # check for abscense of any apks decompiled by baksmali (~* in files.txt). Missing jar will still error
                if [ ! -d "tmp/${FILE}.out" ] ; then
                     echo "No $JAR in your ROM. Not able to patch this file."
                     echo "## No $JAR in ROM ###" >> "$LOG"
@@ -1857,23 +1850,16 @@ patch_matcher () {
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
           printtask "... apply $NAME.patch ..."
-               echo "name is $NAME" #debug
-               echo "full jar_patches is patches{/$P/$A/$R/$B/$NAME}"
                declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
-               echo "JAR_PATCH is ${PATCH_QUEUE[@]}" #debug
-               [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && echo "DEBUGBUDEBUDE" && declare -a INCREMENTAL="patches/$P/$A/$R/$B/$NAME"-*
-               #echo "incremental is ${INCREMENTAL[@]}"
+               [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )
                declare -a FAILED_PATCH_QUEUE
-               #declare -a PATCH_QUEUE=(${JAR_PATCH[@]} ${INCREMENTAL[@]})
-               # add preloaded to PATCH_QUEUE ### I think we can rename to framework_preloaded.patch
                rm -rf {JAR}.log
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     echo "DEBUG *** Applying ${PATCH_QUEUE[$k]} ***"
-                    # let's use dry-run until we build a completely succesful patch queue.
+                    # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
                     $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
                done
                FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
-                    echo "DEBUG *** YOYOY FAILED_PATCH_QUEUE IS ${FAILED_PATCH_QUEUE[@]} YOYOY" #debug
                     # Lets note, FAILS is the name of the patch's name + target, so match from the patch.
                     # unset FAILS # still needed? Test
                     # also need to test if FAILS is set to usable output after changes.
