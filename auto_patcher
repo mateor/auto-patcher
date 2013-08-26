@@ -1730,9 +1730,9 @@ for ((i=0; i < ${#PID[@]}; i++)); do
 
      # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
 
-context_editor (){
+context_editor1 (){
 
-echo "Running the ContextEditor!!!"
+printtask "Running the ContextEditor!!!"
 
      # I have lots of cleaner ways to do this...but I am unsure if cygwin/OSX support them.
      # This could (and perhaps should) be done when making patches, but this just calls it when problems arise
@@ -1740,13 +1740,15 @@ echo "Running the ContextEditor!!!"
      # These extra patches are related to the FM radio addition. Since we add the same code to all AOSP-base roms
      # I am making an executive decision to use the least additions we can once encountering patching failures.
      CONTEXT_CUTOFF=45
-     #CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
+     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
      #echo "conext files are ${#CONTEXT_FILES[@]}"
      #if [[ ${#CONTEXT_FILES[@]} == $CONTEXT_CUTOFF ]]; then
           # these are not really needed AFAIK. We'll see. 
-
-     if ( [ -f patches/$P/$A/$R/$B/*'ContextImpl$'"$CONTEXT_CUTOFF"*patch ] && [ ! -f patches/$P/$A/$R/$B/*'ContextImpl$'$(($CONTEXT_CUTOFF + 1))*patch ] ); then
-          echo "final loop yo" #debug
+     printtask "There are ${#CONTEXT_FILES[@]} context files int this rom peersssonsnal!!!"
+     if ( [ ${#CONTEXT_FILES[@]} == 48 ] ); then
+          # && [ ! -f patches/$P/$A/$R/$B/*'ContextImpl$'$(($CONTEXT_CUTOFF + 1))*patch ] ); then
+          printtask "Context_impl editor final loop yo" #debug
+          printtask "For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
           FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$41'*} )
           FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$42'*} )
           FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$43'*} )
@@ -1758,9 +1760,69 @@ echo "Running the ContextEditor!!!"
           PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$44'*} )
           PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$45'*} )
           # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
-          PATCH_QUEUE+=(patches/$P/$A/.common/'ContextImpl$45'.patch)
+          PATCH_QUEUE+=(patches/$P/$A/.common/'cm_contextImpl$45'.patch)
           printtask ${PATCH_QUEUE[@]}
+     elif ( [ ${#CONTEXT_FILES[@]} == 44 ] ); then
+          if ( [ patches/$P/$A/$R/$B/*'ContextImpl$'$CONTEXT_CUTOFF*patch ] ); then
+               # unset the above patches
+          printtask " AOSP + CM patches Context_impl editor final loop yo" #debug
+          printtask "AOSP+CM PATCHES For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$41'*} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$42'*} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$43'*} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$44'*} )
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$45'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$41'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$42'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$43'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$44'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$45'*} )
+               PATCH_QUEUE+=(patches/$P/$A/.common/'aosp_contextImpl$41'.patch)
+          fi
      fi
+          printtask "AFTERWARDSSSSSS BINGER-- Fow the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+                    printtask "AFTERWARDSSSSSS BINGER-- Fow the PATCH QUEUE is ${PATCH_QUEUE[@]}"
+}
+
+context_editor (){
+
+printtask "Running the ContextEditor!!!"
+
+     # I have lots of cleaner ways to do this...but I am unsure if cygwin/OSX support them.
+     # This could (and perhaps should) be done when making patches, but this just calls it when problems arise
+
+     # These extra patches are related to the FM radio addition. Since we add the same code to all AOSP-base roms
+     # I am making an executive decision to use the least additions we can once encountering patching failures.
+     CONTEXT_CUTOFF=45
+     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
+     #echo "conext files are ${#CONTEXT_FILES[@]}"
+     #if [[ ${#CONTEXT_FILES[@]} == $CONTEXT_CUTOFF ]]; then
+          # these are not really needed AFAIK. We'll see. 
+     printtask "There are ${#CONTEXT_FILES[@]} context files int this rom peersssonsnal!!!"
+     if ( [ ${#CONTEXT_FILES[@]} == 48 ] ); then
+          # && [ ! -f patches/$P/$A/$R/$B/*'ContextImpl$'$(($CONTEXT_CUTOFF + 1))*patch ] ); then
+          printtask "CM-based Context_impl editor final loop yo" #debug
+          printtask "For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
+          # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
+          PATCH_QUEUE+=(patches/$P/$A/cm/latest/*'ContextImpl'*.patch)
+          printtask "theis is the patch Queue${PATCH_QUEUE[@]}"
+     elif ( [ ${#CONTEXT_FILES[@]} == 44 ] ); then
+          if ( [ patches/$P/$A/$R/$B/*'ContextImpl$'$CONTEXT_CUTOFF*patch ] ); then
+               # unset the above patches
+          printtask " AOSP based Context_impl editor final loop yo" #debug
+          printtask "For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
+          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
+          # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
+          PATCH_QUEUE+=(patches/$P/$A/cm/latest/'ContextImpl'.patch)
+          printtask "theis is the patch Queue${PATCH_QUEUE[@]}"
+               PATCH_QUEUE+=(patches/$P/$A/aosp/latest/*'ContextImpl'*.patch)
+          fi
+     fi
+          printtask "AFTERWARDSSSSSS BINGER-- Fow the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+                    printtask "AFTERWARDSSSSSS BINGER-- Fow the PATCH QUEUE is ${PATCH_QUEUE[@]}"
 }
 
 
