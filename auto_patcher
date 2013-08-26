@@ -1785,59 +1785,35 @@ printtask "Running the ContextEditor!!!"
 }
 
 context_editor (){
+     # This was originally planned to remove some unsused CM ContextImpl patches..but now it exists to force 
+     # efficacy if CM patches are forced on an AOSP-based rom, or AOSP patches on a CM-based.
 
-printtask "Running the ContextEditor!!!"
-
-     # I have lots of cleaner ways to do this...but I am unsure if cygwin/OSX support them.
-     # This could (and perhaps should) be done when making patches, but this just calls it when problems arise
-
-     # These extra patches are related to the FM radio addition. Since we add the same code to all AOSP-base roms
-     # I am making an executive decision to use the least additions we can once encountering patching failures.
-     CONTEXT_CUTOFF=45
+     # Counts the number of ContextImpl patches in the decompiled jar. Easy enough.
      CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
-     #echo "conext files are ${#CONTEXT_FILES[@]}"
-     #if [[ ${#CONTEXT_FILES[@]} == $CONTEXT_CUTOFF ]]; then
-          # these are not really needed AFAIK. We'll see. 
-     printtask "There are ${#CONTEXT_FILES[@]} context files int this rom peersssonsnal!!!"
      if ( [ ${#CONTEXT_FILES[@]} == 48 ] ); then
-          # && [ ! -f patches/$P/$A/$R/$B/*'ContextImpl$'$(($CONTEXT_CUTOFF + 1))*patch ] ); then
-          printtask "CM-based Context_impl editor final loop yo" #debug
-          printtask "For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+          # Indicates CM-based roms (PACman, CM)
+          print_to_log "CM-based ContextImpl matching implemented"
+          # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
           FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
           PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
-          # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
+          # Add the proper ContextImpl patches to the PATCH_QUEUE
           PATCH_QUEUE+=(patches/$P/$A/cm/latest/*'ContextImpl'*.patch)
-          printtask "theis is the patch Queue${PATCH_QUEUE[@]}"
      elif ( [ ${#CONTEXT_FILES[@]} == 44 ] ); then
-          if ( [ patches/$P/$A/$R/$B/*'ContextImpl$'$CONTEXT_CUTOFF*patch ] ); then
-               # unset the above patches
-          printtask " AOSP based Context_impl editor final loop yo" #debug
-          printtask "For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
+          # Indicates AOSP-based rom (PA, Slim, AOSP, (AOKP?)
+          print_to_log "AOSP-based ContextImpl matching implemented"
           FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
           PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
-          # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
-          PATCH_QUEUE+=(patches/$P/$A/cm/latest/'ContextImpl'.patch)
-          printtask "theis is the patch Queue${PATCH_QUEUE[@]}"
-               PATCH_QUEUE+=(patches/$P/$A/aosp/latest/*'ContextImpl'*.patch)
-          fi
+          PATCH_QUEUE+=(patches/$P/$A/aosp/latest/*'ContextImpl'*.patch)
+     else
+          # Alerts us we need to expand the model, but leaves all QUEUES alone.
+          print_to_log "There are ${#CONTEXT_FILES[@]} context files in this rom"
      fi
-          printtask "AFTERWARDSSSSSS BINGER-- Fow the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
-                    printtask "AFTERWARDSSSSSS BINGER-- Fow the PATCH QUEUE is ${PATCH_QUEUE[@]}"
 }
 
 
 patch_matcher () {
-                         echo "here is the call for $FAILED_PATCH!!"
-                         #if [ $FAILED_PATCH=="*ContextImpl*" ]; then
-                              # FILE_CONTENT=$(grep -E -o string1|string2|string3|string4 "$FAILED_PATCH")
-                              # POSSIBLE_MATCHES=$( find patches/BID/ANDR -name ContextI* | xargs grep -Hl "$FILE_CONTENT" )
-                              #context_editor
-                         #fi
-     echo "$FAILED_PATCH is failed patch" #debug
      FAILED_FILE=${FAILED_PATCH##*/}    #strip path from file
-     echo $FAILED_FILE #debug
      MATCHED_FILE=${FAILED_FILE##*_}     #strip headers from file name
-                         #echo "$FAILED_PATCH is failed patch. $FAILED_FILE is failed_file and $MATCHED_FILE is matched_file"
                          echo "Now looking for "$MATCHED_FILE"!!"
                          POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" ) # index? (update: expansion seems to hold for now...)
                          echo "${POSSIBLE_MATCHES[@]} is possible matchesz!"
@@ -1903,7 +1879,7 @@ patch_matcher () {
                     # also need to test if FAILS is set to usable output after changes.
                
                # patch_matcher needs to determine which unique string is in the failed patch
-               [[ -n ${FAILED_PATCH_QUEUE[@]} ]] && context_editor
+               [[ -n ${FAILED_PATCH_QUEUE[@]} ]] && [[ "$NAME" == "framework" ]] && context_editor
                for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
                    patch_matcher
                done
