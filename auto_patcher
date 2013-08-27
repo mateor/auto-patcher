@@ -1730,60 +1730,6 @@ for ((i=0; i < ${#PID[@]}; i++)); do
 
      # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
 
-context_editor1 (){
-
-printtask "Running the ContextEditor!!!"
-
-     # I have lots of cleaner ways to do this...but I am unsure if cygwin/OSX support them.
-     # This could (and perhaps should) be done when making patches, but this just calls it when problems arise
-
-     # These extra patches are related to the FM radio addition. Since we add the same code to all AOSP-base roms
-     # I am making an executive decision to use the least additions we can once encountering patching failures.
-     CONTEXT_CUTOFF=45
-     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
-     #echo "conext files are ${#CONTEXT_FILES[@]}"
-     #if [[ ${#CONTEXT_FILES[@]} == $CONTEXT_CUTOFF ]]; then
-          # these are not really needed AFAIK. We'll see. 
-     printtask "There are ${#CONTEXT_FILES[@]} context files int this rom peersssonsnal!!!"
-     if ( [ ${#CONTEXT_FILES[@]} == 48 ] ); then
-          # && [ ! -f patches/$P/$A/$R/$B/*'ContextImpl$'$(($CONTEXT_CUTOFF + 1))*patch ] ); then
-          printtask "Context_impl editor final loop yo" #debug
-          printtask "For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$41'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$42'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$43'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$44'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$45'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$41'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$42'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$43'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$44'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$45'*} )
-          # This added patch is just the AOSP ContextImpl$ServiceFetcher class with the CM header
-          PATCH_QUEUE+=(patches/$P/$A/.common/'cm_contextImpl$45'.patch)
-          printtask ${PATCH_QUEUE[@]}
-     elif ( [ ${#CONTEXT_FILES[@]} == 44 ] ); then
-          if ( [ patches/$P/$A/$R/$B/*'ContextImpl$'$CONTEXT_CUTOFF*patch ] ); then
-               # unset the above patches
-          printtask " AOSP + CM patches Context_impl editor final loop yo" #debug
-          printtask "AOSP+CM PATCHES For now the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$41'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$42'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$43'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$44'*} )
-          FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl$45'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$41'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$42'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$43'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$44'*} )
-          PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl$45'*} )
-               PATCH_QUEUE+=(patches/$P/$A/.common/'aosp_contextImpl$41'.patch)
-          fi
-     fi
-          printtask "AFTERWARDSSSSSS BINGER-- Fow the Failed QUEE is ${FAILED_PATCH_QUEUE[@]}"
-                    printtask "AFTERWARDSSSSSS BINGER-- Fow the PATCH QUEUE is ${PATCH_QUEUE[@]}"
-}
-
 context_editor (){
      # This was originally planned to remove some unsused CM ContextImpl patches..but now it exists to force 
      # efficacy if CM patches are forced on an AOSP-based rom, or AOSP patches on a CM-based.
@@ -1823,7 +1769,8 @@ patch_matcher () {
      for p in $POSSIBLE_MATCHES; do
           rm -rf ${JAR}.log # needs to be cleared (AND moved to a useful function)
                if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 >> ${JAR}.log ); then
-                    echo "Succesful patching for $p!!"
+                    # This below is temporary debug logging.
+                    print_to_log "Succesful match found! Swapping $FAILED_PATCH for $p!!"
                     PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
                     PATCH_QUEUE+=( "$p" )
                     FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
@@ -1869,9 +1816,7 @@ patch_matcher () {
                    patch_matcher
                done
                ALT_PATCH_NUMBER=2
-               echo "Here is the final failed queeu ${FAILED_PATCH_QUEUE[@]}"
                if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then # while ?
-                    echo "tjhis is the failed patch queue now ${FAILED_PATCH_QUEUE[@]}"
                     for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
                          echo "$FAILED_PATCH is failed patch" #debug
                          FAILED_FILE=${FAILED_PATCH##*/}    #strip path from file
@@ -1882,10 +1827,6 @@ patch_matcher () {
                          MATCH_PATTERN=${MATCHED_FILE%patch}
 
 
-                # I need a way to tie FAILED_PATCH to PROVISIONAL
-
-
-                         echo "provsional loopdelooploop"
                          #strip_to_file_name
                          # need to change .patch to .smali here.
                          echo  "FAILS is ${FAILS[@]}"
@@ -1893,15 +1834,12 @@ patch_matcher () {
                                    echo "STARGATE $ITEM !!!!" #debug duh.
                                    [[ "$ITEM" =~ "${MATCH_PATTERN}" ]] && FAIL=$ITEM && echo "$FAIL is matched" 
                               done
-                         #nest two lines are currently pointless
-                         #FAIL=($(grep ${MATCH_PATTERN} ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
-                         echo "FAIL is $FAIL"
                     PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
                          # PROVISIONAL=$(find patches/$P/$ANDR/.provisionals/ -name "*${MATCH_PATTERN}*")
                          echo "This attempt at Provisional is $PROVISIONAL"
                          #echo patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}
 
-                         # change this to glob
+                         # Deprecated...probably headed for removel stat.
                          ALTERNATIVE_PATCH=$(ls $PARB/${NAME}*.patch$ALT_PATCH_NUMBER 2>/dev/null)
 
                          if [ ! -f "$PROVISIONAL" ]; then
@@ -1921,18 +1859,14 @@ patch_matcher () {
                               patch_matcher
   # this includes the period (e.g. 'Instrumentation.') so it does not pick up extra files (e.g. Instrumentation$2
                               ROOT_NAME=${FAIL%smali}
-                              echo "root name is $ROOT_NAME"
-                              #FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*$ROOT_NAME*} )
-                              cat ${JAR}.log #debug
                          fi
                     done
                fi
                rm -rf ${JAR}.log # needs to be cleared!
+
                # Actual application of patches occurs here!
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
-                    echo $k
-                    # This printtask is sending misleading info to log, at minimum.
-                    printtask " ...applying ${PATCH_QUEUE[$k]} ..."
+                    print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
                     $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log
                done
                # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
