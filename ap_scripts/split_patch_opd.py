@@ -1,8 +1,17 @@
+ #!/usr/bin/env python
+
 import sys,os,re
- 
+
+patches = []
 rx = re.compile('^diff -Npru.*/(.*)\.smali$')
- 
-patches = [ 'core', 'framework', 'services', 'telephony-common', 'Mms.apk']
+
+if (len(sys.argv) > 1):
+    for arg in sys.argv:
+        print arg
+        patches.append(arg)
+    del patches[0]
+else:
+    patches = [ 'core', 'framework', 'services', 'telephony-common', 'Mms.apk' ]
  
 for p in patches:
     name_in = p + '.patch'
