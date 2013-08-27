@@ -1816,7 +1816,7 @@ patch_matcher () {
      MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
      POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" )
 
-     # Somewhere here we need to test for empty and test for too large (100?)
+     # Somewhere here we need to test for empty and test for too large (100?) #TODO IMPORTANT!
 
      # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
      MATCH_SUCCESS=false
@@ -1855,7 +1855,6 @@ patch_matcher () {
                declare -a FAILED_PATCH_QUEUE
                rm -rf {JAR}.log
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
-                    echo "DEBUG *** Applying ${PATCH_QUEUE[$k]} ***"
                     # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
                     $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
                done
@@ -1874,14 +1873,14 @@ patch_matcher () {
                if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then # while ?
                     echo "tjhis is the failed patch queue now ${FAILED_PATCH_QUEUE[@]}"
                     for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
-                              echo "$FAILED_PATCH is failed patch" #debug
-                              FAILED_FILE=${FAILED_PATCH##*/}    #strip path from file
-                              echo $FAILED_FILE #debug
-                              MATCHED_FILE=${FAILED_FILE##*_}     #strip headers from file name
-                              echo "MATCHED_FILE is now equal to $MATCHED_FILE"
-  # this includes the period (e.g. 'Instrumentation.') so it does not pick up extra files (e.g. Instrumentation$2
+                         echo "$FAILED_PATCH is failed patch" #debug
+                         FAILED_FILE=${FAILED_PATCH##*/}    #strip path from file
+                         echo $FAILED_FILE #debug
+                         MATCHED_FILE=${FAILED_FILE##*_}     #strip headers from file name
+                         echo "MATCHED_FILE is now equal to $MATCHED_FILE"
+ # MATCH_PATTERN includes period (e.g. 'Instrumentation.') to avoid globbing extra files (e.g. Instrumentation$2)
                          MATCH_PATTERN=${MATCHED_FILE%patch}
-                         echo "MATCH_PATTERN is now equal to $MATCH_PATTERN!!!"
+
 
                 # I need a way to tie FAILED_PATCH to PROVISIONAL
 
@@ -1889,8 +1888,6 @@ patch_matcher () {
                          echo "provsional loopdelooploop"
                          #strip_to_file_name
                          # need to change .patch to .smali here.
-                         #echo "This is one of the failed patches $FAILED_PATCH" #debug
-                         #echo "This is one of the failed patches $MATCHED_FILE" #debug
                          echo  "FAILS is ${FAILS[@]}"
                               for ITEM in ${FAILS[@]}; do
                                    echo "STARGATE $ITEM !!!!" #debug duh.
@@ -1908,17 +1905,16 @@ patch_matcher () {
                          ALTERNATIVE_PATCH=$(ls $PARB/${NAME}*.patch$ALT_PATCH_NUMBER 2>/dev/null)
 
                          if [ ! -f "$PROVISIONAL" ]; then
-                              echo "boBOMBS AWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYyyy"
                               if [ -f "$ALTERNATIVE_PATCH" ]; then
                                    printtask "## trying alternative ${NAME} patch #$ALT_PATCH_NUMBER ###"
                                    prep_alternate_patch
                               else
                                   #I would like this to print the path like before -FAIL
+
+       # TODO this doesn't print anything useful, we need failed smali, path and which jarfile here. Logged.
                                   print_error "failed $FAIL in $JAR cannot be remedied"
                               fi
                          else
-                              echo "Provisional resolver in cordon BBBBBBB"
-
                               echo "!!! patch error for $FAIL !!!" #>> "$LOG"
                               [[ ${SID[@]} =~ $MATCHED_FILE ]] && print_error "$MATCHED_FILE was already replaced before"
                               copy_prepatched_provisional
