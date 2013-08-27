@@ -996,7 +996,7 @@ proberom () {
                     # hack to account for Final builds with old code and current build dates. Huge hack, but if there
                     # is one thing I don't believe in, it's "educating the user-base". Not happening. So hack it is.
                     if [[ "$CMID" == "10.1.2"* ]] || [[ "$CMID" == "10.1.3"* ]]; then
-                         echo " ### CMID: $CMID: Selecting CM Final Build patches" >> "$LOG"
+                         print_to_log " ### CMID: $CMID: Selecting CM Final Build patches"
                          BID_OVERRIDE=20130516
                     fi
                     ;;
@@ -1022,7 +1022,7 @@ proberom () {
      fi
      # romtype_set allows hiding ".aosp-*" types from users while leaving them as options on CLI
      romtype_set
-     echo "... result of ROM check: version= $VID rom= $ROMTYPE ..."
+     echo "... result of ROM check: version= $VID ..."
 }
 
 
@@ -1036,11 +1036,11 @@ UTC=$(getbuildprop ro.build.date.utc)
 case $(uname -s) in
 [Dd]arwin)
      BDID=$(date -r $UTC +%Y%m%d)
-     echo "#### Darwin Build Query used ####" >> "$LOG"
+     print_to_log "#### Darwin Build Query used ####"
      ;;
 *)
      BDID=$(date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d")
-     echo "#### Standard Build Query ####" >> "$LOG"
+     print_to_log "#### Standard Build Query ####"
      ;;
 esac
 
@@ -1093,7 +1093,6 @@ else
                     if [[ -n "$BID_OVERRIDE" ]]; then
                          BID="$BID_OVERRIDE"
                     fi
-                    printtask "... $P patch date has been set to: $BID ..."
                     MODS_LIST[$PATCH_COUNTER]=$P
                     PATCH_DATE_LIST[$PATCH_COUNTER]=$BID
                     PATCH_COUNTER=$(($PATCH_COUNTER + 1))
@@ -1285,7 +1284,7 @@ if ( [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]] || [ -f *".updated.log" ] ); then
 fi
 
 #remove old zips, if built under identical parameters.
-\rm -f $RESTORE.zip $UPDATE.zip
+\rm -f $RESTORE $UPDATE
 
 CHK=$(getconf LONG_BIT) 
 if [[ $CHK = "64" ]]; then
@@ -1395,6 +1394,8 @@ if [ $# -gt 2 ]; then
           rom_error "$RID is not a valid ROMTYPE!!"
           ;;
      esac
+
+     # Most of this needs to go...it is misleading and adds unnecessary steps for users. Available to devs only.
      romtype_set
      echo "... Using $ROMTYPE patches ..."
 else
@@ -1525,12 +1526,12 @@ for P in ${PID[@]}; do
           esac
      done
 done
-echo "### DELETE FILES= ${EID[@]}" >> "$LOG"
-echo "### COPY FILES= ${CID[@]}" >> "$LOG"
-echo "### JAR FILES= ${JID[@]}" >> "$LOG"
-echo "### APK FILES= ${AID[@]}" >> "$LOG"
-echo "### IMG FILES= ${IID[@]}" >> "$LOG"
-echo "### TXT FILES= ${TID[@]}" >> "$LOG"
+print_to_log "### DELETE FILES= ${EID[@]}"
+print_to_log "### COPY FILES= ${CID[@]}"
+print_to_log "### JAR FILES= ${JID[@]}"
+print_to_log "### APK FILES= ${AID[@]}"
+print_to_log "### IMG FILES= ${IID[@]}"
+print_to_log "### TXT FILES= ${TID[@]}"
 
 # extract system files
 printtask "### unzip rom ###"
@@ -1541,8 +1542,10 @@ jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_err
 printtask "### create updater script ###"
 UPDATER_LOC=META-INF/com/google/android
 UPDS=updater-script
-UPDATE="update-$ROMTYPE-$DID-$BDID-${PIL// /-}"
-RESTORE="restore-$ROMTYPE-$DID-$BDID"
+ROM_NAME=${ROMX##*/}
+UPDATE="update-${PIL// /-}-$ROM_NAME"
+RESTORE="restore-from-${PIL// /-}-$ROM_NAME"
+
 
 jar -xvf "$ROMX" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
 jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
@@ -1588,7 +1591,7 @@ cat $UPDS >> "$LOG"
 printtask "### create restore.zip ###"
 jar -cvf tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
 java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
-\mv signed.zip $RESTORE.zip
+\mv signed.zip $RESTORE
 \rm -f tmp.zip
 
 
@@ -1686,8 +1689,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           esac
      done
 
-     [[ -n ${COPY[@]} ]] && echo "### copy patch $P/$A/$ROMTYPE/$B ###"
-     echo "### copy patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$A ###"
      for FILE in ${COPY[@]}; do
           printtask "... copying $FILE ..."
           DEST=${FILE%/*}
@@ -1697,7 +1699,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                \cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG" 2>&1
           elif [ -e patches/$P/common/$FILE ]; then
                printtask "... overwriting $FILE from $P ..."
-               echo " ### SOMETHING WENT WRONG!! Could not find file-- using common. ###" >> "$LOG"
+               print_to_log " ### SOMETHING WENT WRONG!! Could not find file-- using common. ###"
                \cp -av patches/$P/common/$FILE ./$DEST >> "$LOG" 2>&1
           else
                print_error "$FILE is missing in the patch. Please upload your logfile to the support thread!"
@@ -1721,14 +1723,13 @@ for ((i=0; i < ${#PID[@]}; i++)); do
            fi
      done
 
-     [[ -n ${DELS[@]} ]] && echo "### delete patch $P/$A/$ROMTYPE/$B ###"
-     echo "### delete patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$A ###"
      for FILE in ${DELS[@]}; do
           printtask "... deleting $FILE ..."
           \rm -rf ./$FILE
      done
-     [[ -n ${JARS[@]} ]] && echo "### jar patch $P/$A/$ROMTYPE/$B ###"
-     echo "### jar patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$A ###"
+
 
      # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
 
@@ -1870,8 +1871,7 @@ patch_matcher () {
           fi
      done
 
-     [[ -n ${APKS[@]} ]] && echo "### apk patch $P/$A/$ROMTYPE/$B ###"
-     echo "### apk patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$A ###"
      for FILE in ${APKS[@]}; do
           APK=${FILE##*/}
           if [ -d "tmp/${FILE}.out" ] ; then
@@ -1889,8 +1889,7 @@ patch_matcher () {
                echo "## No $APK in ROM ###" >> "$LOG"
           fi
      done
-     [[ -n ${IMGS[@]} ]] && echo "### img patch $P/$A/$ROMTYPE/$B ###"
-     echo "### img patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$A ###"
      for FILE in ${IMGS[@]}; do
           IMG=${FILE##*/}
           printtask "... applying $IMG.patch ..."
@@ -1898,8 +1897,7 @@ patch_matcher () {
      done
 
 # Text Editing Functions --this can really do just about anything. Needs a working restore!
-     [[ -n ${TXTS[@]} ]] && echo "### text patch $P/$A/$ROMTYPE/$B ###"
-     echo "### text patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$A ###"
      for FILE in ${TXTS[@]}; do
           TXT=${FILE##*/}
           if [[ -f $PARB/${TXT}.patch ]]; then
@@ -1990,11 +1988,11 @@ for FILE in ${IID[@]}; do
      esac
 done
 
-printtask "### create $UPDATE.zip ###"
+printtask "### create $UPDATE ###"
 jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
-java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip $UPDATE.zip 2>> "$LOG"
+java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip $UPDATE 2>> "$LOG"
 
-\mv $RESTORE.zip $UPDATE.zip ..
+\mv $RESTORE $UPDATE ..
 printtask "### finished ###"
 printtask ""
 printtask "$(colorize_bold ${red}Congratulations), the patching was $(colorize_bold ${red}successful)."
@@ -2003,10 +2001,10 @@ printtask ""
 printtask "!!! Only file a bug report if the software is $(colorize_bold ${grn}not) behaving as expected !!!"
 printtask ""
 echo "to install patched files, flash:"
-printtask "--- $(colorize_bold ${grn}$UPDATE.zip)"
+printtask "--- $(colorize_bold ${grn}$UPDATE)"
 echo ""
 printtask "to restore original system, flash:"
-printtask "--- $(colorize_bold ${grn}$RESTORE.zip)"
+printtask "--- $(colorize_bold ${grn}$RESTORE)"
 echo ""
 
      # add announcement- optional.
