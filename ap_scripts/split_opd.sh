@@ -1,6 +1,15 @@
 #!/bin/bash
 
-python ~/android/auto3/ap_scripts/split_patch_opd.py
+
+# This allows to pass arguments, so can split AND remove files at once.
+if [ $# -gt 0 ]; then
+     for FILE in $@; do
+          args+=($FILE)
+     done
+     args=( ${args[@]//*'split_patch'*} )
+fi
+
+python ~/android/auto3/ap_scripts/split_patch_opd.py ${args[@]}
 
 files=(*_*_*patch)
 echo "files are ${files[@]}"
