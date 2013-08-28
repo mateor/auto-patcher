@@ -157,7 +157,7 @@
 
 VERSION="v3.1.0"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20130827"
+PATCHES_VERSION="20130828"
 CURRENT_ANDROID="4.3.0"
 
 # pass variables to children
@@ -1787,8 +1787,9 @@ patch_matcher () {
      # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
      MATCH_SUCCESS=false
      for p in $POSSIBLE_MATCHES; do
-          rm -rf ${JAR}.log # needs to be cleared (AND moved to a useful function)
-               if ($PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 >> ${JAR}.log ); then
+          $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
+          # I was originally just testing the patch command for success...but all ignored fails that way 
+          if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
                     # This below is temporary debug logging.
                     print_to_log "Succesful match found! Swapping $FAILED_PATCH for $p!!"
                     PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
