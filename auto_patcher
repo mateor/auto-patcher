@@ -166,6 +166,7 @@ set -a
 # Set any environmental variables
 LANG=C
 CYGWIN=false
+
 # unused for now...for experiments with "-s" flag and new patches made with it.
 BAKSMALI_BINARY=baksmali.jar
 SMALI_BINARY=smali.jar
@@ -1191,6 +1192,7 @@ ROOT="$(abspath "$(dirname "$(abspath "$(type -p "$0")")")")"
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
 cleanup
+
 # set temporary directory
 DATE=$(date +%Y%m%d%H%M%S)
 TEMP="$ROOT/tmp$DATE"
@@ -1199,6 +1201,10 @@ TMPDIR="$ROOT/tmp$DATE"
 mkdir "$TEMP"
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
+ERR="$TEMP"/ERR
+
+exec 2>> ${ERR}.log
+
 PATCH_BINARY=patch
 PINGCOUNT="-c1"
 
@@ -1879,6 +1885,7 @@ patch_matcher () {
           done
           # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
+
           garbage tmp/${FILE}.out
 
      # run special $JAR.sh scripts if any JAR needs special attention 
@@ -2005,6 +2012,13 @@ for FILE in ${IID[@]}; do
           ;;
      esac
 done
+
+# Check ERR.log
+cat ${ERR}.log
+if ( [ -s ${ERR}.log ] ); then
+     print_to_log "Unhandled error!" && cat ${ERR}.log >> "$LOG"
+     print_error "There was an unhandled error! Please submit your log!"
+fi
 
 printtask "### create $UPDATE ###"
 jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
