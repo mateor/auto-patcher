@@ -155,7 +155,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.05"
+VERSION="v3.1.07"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130829"
 CURRENT_ANDROID="4.3.0"
@@ -1781,7 +1781,8 @@ context_editor (){
      PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
 
      # Add the proper ContextImpl patches to the PATCH_QUEUE
-     PATCH_QUEUE+=(patches/$P/$A/$ROM_BASE/latest/*'ContextImpl'*.patch)
+     CONTEXT_PATCHES=(patches/$P/$A/$ROM_BASE/latest/*ContextImpl*.patch)
+     PATCH_QUEUE+=("$CONTEXT_PATCHES")
 }
 
 patch_matcher () {
@@ -1806,6 +1807,7 @@ patch_matcher () {
                     break
                fi
      done
+     cat MATCH.log >> "$LOG" # for now...I have seen some stderr get hidden without this.
      [ $MATCH_SUCCESS == true ] || print_to_log "We did not find a working patch for $p...looking for other solutions!"                       
 }
 
@@ -1881,7 +1883,7 @@ patch_matcher () {
           # Actual application of patches occurs here!
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
-               $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log
+               $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
           done
           # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
