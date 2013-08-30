@@ -1782,7 +1782,11 @@ context_editor (){
 
      # Add the proper ContextImpl patches to the PATCH_QUEUE
      CONTEXT_PATCHES=(patches/$P/$A/$ROM_BASE/latest/*ContextImpl*)
-     PATCH_QUEUE+=(${CONTEXT_PATCHES[@]})
+     for C in ${CONTEXT_PATCHES[@]}; do
+          PATCH_QUEUE+=($C)
+     done
+     print_to_log "CONTEXT_PATCHES are ${CONTEXT_PATCHES[@]}"
+     print_to_log "Path expansion contents are:"
 }
 
 patch_matcher () {
@@ -1874,7 +1878,6 @@ patch_matcher () {
                          [[ ${SID[@]} =~ $MATCHED_FILE ]] && print_error "$MATCHED_FILE was already replaced before"
                          copy_prepatched_provisional
                          patch_matcher
-  # this includes the period (e.g. 'Instrumentation.') so it does not pick up extra files (e.g. Instrumentation$2
                     fi
                done
           fi
@@ -1887,7 +1890,7 @@ patch_matcher () {
           done
           # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
-
+          cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
 
      # run special $JAR.sh scripts if any JAR needs special attention 
