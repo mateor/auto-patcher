@@ -1,0 +1,48 @@
+diff -Npruw stock-framework/smali/android/app/ContextImpl$43.smali pdroid-framework/smali/android/app/ContextImpl$43.smali
+--- stock-framework/smali/android/app/ContextImpl$43.smali	2013-08-30 10:38:25.435180770 -0500
++++ pdroid-framework/smali/android/app/ContextImpl$43.smali	2013-08-30 10:38:16.115180625 -0500
+@@ -1,5 +1,5 @@
+ .class final Landroid/app/ContextImpl$43;
+-.super Landroid/app/ContextImpl$StaticServiceFetcher;
++.super Landroid/app/ContextImpl$ServiceFetcher;
+ .source "ContextImpl.java"
+ 
+ 
+@@ -18,29 +18,25 @@
+ .method constructor <init>()V
+     .registers 1
+ 
+-    invoke-direct {p0}, Landroid/app/ContextImpl$StaticServiceFetcher;-><init>()V
++    invoke-direct {p0}, Landroid/app/ContextImpl$ServiceFetcher;-><init>()V
+ 
+     return-void
+ .end method
+ 
+ 
+ # virtual methods
+-.method public createStaticService()Ljava/lang/Object;
+-    .registers 4
++.method public createService(Landroid/app/ContextImpl;)Ljava/lang/Object;
++    .registers 3
+ 
+-    const-string v2, "irda"
++    iget-object v0, p1, Landroid/app/ContextImpl;->mMainThread:Landroid/app/ActivityThread;
+ 
+-    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++    invoke-virtual {v0}, Landroid/app/ActivityThread;->getHandler()Landroid/os/Handler;
+ 
+     move-result-object v0
+ 
+-    invoke-static {v0}, Landroid/hardware/IIrdaManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/hardware/IIrdaManager;
++    invoke-static {p1, v0}, Landroid/net/wimax/WimaxHelper;->createWimaxService(Landroid/content/Context;Landroid/os/Handler;)Ljava/lang/Object;
+ 
+-    move-result-object v1
+-
+-    new-instance v2, Landroid/hardware/IrdaManager;
+-
+-    invoke-direct {v2, v1}, Landroid/hardware/IrdaManager;-><init>(Landroid/hardware/IIrdaManager;)V
++    move-result-object v0
+ 
+-    return-object v2
++    return-object v0
+ .end method
