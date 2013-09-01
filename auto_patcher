@@ -1641,8 +1641,8 @@ done
 if [ ${#AID[@]} -gt 0 ]; then
      jar -xvf "$ROMX" system/framework/framework-res.apk >> "$LOG"
      printtask "... installing framework files ..."
-     java -jar apktool.jar if system/framework/framework-res.apk
-   # Decompile APKs
+     # have to redirect to /dev/null...oddly framework installation is reported as stderr; bug in apktool.
+     java -jar apktool.jar if system/framework/framework-res.apk >> /dev/null 2>&1
      for FILE in ${AID[@]}; do
           APK=${FILE##*/}
           if [ -f $FILE ]; then
@@ -1798,6 +1798,8 @@ context_editor (){
 }
 
 patch_matcher () {
+     # Strip level - If this project continues, we need to simply standardize strip levels.
+
      FAILED_FILE=${FAILED_PATCH##*/}     # strip path from file
      MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
      POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" )
@@ -1807,7 +1809,7 @@ patch_matcher () {
      # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
      MATCH_SUCCESS=false
      for p in $POSSIBLE_MATCHES; do
-          $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
+          $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
           # I was originally just testing the patch command for success...but all ignored fails that way 
           if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
                     # This below is temporary debug logging.
@@ -1826,6 +1828,7 @@ patch_matcher () {
      for (( current_jar=0; current_jar < ${#JARS[@]}; current_jar++)); do
           FILE=${JARS[$current_jar]}
           JAR=${FILE##*/}
+          STRIP_LEVEL=1
           if [[ $FILE == *".jar" ]]; then # allows for *.apks to be decompiled by baksmali
                NAME=${JAR%.jar}
           else
@@ -1844,7 +1847,7 @@ patch_matcher () {
           # In a test, this failed when retitled framework_00_preloaded.patch and added to QUEUE. But why?
           if ( [[ "$NAME" == "framework" ]] && [ -f $PARB/preloaded.patch ] ); then
                     printtask "... apply preloaded.patch ..."
-                    $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
+                    $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
                     [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
           fi
 
@@ -1856,7 +1859,7 @@ patch_matcher () {
 
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
-               $PATCH_BINARY --dry-run -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
+               $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
           done
 
           FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))          
@@ -1894,7 +1897,7 @@ patch_matcher () {
           # Actual application of patches occurs here!
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
-               $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
           done
           # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
           [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
@@ -1912,9 +1915,26 @@ patch_matcher () {
      [[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$A ###"
      for FILE in ${APKS[@]}; do
           APK=${FILE##*/}
+          STRIP_LEVEL=2
+
           if [ -d "tmp/${FILE}.out" ] ; then
+
+          # 3.1 additions here
+          declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$APK"_*patch)
+          unset FAILED_PATCH_QUEUE
+               for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
+                    $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${APK}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
+               done
+               for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+                    patch_matcher
+               done
+
                printtask "... apply $APK.patch ..."
-               $PATCH_BINARY -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 > ${APK}.log
+          for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+               print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${APK}.log 2>&1
+          done
                cat ${APK}.log >> "$LOG"
 
                if [[ $(grep FAILED ${APK}.log) != "" ]]; then
@@ -1930,17 +1950,19 @@ patch_matcher () {
      [[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$A ###"
      for FILE in ${IMGS[@]}; do
           IMG=${FILE##*/}
+          STRIP_LEVEL=1
           printtask "... applying $IMG.patch ..."
-          $PATCH_BINARY -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
+          $PATCH_BINARY -Nls -p$STRIP_LEVEL -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
      done
 
 # Text Editing Functions --this can really do just about anything. Needs a working restore!
      [[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$A ###"
      for FILE in ${TXTS[@]}; do
           TXT=${FILE##*/}
+          STRIP_LEVEL=2
           if [[ -f $PARB/${TXT}.patch ]]; then
                printtask "... apply $TXT.patch ..."
-               $PATCH_BINARY -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
                #cat ${TXT}.log | tee -a "$LOG"
                [[ $(grep FAILED ${TXT}.log) != "" ]] && print_error "failed $TXT.patch"
           fi
