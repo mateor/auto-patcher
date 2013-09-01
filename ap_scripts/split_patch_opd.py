@@ -4,6 +4,7 @@ import sys,os,re
 
 patches = []
 rx = re.compile('^diff -Npru.*/(.*)\.smali$')
+rxml = re.compile('^diff -Npru.*/(.*)\.xml$')
 
 if (len(sys.argv) > 1):
     for arg in sys.argv:
@@ -22,8 +23,14 @@ for p in patches:
     fout = None
     for l in fin.readlines():
         m = rx.match(l)
+        n = rxml.match(l)
         if m:
             name_out = fmt_name_out % (i, m.group(1))
+            print "Creating: '%s'" % name_out
+            fout = open(name_out, 'wb')
+            i += 1
+        if n:
+            name_out = fmt_name_out % (i, n.group(1))
             print "Creating: '%s'" % name_out
             fout = open(name_out, 'wb')
             i += 1

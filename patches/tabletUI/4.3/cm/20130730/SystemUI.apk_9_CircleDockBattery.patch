@@ -1,0 +1,169 @@
+diff -Npru stock-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/CircleDockBattery.smali tablet-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/CircleDockBattery.smali
+--- stock-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/CircleDockBattery.smali
++++ tablet-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/CircleDockBattery.smali
+@@ -2,13 +2,12 @@
+ .super Lcom/android/systemui/statusbar/policy/CircleBattery;
+ .source "CircleDockBattery.java"
+ 
+-# interfaces
+-.implements Lcom/android/systemui/statusbar/policy/DockBatteryController$DockBatteryStateChangeCallback;
+-
+ 
+ # instance fields
+ .field private mAttached:Z
+ 
++.field private mBatteryPlugged:Z
++
+ .field private mBatteryPresent:Z
+ 
+ .field private final mContext:Landroid/content/Context;
+@@ -53,12 +52,14 @@
+ .end method
+ 
+ .method public constructor <init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V
+-    .locals 1
++    .locals 2
+     .parameter "context"
+     .parameter "attrs"
+     .parameter "defStyle"
+ 
+     .prologue
++    const/4 v1, 0x0
++
+     .line 62
+     invoke-direct {p0, p1, p2, p3}, Lcom/android/systemui/statusbar/policy/CircleBattery;-><init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V
+ 
+@@ -67,10 +68,11 @@
+ 
+     iput v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mDockBatteryStatus:I
+ 
+-    .line 42
+-    const/4 v0, 0x0
++    .line 41
++    iput-boolean v1, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mBatteryPlugged:Z
+ 
+-    iput-boolean v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mBatteryPresent:Z
++    .line 42
++    iput-boolean v1, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mBatteryPresent:Z
+ 
+     .line 63
+     iput-object p1, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mContext:Landroid/content/Context;
+@@ -230,22 +232,22 @@
+     return-void
+ .end method
+ 
+-.method protected getBatteryLevel()I
++.method protected getBatteryStatus()I
+     .locals 1
+ 
+     .prologue
+     .line 106
+-    iget v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mLevel:I
++    iget v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mDockBatteryStatus:I
+ 
+     return v0
+ .end method
+ 
+-.method protected getBatteryStatus()I
++.method protected getLevel()I
+     .locals 1
+ 
+     .prologue
+     .line 111
+-    iget v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mDockBatteryStatus:I
++    iget v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mLevel:I
+ 
+     return v0
+ .end method
+@@ -319,6 +321,64 @@
+     return-void
+ .end method
+ 
++.method protected onBatteryStatusChange(Landroid/content/Intent;)V
++    .locals 3
++    .parameter "intent"
++
++    .prologue
++    const/4 v0, 0x1
++
++    const/4 v1, 0x0
++
++    .line 118
++    const-string v2, "dock_level"
++
++    invoke-virtual {p1, v2, v1}, Landroid/content/Intent;->getIntExtra(Ljava/lang/String;I)I
++
++    move-result v2
++
++    iput v2, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mLevel:I
++
++    .line 119
++    const-string v2, "dock_status"
++
++    invoke-virtual {p1, v2, v0}, Landroid/content/Intent;->getIntExtra(Ljava/lang/String;I)I
++
++    move-result v2
++
++    iput v2, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mDockBatteryStatus:I
++
++    .line 122
++    const-string v2, "dock_plugged"
++
++    invoke-virtual {p1, v2, v1}, Landroid/content/Intent;->getIntExtra(Ljava/lang/String;I)I
++
++    move-result v2
++
++    if-eqz v2, :cond_0
++
++    :goto_0
++    iput-boolean v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mBatteryPlugged:Z
++
++    .line 123
++    const-string v0, "dock_present"
++
++    invoke-virtual {p1, v0, v1}, Landroid/content/Intent;->getBooleanExtra(Ljava/lang/String;Z)Z
++
++    move-result v0
++
++    iput-boolean v0, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mBatteryPresent:Z
++
++    .line 124
++    return-void
++
++    :cond_0
++    move v0, v1
++
++    .line 122
++    goto :goto_0
++.end method
++
+ .method protected onDetachedFromWindow()V
+     .locals 2
+ 
+@@ -353,26 +413,3 @@
+     .line 94
+     return-void
+ .end method
+-
+-.method public onDockBatteryLevelChanged(IZI)V
+-    .locals 0
+-    .parameter "level"
+-    .parameter "present"
+-    .parameter "status"
+-
+-    .prologue
+-    .line 98
+-    iput p1, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mLevel:I
+-
+-    .line 99
+-    iput-boolean p2, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mBatteryPresent:Z
+-
+-    .line 100
+-    iput p3, p0, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->mDockBatteryStatus:I
+-
+-    .line 101
+-    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/CircleDockBattery;->updateVisibility()V
+-
+-    .line 102
+-    return-void
+-.end method
