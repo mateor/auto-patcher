@@ -156,9 +156,9 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.2"
+VERSION="v3.1.22"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20130904"
+PATCHES_VERSION="20130905"
 CURRENT_ANDROID="4.3.0"
 
 # pass variables to children
@@ -1393,6 +1393,7 @@ jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || print_error "failed extracting 
 proberil
 printtask "### probe rom type ###"
 proberom
+PROBE_RESULTS=$RID
 
 # rom type
 if [ $# -gt 1 ]; then
@@ -1789,14 +1790,34 @@ context_editor (){
 
      # Counts the number of ContextImpl patches in the decompiled jar. Easy enough.
      CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
+     print_to_log "There are ${#CONTEXT_FILES[@]} context files in this rom"
+     ROM_BASE_DATE="latest"
      if ( [ ${#CONTEXT_FILES[@]} == 49 ] ); then
-          # Indicates SlimRom-based roms (Slim)
-          print_to_log "CM-based ContextImpl matching implemented"
-          ROM_BASE=.aosp-slim
+          if [[ "$PROBE_RESULTS" == ".aosp-slim" ]]; then
+               print_to_log "Slim-based ContextImpl matching implemented"
+               ROM_BASE=.aosp-slim
+          else
+               # Indicates CM after 0901
+               print_to_log "CM-based ContextImpl matching implemented"
+               ROM_BASE=cm
+          fi
      elif ( [ ${#CONTEXT_FILES[@]} == 48 ] ); then
           # Indicates CM-based roms (PACman, CM)
-          print_to_log "CM-based ContextImpl matching implemented"
-          ROM_BASE=cm
+          if [[ "$BDID" -lt "20130831" ]]; then
+               if [[ "$PROBE_RESULTS" == ".aosp-slim" ]]; then
+                    print_to_log "Slim-based ContextImpl matching implemented"
+                    ROM_BASE=.aosp-slim
+                    ROM_BASE_DATE="20130824"
+               else
+                    # Indicates CM after 0901
+                    print_to_log "CM-based ContextImpl matching implemented"
+                    ROM_BASE=cm
+                    ROM_BASE_DATE="20130826"
+               fi
+          else
+               print_to_log "Undetermined-based ContextImpl matching implemented"
+               ROM_BASE=$PROBE_RESULTS
+          fi
      elif ( [ ${#CONTEXT_FILES[@]} == 47 ] ); then
           # Indicates Carbon-based roms
           print_to_log "Carbon-based ContextImpl matching implemented"
@@ -1808,7 +1829,7 @@ context_editor (){
      else
           # Alerts us we need to expand the model, but leaves QUEUES alone for now
           print_to_log "There are ${#CONTEXT_FILES[@]} context files in this rom"
-          ROM_BASE=$RID
+          ROM_BASE=$PROBE_RESULTS
      fi
 
      # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
@@ -1816,7 +1837,7 @@ context_editor (){
      PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
 
      # Add the proper ContextImpl patches to the PATCH_QUEUE
-     CONTEXT_PATCHES=(patches/$P/$A/$ROM_BASE/latest/*ContextImpl*)
+     CONTEXT_PATCHES=(patches/$P/$A/$ROM_BASE/$ROM_BASE_DATE/*ContextImpl*)
      for C in ${CONTEXT_PATCHES[@]}; do
           PATCH_QUEUE+=($C)
      done
@@ -1883,14 +1904,14 @@ patch_matcher () {
           [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )
           declare -a FAILED_PATCH_QUEUE
           rm -rf {JAR}.log # Needed since we append the patch output now
-
+          [[ "$NAME" == "framework" ]] && context_editor
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
                $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
           done
 
           FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))          
-          [[ -n ${FAILED_PATCH_QUEUE[@]} ]] && [[ "$NAME" == "framework" ]] && context_editor
+          #[[ -n ${FAILED_PATCH_QUEUE[@]} ]] && 
           for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
               patch_matcher
           done
@@ -1927,7 +1948,7 @@ patch_matcher () {
                $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
           done
           # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
-          [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
+          [[ $(grep FAILED ${JAR}.log) != "" ]] && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
           cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
 
