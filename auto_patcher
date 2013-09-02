@@ -216,16 +216,9 @@ brief_help () {
      echo ""
      echo "Use ./auto_patcher -h for the help menu"
      echo ""
-     printtask "If you have a failed patch for your rom, please upload your log to the XDA support thread."
-     printtask
-     printtask "  If your rom is not on the supported list and you want it added, please:"
-     printtask ""
-     printtask "\t- Upload your log to the XDA support thread"
-     printtask "\t- and ask your ROM's developer for: "
-     printtask "\t\t- manifest (default.xml is the best/quickest)"
-     printtask "\t\t- or at least a link to their sources"
-     printtask ""
-     printtask "Post both to the (UPCOMING...use thread for now) and be patient, please!"
+     printtask "  If your rom is not on the supported list and you want it added:"
+     printtask "\t- Upload your log and a link to the rom's source code (mandatory)"
+     printtask "\t   and be patient, please!"
      echo ""
      cleanup
      exit
@@ -625,6 +618,7 @@ mods_info () {
      CEILING=$CURRENT_ANDROID
      ROM_CONFLICTS=(None)
      UNKNOWN_MOD=false
+     DEVICE_LIMIT="None"
      case $PID in
      mods)
           mods_display
@@ -711,11 +705,16 @@ mods_info () {
           ;;
      3gdongle)
           FLOOR=4.1.0
-          CEILING=4.2.2
+          CEILING=4.3.0
           DESC="Allows 3gdongles to work on wifi tablets w/o 3rd party applications."
           DEV="trevd"
           DEPENDENCY="None, but read the troubleshooting guide at the link"
           WEBSITE="http://forum.xda-developers.com/showthread.php?t=1798631"
+          DEVICE_LIMIT=( grouper )
+          if [[ $ANDR == "4.3" ]]; then
+               # at least. Looks like CM merged this mod. Probably other roms have as well.
+               ROM_CONFLICTS=( cm )
+          fi
           ;;
      tabletUI)
           FLOOR=4.1.0
@@ -803,15 +802,31 @@ compat_check () {
 
 rom_compat_check () {
      N=${#ROM_CONFLICTS[@]}
-          for ((i=0; i < $N; i++)); do
-               if [[ $RID == ${ROM_CONFLICTS[$i]} ]]; then
-                    rom_compat_error
-               fi
-          done
+     for ((i=0; i < $N; i++)); do
+          if [[ $RID == ${ROM_CONFLICTS[$i]} ]]; then
+               rom_compat_error
+          fi
+     done
 }
 
 rom_compat_error () {
-     print_error "$RID is incompatible with $PID!!!"
+     print_error "$PID is incompatible with $RID!!!"
+}
+
+device_compat_check () {
+     O=${#DEVICE_LIMIT[@]}
+     for ((i=0; i < $O; i++)); do
+          if [[ $DID == ${DEVICE_LIMIT[$i]} ]]; then
+               DEVICE_MATCHED=true
+          fi
+     done
+     if [[ ! "$DEVICE_MATCHED" == true ]]; then
+          device_compat_error
+     fi
+}
+
+device_compat_error () {
+     print_error "$PID is not available for $DID!!! Supported devices: ${DEVICE_LIMIT[@]}"
 }
 
 extpath () {
@@ -1476,10 +1491,13 @@ compat_check
 
 # Make sure mod and rom don't conflict (e.g. pa and tabletUI)
 for T in ${PID[@]}; do
-     PID=$T                  #Set PID so mods_info function returns different values for each mod
-     mods_info
+     PID=$T                  # Set PID so mods_info function returns different values for each mod
+     mods_info               # Populate variables for each PID
      if [[ ${ROM_CONFLICTS[@]} != "None" ]]; then
           rom_compat_check
+     fi
+     if [[ ${DEVICE_LIMIT[@]} != "None" ]]; then
+          device_compat_check
      fi
 done
 # reset to original ordered list
