@@ -1,0 +1,558 @@
+diff -Npruw stock-framework/smali/android/media/ThumbnailUtils.smali pdroid-framework/smali/android/media/ThumbnailUtils.smali
+--- stock-framework/smali/android/media/ThumbnailUtils.smali	2013-07-15 18:10:55.806628007 -0500
++++ pdroid-framework/smali/android/media/ThumbnailUtils.smali	2013-07-15 18:10:49.334628177 -0500
+@@ -235,7 +235,7 @@
+     iget-object v1, v8, Landroid/media/ThumbnailUtils$SizedThumbnailBitmap;->mBitmap:Landroid/graphics/Bitmap;
+ 
+     :cond_28
+-    if-nez v1, :cond_7c
++    if-nez v1, :cond_85
+ 
+     const/4 v9, 0x0
+ 
+@@ -246,9 +246,9 @@
+ 
+     invoke-direct {v10, v0}, Ljava/io/FileInputStream;-><init>(Ljava/lang/String;)V
+     :try_end_32
+-    .catchall {:try_start_2b .. :try_end_32} :catchall_d0
+-    .catch Ljava/io/IOException; {:try_start_2b .. :try_end_32} :catch_8c
+-    .catch Ljava/lang/OutOfMemoryError; {:try_start_2b .. :try_end_32} :catch_a3
++    .catchall {:try_start_2b .. :try_end_32} :catchall_e5
++    .catch Ljava/io/IOException; {:try_start_2b .. :try_end_32} :catch_9e
++    .catch Ljava/lang/OutOfMemoryError; {:try_start_2b .. :try_end_32} :catch_b5
+ 
+     :try_start_32
+     invoke-virtual {v10}, Ljava/io/FileInputStream;->getFD()Ljava/io/FileDescriptor;
+@@ -283,13 +283,13 @@
+ 
+     iget v13, v7, Landroid/graphics/BitmapFactory$Options;->outHeight:I
+     :try_end_50
+-    .catchall {:try_start_32 .. :try_end_50} :catchall_f0
+-    .catch Ljava/io/IOException; {:try_start_32 .. :try_end_50} :catch_f6
+-    .catch Ljava/lang/OutOfMemoryError; {:try_start_32 .. :try_end_50} :catch_f3
++    .catchall {:try_start_32 .. :try_end_50} :catchall_f5
++    .catch Ljava/io/IOException; {:try_start_32 .. :try_end_50} :catch_fb
++    .catch Ljava/lang/OutOfMemoryError; {:try_start_32 .. :try_end_50} :catch_f8
+ 
+     const/4 v14, -0x1
+ 
+-    if-ne v13, v14, :cond_62
++    if-ne v13, v14, :cond_6b
+ 
+     :cond_53
+     const/4 v13, 0x0
+@@ -299,7 +299,7 @@
+     :try_start_56
+     invoke-virtual {v10}, Ljava/io/FileInputStream;->close()V
+     :try_end_59
+-    .catch Ljava/io/IOException; {:try_start_56 .. :try_end_59} :catch_e0
++    .catch Ljava/io/IOException; {:try_start_56 .. :try_end_59} :catch_62
+ 
+     :cond_59
+     :goto_59
+@@ -320,8 +320,19 @@
+ 
+     goto :goto_e
+ 
+-    :cond_62
+-    :try_start_62
++    :catch_62
++    move-exception v2
++
++    const-string v14, "ThumbnailUtils"
++
++    const-string v15, ""
++
++    invoke-static {v14, v15, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_59
++
++    :cond_6b
++    :try_start_6b
+     invoke-static {v7, v11, v5}, Landroid/media/ThumbnailUtils;->computeSampleSize(Landroid/graphics/BitmapFactory$Options;II)I
+ 
+     move-result v13
+@@ -343,27 +354,27 @@
+     const/4 v13, 0x0
+ 
+     invoke-static {v3, v13, v7}, Landroid/graphics/BitmapFactory;->decodeFileDescriptor(Ljava/io/FileDescriptor;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;
+-    :try_end_76
+-    .catchall {:try_start_62 .. :try_end_76} :catchall_f0
+-    .catch Ljava/io/IOException; {:try_start_62 .. :try_end_76} :catch_f6
+-    .catch Ljava/lang/OutOfMemoryError; {:try_start_62 .. :try_end_76} :catch_f3
++    :try_end_7f
++    .catchall {:try_start_6b .. :try_end_7f} :catchall_f5
++    .catch Ljava/io/IOException; {:try_start_6b .. :try_end_7f} :catch_fb
++    .catch Ljava/lang/OutOfMemoryError; {:try_start_6b .. :try_end_7f} :catch_f8
+ 
+     move-result-object v1
+ 
+-    if-eqz v10, :cond_7c
++    if-eqz v10, :cond_85
+ 
+-    :try_start_79
++    :try_start_82
+     invoke-virtual {v10}, Ljava/io/FileInputStream;->close()V
+-    :try_end_7c
+-    .catch Ljava/io/IOException; {:try_start_79 .. :try_end_7c} :catch_ea
++    :try_end_85
++    .catch Ljava/io/IOException; {:try_start_82 .. :try_end_85} :catch_95
+ 
+-    :cond_7c
+-    :goto_7c
++    :cond_85
++    :goto_85
+     const/4 v13, 0x3
+ 
+     move/from16 v0, p1
+ 
+-    if-ne v0, v13, :cond_8a
++    if-ne v0, v13, :cond_93
+ 
+     const/16 v13, 0x60
+ 
+@@ -375,50 +386,60 @@
+ 
+     move-result-object v1
+ 
+-    :cond_8a
++    :cond_93
+     move-object v13, v1
+ 
+     goto :goto_59
+ 
+-    :catch_8c
++    :catch_95
+     move-exception v2
+ 
+-    :goto_8d
+-    :try_start_8d
+     const-string v13, "ThumbnailUtils"
+ 
+     const-string v14, ""
+ 
+     invoke-static {v13, v14, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_94
+-    .catchall {:try_start_8d .. :try_end_94} :catchall_d0
+ 
+-    if-eqz v9, :cond_7c
++    goto :goto_85
+ 
+-    :try_start_96
++    :catch_9e
++    move-exception v2
++
++    :goto_9f
++    :try_start_9f
++    const-string v13, "ThumbnailUtils"
++
++    const-string v14, ""
++
++    invoke-static {v13, v14, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_a6
++    .catchall {:try_start_9f .. :try_end_a6} :catchall_e5
++
++    if-eqz v9, :cond_85
++
++    :try_start_a8
+     invoke-virtual {v9}, Ljava/io/FileInputStream;->close()V
+-    :try_end_99
+-    .catch Ljava/io/IOException; {:try_start_96 .. :try_end_99} :catch_9a
++    :try_end_ab
++    .catch Ljava/io/IOException; {:try_start_a8 .. :try_end_ab} :catch_ac
+ 
+-    goto :goto_7c
++    goto :goto_85
+ 
+-    :catch_9a
++    :catch_ac
+     move-exception v2
+ 
+     const-string v13, "ThumbnailUtils"
+ 
+     const-string v14, ""
+ 
+-    :goto_9f
+     invoke-static {v13, v14, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto :goto_7c
++    goto :goto_85
+ 
+-    :catch_a3
++    :catch_b5
+     move-exception v6
+ 
+-    :goto_a4
+-    :try_start_a4
++    :goto_b6
++    :try_start_b6
+     const-string v13, "ThumbnailUtils"
+ 
+     new-instance v14, Ljava/lang/StringBuilder;
+@@ -448,43 +469,45 @@
+     move-result-object v14
+ 
+     invoke-static {v13, v14, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_c4
+-    .catchall {:try_start_a4 .. :try_end_c4} :catchall_d0
++    :try_end_d6
++    .catchall {:try_start_b6 .. :try_end_d6} :catchall_e5
+ 
+-    if-eqz v9, :cond_7c
++    if-eqz v9, :cond_85
+ 
+-    :try_start_c6
++    :try_start_d8
+     invoke-virtual {v9}, Ljava/io/FileInputStream;->close()V
+-    :try_end_c9
+-    .catch Ljava/io/IOException; {:try_start_c6 .. :try_end_c9} :catch_ca
++    :try_end_db
++    .catch Ljava/io/IOException; {:try_start_d8 .. :try_end_db} :catch_dc
+ 
+-    goto :goto_7c
++    goto :goto_85
+ 
+-    :catch_ca
++    :catch_dc
+     move-exception v2
+ 
+     const-string v13, "ThumbnailUtils"
+ 
+     const-string v14, ""
+ 
+-    goto :goto_9f
++    invoke-static {v13, v14, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    :catchall_d0
++    goto :goto_85
++
++    :catchall_e5
+     move-exception v13
+ 
+-    :goto_d1
+-    if-eqz v9, :cond_d6
++    :goto_e6
++    if-eqz v9, :cond_eb
+ 
+-    :try_start_d3
++    :try_start_e8
+     invoke-virtual {v9}, Ljava/io/FileInputStream;->close()V
+-    :try_end_d6
+-    .catch Ljava/io/IOException; {:try_start_d3 .. :try_end_d6} :catch_d7
++    :try_end_eb
++    .catch Ljava/io/IOException; {:try_start_e8 .. :try_end_eb} :catch_ec
+ 
+-    :cond_d6
+-    :goto_d6
++    :cond_eb
++    :goto_eb
+     throw v13
+ 
+-    :catch_d7
++    :catch_ec
+     move-exception v2
+ 
+     const-string v14, "ThumbnailUtils"
+@@ -493,48 +516,28 @@
+ 
+     invoke-static {v14, v15, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    goto :goto_d6
+-
+-    :catch_e0
+-    move-exception v2
+-
+-    const-string v14, "ThumbnailUtils"
+-
+-    const-string v15, ""
+-
+-    invoke-static {v14, v15, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-
+-    goto/16 :goto_59
+-
+-    :catch_ea
+-    move-exception v2
+-
+-    const-string v13, "ThumbnailUtils"
+-
+-    const-string v14, ""
+-
+-    goto :goto_9f
++    goto :goto_eb
+ 
+-    :catchall_f0
++    :catchall_f5
+     move-exception v13
+ 
+     move-object v9, v10
+ 
+-    goto :goto_d1
++    goto :goto_e6
+ 
+-    :catch_f3
++    :catch_f8
+     move-exception v6
+ 
+     move-object v9, v10
+ 
+-    goto :goto_a4
++    goto :goto_b6
+ 
+-    :catch_f6
++    :catch_fb
+     move-exception v2
+ 
+     move-object v9, v10
+ 
+-    goto :goto_8d
++    goto :goto_9f
+ .end method
+ 
+ .method private static createThumbnailFromEXIF(Ljava/lang/String;IILandroid/media/ThumbnailUtils$SizedThumbnailBitmap;)V
+@@ -708,20 +711,20 @@
+ 
+     invoke-virtual {v5, v9, v10}, Landroid/media/MediaMetadataRetriever;->getFrameAtTime(J)Landroid/graphics/Bitmap;
+     :try_end_11
+-    .catchall {:try_start_9 .. :try_end_11} :catchall_27
++    .catchall {:try_start_9 .. :try_end_11} :catchall_35
+     .catch Ljava/lang/OutOfMemoryError; {:try_start_9 .. :try_end_11} :catch_19
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_9 .. :try_end_11} :catch_60
+-    .catch Ljava/lang/RuntimeException; {:try_start_9 .. :try_end_11} :catch_65
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_9 .. :try_end_11} :catch_27
++    .catch Ljava/lang/RuntimeException; {:try_start_9 .. :try_end_11} :catch_2e
+ 
+     move-result-object v0
+ 
+     :try_start_12
+     invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
+     :try_end_15
+-    .catch Ljava/lang/RuntimeException; {:try_start_12 .. :try_end_15} :catch_25
++    .catch Ljava/lang/RuntimeException; {:try_start_12 .. :try_end_15} :catch_6c
+ 
+     :goto_15
+-    if-nez v0, :cond_2c
++    if-nez v0, :cond_3a
+ 
+     const/4 v9, 0x0
+ 
+@@ -738,7 +741,7 @@
+ 
+     invoke-static {v9, v10, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+     :try_end_21
+-    .catchall {:try_start_1a .. :try_end_21} :catchall_27
++    .catchall {:try_start_1a .. :try_end_21} :catchall_35
+ 
+     :try_start_21
+     invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
+@@ -752,19 +755,49 @@
+ 
+     goto :goto_15
+ 
+-    :catchall_27
++    :catch_27
+     move-exception v9
+ 
+     :try_start_28
+     invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
+     :try_end_2b
+-    .catch Ljava/lang/RuntimeException; {:try_start_28 .. :try_end_2b} :catch_5e
++    .catch Ljava/lang/RuntimeException; {:try_start_28 .. :try_end_2b} :catch_2c
++
++    goto :goto_15
++
++    :catch_2c
++    move-exception v9
++
++    goto :goto_15
++
++    :catch_2e
++    move-exception v9
++
++    :try_start_2f
++    invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
++    :try_end_32
++    .catch Ljava/lang/RuntimeException; {:try_start_2f .. :try_end_32} :catch_33
++
++    goto :goto_15
++
++    :catch_33
++    move-exception v9
++
++    goto :goto_15
++
++    :catchall_35
++    move-exception v9
+ 
+-    :goto_2b
++    :try_start_36
++    invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
++    :try_end_39
++    .catch Ljava/lang/RuntimeException; {:try_start_36 .. :try_end_39} :catch_6e
++
++    :goto_39
+     throw v9
+ 
+-    :cond_2c
+-    if-ne p1, v11, :cond_55
++    :cond_3a
++    if-ne p1, v11, :cond_63
+ 
+     invoke-virtual {v0}, Landroid/graphics/Bitmap;->getWidth()I
+ 
+@@ -780,7 +813,7 @@
+ 
+     const/16 v9, 0x200
+ 
+-    if-le v4, v9, :cond_53
++    if-le v4, v9, :cond_61
+ 
+     const/high16 v9, 0x4400
+ 
+@@ -808,16 +841,16 @@
+ 
+     move-result-object v0
+ 
+-    :cond_53
+-    :goto_53
++    :cond_61
++    :goto_61
+     move-object v9, v0
+ 
+     goto :goto_18
+ 
+-    :cond_55
++    :cond_63
+     const/4 v9, 0x3
+ 
+-    if-ne p1, v9, :cond_53
++    if-ne p1, v9, :cond_61
+ 
+     const/4 v9, 0x2
+ 
+@@ -825,29 +858,17 @@
+ 
+     move-result-object v0
+ 
+-    goto :goto_53
+-
+-    :catch_5e
+-    move-exception v10
+-
+-    goto :goto_2b
++    goto :goto_61
+ 
+-    :catch_60
++    :catch_6c
+     move-exception v9
+ 
+-    :try_start_61
+-    invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
+-
+     goto :goto_15
+ 
+-    :catch_65
+-    move-exception v9
+-
+-    invoke-virtual {v5}, Landroid/media/MediaMetadataRetriever;->release()V
+-    :try_end_69
+-    .catch Ljava/lang/RuntimeException; {:try_start_61 .. :try_end_69} :catch_25
++    :catch_6e
++    move-exception v10
+ 
+-    goto :goto_15
++    goto :goto_39
+ .end method
+ 
+ .method public static extractThumbnail(Landroid/graphics/Bitmap;II)Landroid/graphics/Bitmap;
+@@ -936,16 +957,14 @@
+     :try_start_5
+     invoke-static {p2, p3}, Landroid/media/ThumbnailUtils;->makeInputStream(Landroid/net/Uri;Landroid/content/ContentResolver;)Landroid/os/ParcelFileDescriptor;
+     :try_end_8
+-    .catchall {:try_start_5 .. :try_end_8} :catchall_54
+-    .catch Ljava/lang/OutOfMemoryError; {:try_start_5 .. :try_end_8} :catch_4b
++    .catchall {:try_start_5 .. :try_end_8} :catchall_5b
++    .catch Ljava/lang/OutOfMemoryError; {:try_start_5 .. :try_end_8} :catch_4f
+ 
+     move-result-object p4
+ 
+     :cond_9
+     if-nez p4, :cond_f
+ 
+-    :cond_b
+-    :goto_b
+     invoke-static {p4}, Landroid/media/ThumbnailUtils;->closeSilently(Landroid/os/ParcelFileDescriptor;)V
+ 
+     :goto_e
+@@ -980,16 +999,26 @@
+ 
+     iget-boolean v5, p5, Landroid/graphics/BitmapFactory$Options;->mCancel:Z
+ 
+-    if-nez v5, :cond_b
++    if-nez v5, :cond_31
+ 
+     iget v5, p5, Landroid/graphics/BitmapFactory$Options;->outWidth:I
+ 
+-    if-eq v5, v6, :cond_b
++    if-eq v5, v6, :cond_31
+ 
+     iget v5, p5, Landroid/graphics/BitmapFactory$Options;->outHeight:I
++    :try_end_2f
++    .catchall {:try_start_11 .. :try_end_2f} :catchall_5b
++    .catch Ljava/lang/OutOfMemoryError; {:try_start_11 .. :try_end_2f} :catch_4f
++
++    if-ne v5, v6, :cond_35
++
++    :cond_31
++    invoke-static {p4}, Landroid/media/ThumbnailUtils;->closeSilently(Landroid/os/ParcelFileDescriptor;)V
+ 
+-    if-eq v5, v6, :cond_b
++    goto :goto_e
+ 
++    :cond_35
++    :try_start_35
+     invoke-static {p5, p0, p1}, Landroid/media/ThumbnailUtils;->computeSampleSize(Landroid/graphics/BitmapFactory$Options;II)I
+ 
+     move-result v5
+@@ -1011,9 +1040,9 @@
+     const/4 v5, 0x0
+ 
+     invoke-static {v2, v5, p5}, Landroid/graphics/BitmapFactory;->decodeFileDescriptor(Ljava/io/FileDescriptor;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;
+-    :try_end_45
+-    .catchall {:try_start_11 .. :try_end_45} :catchall_54
+-    .catch Ljava/lang/OutOfMemoryError; {:try_start_11 .. :try_end_45} :catch_4b
++    :try_end_49
++    .catchall {:try_start_35 .. :try_end_49} :catchall_5b
++    .catch Ljava/lang/OutOfMemoryError; {:try_start_35 .. :try_end_49} :catch_4f
+ 
+     move-result-object v0
+ 
+@@ -1023,21 +1052,23 @@
+ 
+     goto :goto_e
+ 
+-    :catch_4b
++    :catch_4f
+     move-exception v1
+ 
+-    :try_start_4c
++    :try_start_50
+     const-string v5, "ThumbnailUtils"
+ 
+     const-string v6, "Got oom exception "
+ 
+     invoke-static {v5, v6, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_53
+-    .catchall {:try_start_4c .. :try_end_53} :catchall_54
++    :try_end_57
++    .catchall {:try_start_50 .. :try_end_57} :catchall_5b
+ 
+-    goto :goto_b
++    invoke-static {p4}, Landroid/media/ThumbnailUtils;->closeSilently(Landroid/os/ParcelFileDescriptor;)V
++
++    goto :goto_e
+ 
+-    :catchall_54
++    :catchall_5b
+     move-exception v4
+ 
+     invoke-static {p4}, Landroid/media/ThumbnailUtils;->closeSilently(Landroid/os/ParcelFileDescriptor;)V

@@ -1,0 +1,152 @@
+diff -Npruw stock-framework/smali/android/database/sqlite/SQLiteConnection.smali pdroid-framework/smali/android/database/sqlite/SQLiteConnection.smali
+--- stock-framework/smali/android/database/sqlite/SQLiteConnection.smali	2013-07-15 18:10:55.438628017 -0500
++++ pdroid-framework/smali/android/database/sqlite/SQLiteConnection.smali	2013-07-15 18:10:48.898628188 -0500
+@@ -1460,11 +1460,11 @@
+ 
+     invoke-virtual {p0, v4, v5, v6}, Landroid/database/sqlite/SQLiteConnection;->execute(Ljava/lang/String;[Ljava/lang/Object;Landroid/os/CancellationSignal;)V
+     :try_end_53
+-    .catchall {:try_start_39 .. :try_end_53} :catchall_8c
++    .catchall {:try_start_39 .. :try_end_53} :catchall_8f
+ 
+     const/4 v3, 0x1
+ 
+-    if-eqz v3, :cond_9a
++    if-eqz v3, :cond_8c
+ 
+     :try_start_56
+     const-string v4, "COMMIT"
+@@ -1527,15 +1527,20 @@
+ 
+     throw v4
+ 
+-    :catchall_8c
++    :cond_8c
++    :try_start_8c
++    const-string v4, "ROLLBACK"
++
++    goto :goto_58
++
++    :catchall_8f
+     move-exception v4
+ 
+-    if-eqz v3, :cond_97
++    if-eqz v3, :cond_9a
+ 
+-    :try_start_8f
+     const-string v5, "COMMIT"
+ 
+-    :goto_91
++    :goto_94
+     const/4 v6, 0x0
+ 
+     const/4 v7, 0x0
+@@ -1544,17 +1549,12 @@
+ 
+     throw v4
+ 
+-    :cond_97
+-    const-string v5, "ROLLBACK"
+-
+-    goto :goto_91
+-
+     :cond_9a
+-    const-string v4, "ROLLBACK"
++    const-string v5, "ROLLBACK"
+     :try_end_9c
+-    .catch Ljava/lang/RuntimeException; {:try_start_8f .. :try_end_9c} :catch_5e
++    .catch Ljava/lang/RuntimeException; {:try_start_8c .. :try_end_9c} :catch_5e
+ 
+-    goto :goto_58
++    goto :goto_94
+ .end method
+ 
+ .method private setPageSize()V
+@@ -1818,7 +1818,7 @@
+ 
+     invoke-virtual {v0, v1, v7, v8}, Landroid/database/sqlite/SQLiteConnection;->executeForLong(Ljava/lang/String;[Ljava/lang/Object;Landroid/os/CancellationSignal;)J
+     :try_end_1f
+-    .catch Landroid/database/sqlite/SQLiteException; {:try_start_c .. :try_end_1f} :catch_f8
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_c .. :try_end_1f} :catch_fc
+ 
+     move-result-wide v5
+ 
+@@ -1865,7 +1865,7 @@
+ 
+     move/from16 v0, v21
+ 
+-    if-ge v0, v1, :cond_f2
++    if-ge v0, v1, :cond_ec
+ 
+     const/4 v1, 0x1
+ 
+@@ -1881,8 +1881,8 @@
+ 
+     invoke-virtual {v10, v0, v1}, Landroid/database/CursorWindow;->getString(II)Ljava/lang/String;
+     :try_end_55
+-    .catchall {:try_start_32 .. :try_end_55} :catchall_ec
+-    .catch Landroid/database/sqlite/SQLiteException; {:try_start_32 .. :try_end_55} :catch_f1
++    .catchall {:try_start_32 .. :try_end_55} :catchall_f5
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_32 .. :try_end_55} :catch_f0
+ 
+     move-result-object v23
+ 
+@@ -1961,8 +1961,8 @@
+ 
+     invoke-virtual {v0, v1, v7, v8}, Landroid/database/sqlite/SQLiteConnection;->executeForLong(Ljava/lang/String;[Ljava/lang/Object;Landroid/os/CancellationSignal;)J
+     :try_end_9f
+-    .catchall {:try_start_5a .. :try_end_9f} :catchall_ec
+-    .catch Landroid/database/sqlite/SQLiteException; {:try_start_5a .. :try_end_9f} :catch_f6
++    .catchall {:try_start_5a .. :try_end_9f} :catchall_f5
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_5a .. :try_end_9f} :catch_fa
+ 
+     move-result-wide v5
+ 
+@@ -2039,34 +2039,39 @@
+ 
+     invoke-virtual {v0, v11}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+     :try_end_e8
+-    .catchall {:try_start_a0 .. :try_end_e8} :catchall_ec
+-    .catch Landroid/database/sqlite/SQLiteException; {:try_start_a0 .. :try_end_e8} :catch_f1
++    .catchall {:try_start_a0 .. :try_end_e8} :catchall_f5
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_a0 .. :try_end_e8} :catch_f0
+ 
+     add-int/lit8 v21, v21, 0x1
+ 
+     goto/16 :goto_40
+ 
+-    :catchall_ec
++    :cond_ec
++    invoke-virtual {v10}, Landroid/database/CursorWindow;->close()V
++
++    :goto_ef
++    return-void
++
++    :catch_f0
+     move-exception v1
+ 
+     invoke-virtual {v10}, Landroid/database/CursorWindow;->close()V
+ 
+-    throw v1
++    goto :goto_ef
+ 
+-    :catch_f1
++    :catchall_f5
+     move-exception v1
+ 
+-    :cond_f2
+     invoke-virtual {v10}, Landroid/database/CursorWindow;->close()V
+ 
+-    return-void
++    throw v1
+ 
+-    :catch_f6
++    :catch_fa
+     move-exception v1
+ 
+     goto :goto_a0
+ 
+-    :catch_f8
++    :catch_fc
+     move-exception v1
+ 
+     goto/16 :goto_20
