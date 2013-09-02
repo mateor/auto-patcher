@@ -1,0 +1,122 @@
+diff -Npru stock-framework/smali/android/app/ContextImpl.smali opd-framework/smali/android/app/ContextImpl.smali
+--- stock-framework/smali/android/app/ContextImpl.smali	2013-02-01 00:19:36.002386375 -0600
++++ opd-framework/smali/android/app/ContextImpl.smali	2013-02-01 00:20:03.990525164 -0600
+@@ -36,6 +36,8 @@
+ 
+ .field private static sNextPerContextServiceCacheIndex:I
+ 
++.field private static sOuterContext:Landroid/content/Context;
++
+ .field private static final sSharedPrefs:Ljava/util/HashMap;
+     .annotation system Ldalvik/annotation/Signature;
+         value = {
+@@ -114,6 +116,10 @@
+ 
+     sput-object v0, Landroid/app/ContextImpl;->sSharedPrefs:Ljava/util/HashMap;
+ 
++    const/4 v0, 0x0
++
++    sput-object v0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     new-array v0, v1, [Ljava/lang/String;
+ 
+     sput-object v0, Landroid/app/ContextImpl;->EMPTY_FILE_LIST:[Ljava/lang/String;
+@@ -442,6 +448,14 @@
+ 
+     invoke-static {v0, v1}, Landroid/app/ContextImpl;->registerService(Ljava/lang/String;Landroid/app/ContextImpl$ServiceFetcher;)V
+ 
++    const-string/jumbo v0, "privacy"
++
++    new-instance v1, Landroid/app/ContextImpl$40;
++
++    invoke-direct {v1}, Landroid/app/ContextImpl$40;-><init>()V
++
++    invoke-static {v0, v1}, Landroid/app/ContextImpl;->registerService(Ljava/lang/String;Landroid/app/ContextImpl$ServiceFetcher;)V
++
+     return-void
+ .end method
+ 
+@@ -474,8 +488,21 @@
+ 
+     iput-object v0, p0, Landroid/app/ContextImpl;->mServiceCache:Ljava/util/ArrayList;
+ 
++    sget-object v0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
++    if-eqz v0, :cond_26
++
++    const-string v0, "ApplicationContext"
++
++    const-string v1, "PDroid:ContextImpl: ContextImpl being created but already has sOuterContext"
++
++    invoke-static {v0, v1}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
++
++    :cond_26
+     iput-object p0, p0, Landroid/app/ContextImpl;->mOuterContext:Landroid/content/Context;
+ 
++    sput-object p0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     return-void
+ .end method
+ 
+@@ -528,8 +555,21 @@
+ 
+     iput-object v0, p0, Landroid/app/ContextImpl;->mContentResolver:Landroid/app/ContextImpl$ApplicationContentResolver;
+ 
++    sget-object v0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
++    if-eqz v0, :cond_3a
++
++    const-string v0, "ApplicationContext"
++
++    const-string v1, "PDroid:ContextImpl: ContextImpl being created but already has sOuterContext"
++
++    invoke-static {v0, v1}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
++
++    :cond_3a
+     iput-object p0, p0, Landroid/app/ContextImpl;->mOuterContext:Landroid/content/Context;
+ 
++    sput-object p0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     return-void
+ .end method
+ 
+@@ -999,6 +1039,14 @@
+     throw v0
+ .end method
+ 
++.method static final getStaticOuterContext()Landroid/content/Context;
++    .registers 1
++
++    sget-object v0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
++    return-object v0
++.end method
++
+ .method private getWallpaperManager()Landroid/app/WallpaperManager;
+     .registers 2
+ 
+@@ -4268,10 +4316,23 @@
+ .end method
+ 
+ .method final setOuterContext(Landroid/content/Context;)V
+-    .registers 2
++    .registers 4
++
++    sget-object v0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
++    if-eqz v0, :cond_b
++
++    const-string v0, "ApplicationContext"
++
++    const-string v1, "PDroid:ContextImpl: ContextImpl being created but already has sOuterContext"
++
++    invoke-static {v0, v1}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+ 
++    :cond_b
+     iput-object p1, p0, Landroid/app/ContextImpl;->mOuterContext:Landroid/content/Context;
+ 
++    sput-object p1, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     return-void
+ .end method
+ 

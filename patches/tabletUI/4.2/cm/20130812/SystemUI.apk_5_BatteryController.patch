@@ -1,0 +1,127 @@
+diff -Npru stock-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/BatteryController.smali tablet-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/BatteryController.smali
+--- stock-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/BatteryController.smali
++++ tablet-SystemUI/SystemUI.out/smali/com/android/systemui/statusbar/policy/BatteryController.smali
+@@ -149,7 +149,7 @@
+     invoke-virtual {v1}, Lcom/android/systemui/statusbar/policy/BatteryController$SettingsObserver;->observe()V
+ 
+     .line 105
+-    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->updateSettings()V
++    invoke-direct {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->updateSettings()V
+ 
+     .line 108
+     .end local v1           #settingsObserver:Lcom/android/systemui/statusbar/policy/BatteryController$SettingsObserver;
+@@ -184,6 +184,47 @@
+     return-object v0
+ .end method
+ 
++.method static synthetic access$100(Lcom/android/systemui/statusbar/policy/BatteryController;)V
++    .locals 0
++    .parameter "x0"
++
++    .prologue
++    .line 36
++    invoke-direct {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->updateSettings()V
++
++    return-void
++.end method
++
++.method private updateSettings()V
++    .locals 3
++
++    .prologue
++    .line 253
++    iget-object v1, p0, Lcom/android/systemui/statusbar/policy/BatteryController;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    .line 254
++    .local v0, resolver:Landroid/content/ContentResolver;
++    const-string v1, "status_bar_battery"
++
++    const/4 v2, 0x0
++
++    invoke-static {v0, v1, v2}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++
++    move-result v1
++
++    iput v1, p0, Lcom/android/systemui/statusbar/policy/BatteryController;->mBatteryStyle:I
++
++    .line 256
++    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->updateBattery()V
++
++    .line 257
++    return-void
++.end method
++
+ 
+ # virtual methods
+ .method public addIconView(Landroid/widget/ImageView;)V
+@@ -229,11 +270,11 @@
+ 
+     move-result v0
+ 
+-    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->getBatteryStatus()I
++    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->isBatteryStatusCharging()Z
+ 
+     move-result v1
+ 
+-    invoke-interface {p1, v0, v1}, Lcom/android/systemui/statusbar/policy/BatteryController$BatteryStateChangeCallback;->onBatteryLevelChanged(II)V
++    invoke-interface {p1, v0, v1}, Lcom/android/systemui/statusbar/policy/BatteryController$BatteryStateChangeCallback;->onBatteryLevelChanged(IZ)V
+ 
+     .line 125
+     return-void
+@@ -657,38 +698,6 @@
+     return-void
+ .end method
+ 
+-.method public updateSettings()V
+-    .locals 4
+-
+-    .prologue
+-    .line 254
+-    iget-object v1, p0, Lcom/android/systemui/statusbar/policy/BatteryController;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+-
+-    move-result-object v0
+-
+-    .line 255
+-    .local v0, resolver:Landroid/content/ContentResolver;
+-    const-string v1, "status_bar_battery"
+-
+-    const/4 v2, 0x0
+-
+-    const/4 v3, -0x2
+-
+-    invoke-static {v0, v1, v2, v3}, Landroid/provider/Settings$System;->getIntForUser(Landroid/content/ContentResolver;Ljava/lang/String;II)I
+-
+-    move-result v1
+-
+-    iput v1, p0, Lcom/android/systemui/statusbar/policy/BatteryController;->mBatteryStyle:I
+-
+-    .line 258
+-    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->updateBattery()V
+-
+-    .line 259
+-    return-void
+-.end method
+-
+ .method protected updateViews()V
+     .locals 12
+ 
+@@ -836,11 +845,11 @@
+ 
+     .line 213
+     .local v1, cb:Lcom/android/systemui/statusbar/policy/BatteryController$BatteryStateChangeCallback;
+-    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->getBatteryStatus()I
++    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/BatteryController;->isBatteryStatusCharging()Z
+ 
+     move-result v6
+ 
+-    invoke-interface {v1, v4, v6}, Lcom/android/systemui/statusbar/policy/BatteryController$BatteryStateChangeCallback;->onBatteryLevelChanged(II)V
++    invoke-interface {v1, v4, v6}, Lcom/android/systemui/statusbar/policy/BatteryController$BatteryStateChangeCallback;->onBatteryLevelChanged(IZ)V
+ 
+     goto :goto_2
+ 

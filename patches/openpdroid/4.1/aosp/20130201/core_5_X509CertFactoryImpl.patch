@@ -1,0 +1,895 @@
+diff -Npru stock-core/smali/org/apache/harmony/security/provider/cert/X509CertFactoryImpl.smali opd-core/smali/org/apache/harmony/security/provider/cert/X509CertFactoryImpl.smali
+--- stock-core/smali/org/apache/harmony/security/provider/cert/X509CertFactoryImpl.smali	2013-01-09 01:56:28.226797645 -0600
++++ opd-core/smali/org/apache/harmony/security/provider/cert/X509CertFactoryImpl.smali	2013-01-09 01:56:13.418724211 -0600
+@@ -1085,7 +1085,7 @@
+ .end method
+ 
+ .method public engineGenerateCRLs(Ljava/io/InputStream;)Ljava/util/Collection;
+-    .registers 17
++    .registers 16
+     .annotation system Ldalvik/annotation/Signature;
+         value = {
+             "(",
+@@ -1106,291 +1106,271 @@
+ 
+     if-nez p1, :cond_a
+ 
+-    new-instance v13, Ljava/security/cert/CRLException;
++    new-instance v12, Ljava/security/cert/CRLException;
+ 
+-    const-string v14, "inStream == null"
++    const-string v13, "inStream == null"
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
++    invoke-direct {v12, v13}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
+ 
+-    throw v13
++    throw v12
+ 
+     :cond_a
+-    new-instance v11, Ljava/util/ArrayList;
++    new-instance v10, Ljava/util/ArrayList;
+ 
+-    invoke-direct {v11}, Ljava/util/ArrayList;-><init>()V
++    invoke-direct {v10}, Ljava/util/ArrayList;-><init>()V
+ 
+     :try_start_f
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->markSupported()Z
++    invoke-virtual {p1}, Ljava/io/InputStream;->markSupported()Z
+ 
+-    move-result v13
++    move-result v12
+ 
+-    if-nez v13, :cond_1e
++    if-nez v12, :cond_1b
+ 
+-    new-instance v9, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;
++    new-instance v8, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;
+ 
+-    move-object/from16 v0, p1
++    invoke-direct {v8, p1}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;-><init>(Ljava/io/InputStream;)V
+ 
+-    invoke-direct {v9, v0}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;-><init>(Ljava/io/InputStream;)V
++    move-object p1, v8
+ 
+-    move-object/from16 p1, v9
++    :cond_1b
++    const/4 v5, 0x0
+ 
+-    :cond_1e
+-    const/4 v6, 0x0
++    const/4 v11, -0x1
+ 
+-    const/4 v12, -0x1
++    const/4 v12, 0x1
+ 
+-    const/4 v13, 0x1
++    invoke-virtual {p1, v12}, Ljava/io/InputStream;->mark(I)V
+ 
+-    move-object/from16 v0, p1
++    :goto_21
++    invoke-virtual {p1}, Ljava/io/InputStream;->read()I
+ 
+-    invoke-virtual {v0, v13}, Ljava/io/InputStream;->mark(I)V
++    move-result v0
+ 
+-    :goto_26
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->read()I
++    const/4 v12, -0x1
+ 
+-    move-result v1
++    if-eq v0, v12, :cond_4c
+ 
+-    const/4 v13, -0x1
++    const/16 v12, 0x2d
+ 
+-    if-eq v1, v13, :cond_55
++    if-ne v0, v12, :cond_53
+ 
+-    const/16 v13, 0x2d
++    sget-object v12, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->FREE_BOUND_SUFFIX:[B
+ 
+-    if-ne v1, v13, :cond_5c
++    invoke-direct {p0, p1, v12}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->decodePEM(Ljava/io/InputStream;[B)[B
+ 
+-    sget-object v13, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->FREE_BOUND_SUFFIX:[B
++    move-result-object v5
+ 
+-    move-object/from16 v0, p1
++    :goto_32
++    if-nez v5, :cond_7a
+ 
+-    invoke-direct {p0, v0, v13}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->decodePEM(Ljava/io/InputStream;[B)[B
++    new-instance v7, Lorg/apache/harmony/security/asn1/BerInputStream;
+ 
+-    move-result-object v6
++    invoke-direct {v7, p1}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>(Ljava/io/InputStream;)V
+ 
+     :goto_39
+-    if-nez v6, :cond_85
+-
+-    new-instance v8, Lorg/apache/harmony/security/asn1/BerInputStream;
+-
+-    move-object/from16 v0, p1
+-
+-    invoke-direct {v8, v0}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>(Ljava/io/InputStream;)V
+-
+-    :goto_42
+-    invoke-virtual {v8}, Lorg/apache/harmony/security/asn1/BerInputStream;->next()I
+-
+-    move-result v12
+-
+-    if-nez v6, :cond_4b
+-
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->reset()V
+-
+-    :cond_4b
+-    const/16 v13, 0x30
+-
+-    if-eq v12, v13, :cond_8b
+-
+-    invoke-virtual {v11}, Ljava/util/ArrayList;->size()I
++    invoke-virtual {v7}, Lorg/apache/harmony/security/asn1/BerInputStream;->next()I
+ 
+-    move-result v13
++    move-result v11
+ 
+-    if-nez v13, :cond_5b
++    if-nez v5, :cond_42
+ 
+-    :cond_55
+-    invoke-virtual {v11}, Ljava/util/ArrayList;->size()I
++    invoke-virtual {p1}, Ljava/io/InputStream;->reset()V
+ 
+-    move-result v13
++    :cond_42
++    const/16 v12, 0x30
+ 
+-    if-eqz v13, :cond_a3
++    if-eq v11, v12, :cond_80
+ 
+-    :cond_5b
+-    :goto_5b
+-    return-object v11
++    invoke-virtual {v10}, Ljava/util/ArrayList;->size()I
+ 
+-    :cond_5c
+-    const/16 v13, 0x30
++    move-result v12
+ 
+-    if-ne v1, v13, :cond_73
++    if-nez v12, :cond_52
+ 
+-    const/4 v6, 0x0
++    :cond_4c
++    invoke-virtual {v10}, Ljava/util/ArrayList;->size()I
+ 
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->reset()V
++    move-result v12
+ 
+-    const/16 v13, 0x18
++    if-eqz v12, :cond_96
+ 
+-    move-object/from16 v0, p1
++    :cond_52
++    :goto_52
++    return-object v10
+ 
+-    invoke-virtual {v0, v13}, Ljava/io/InputStream;->mark(I)V
+-    :try_end_6b
+-    .catch Ljava/io/IOException; {:try_start_f .. :try_end_6b} :catch_6c
++    :cond_53
++    const/16 v12, 0x30
+ 
+-    goto :goto_39
++    if-ne v0, v12, :cond_68
+ 
+-    :catch_6c
+-    move-exception v5
++    const/4 v5, 0x0
+ 
+-    new-instance v13, Ljava/security/cert/CRLException;
++    invoke-virtual {p1}, Ljava/io/InputStream;->reset()V
+ 
+-    invoke-direct {v13, v5}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/Throwable;)V
++    const/16 v12, 0x18
+ 
+-    throw v13
++    invoke-virtual {p1, v12}, Ljava/io/InputStream;->mark(I)V
++    :try_end_60
++    .catch Ljava/io/IOException; {:try_start_f .. :try_end_60} :catch_61
+ 
+-    :cond_73
+-    :try_start_73
+-    invoke-virtual {v11}, Ljava/util/ArrayList;->size()I
++    goto :goto_32
+ 
+-    move-result v13
++    :catch_61
++    move-exception v4
+ 
+-    if-nez v13, :cond_81
++    new-instance v12, Ljava/security/cert/CRLException;
+ 
+-    new-instance v13, Ljava/security/cert/CRLException;
++    invoke-direct {v12, v4}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/Throwable;)V
+ 
+-    const-string v14, "Unsupported encoding"
++    throw v12
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
++    :cond_68
++    :try_start_68
++    invoke-virtual {v10}, Ljava/util/ArrayList;->size()I
+ 
+-    throw v13
++    move-result v12
+ 
+-    :cond_81
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->reset()V
++    if-nez v12, :cond_76
+ 
+-    goto :goto_5b
++    new-instance v12, Ljava/security/cert/CRLException;
+ 
+-    :cond_85
+-    new-instance v8, Lorg/apache/harmony/security/asn1/BerInputStream;
++    const-string v13, "Unsupported encoding"
+ 
+-    invoke-direct {v8, v6}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>([B)V
++    invoke-direct {v12, v13}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
+ 
+-    goto :goto_42
++    throw v12
+ 
+-    :cond_8b
+-    if-nez v6, :cond_9b
++    :cond_76
++    invoke-virtual {p1}, Ljava/io/InputStream;->reset()V
+ 
+-    invoke-static/range {p1 .. p1}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCRL(Ljava/io/InputStream;)Ljava/security/cert/CRL;
++    goto :goto_52
+ 
+-    move-result-object v13
++    :cond_7a
++    new-instance v7, Lorg/apache/harmony/security/asn1/BerInputStream;
+ 
+-    invoke-virtual {v11, v13}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++    invoke-direct {v7, v5}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>([B)V
+ 
+-    :goto_94
+-    const/4 v13, 0x1
++    goto :goto_39
+ 
+-    move-object/from16 v0, p1
++    :cond_80
++    if-nez v5, :cond_8e
+ 
+-    invoke-virtual {v0, v13}, Ljava/io/InputStream;->mark(I)V
++    invoke-static {p1}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCRL(Ljava/io/InputStream;)Ljava/security/cert/CRL;
+ 
+-    goto :goto_26
++    move-result-object v12
+ 
+-    :cond_9b
+-    invoke-static {v6}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCRL([B)Ljava/security/cert/CRL;
++    invoke-virtual {v10, v12}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+-    move-result-object v13
++    :goto_89
++    const/4 v12, 0x1
+ 
+-    invoke-virtual {v11, v13}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++    invoke-virtual {p1, v12}, Ljava/io/InputStream;->mark(I)V
+ 
+-    goto :goto_94
++    goto :goto_21
+ 
+-    :cond_a3
+-    const/4 v13, -0x1
++    :cond_8e
++    invoke-static {v5}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCRL([B)Ljava/security/cert/CRL;
+ 
+-    if-ne v1, v13, :cond_ae
++    move-result-object v12
+ 
+-    new-instance v13, Ljava/security/cert/CRLException;
++    invoke-virtual {v10, v12}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+-    const-string v14, "There is no data in the stream"
++    goto :goto_89
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
++    :cond_96
++    const/4 v12, -0x1
+ 
+-    throw v13
++    if-ne v0, v12, :cond_a1
+ 
+-    :cond_ae
+-    const/4 v13, 0x6
++    new-instance v12, Ljava/security/cert/CRLException;
+ 
+-    if-ne v12, v13, :cond_f5
++    const-string v13, "There is no data in the stream"
+ 
+-    if-eqz v6, :cond_cd
++    invoke-direct {v12, v13}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
+ 
+-    sget-object v13, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
++    throw v12
+ 
+-    invoke-virtual {v13, v6}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode([B)Ljava/lang/Object;
++    :cond_a1
++    const/4 v12, 0x6
+ 
+-    move-result-object v13
++    if-ne v11, v12, :cond_e2
+ 
+-    :goto_b9
+-    check-cast v13, Lorg/apache/harmony/security/pkcs7/ContentInfo;
++    if-eqz v5, :cond_bc
+ 
+-    move-object v0, v13
++    sget-object v12, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
+ 
+-    check-cast v0, Lorg/apache/harmony/security/pkcs7/ContentInfo;
++    invoke-virtual {v12, v5}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode([B)Ljava/lang/Object;
+ 
+-    move-object v10, v0
++    move-result-object v9
+ 
+-    invoke-virtual {v10}, Lorg/apache/harmony/security/pkcs7/ContentInfo;->getSignedData()Lorg/apache/harmony/security/pkcs7/SignedData;
++    :goto_ac
++    check-cast v9, Lorg/apache/harmony/security/pkcs7/ContentInfo;
+ 
+-    move-result-object v4
++    invoke-virtual {v9}, Lorg/apache/harmony/security/pkcs7/ContentInfo;->getSignedData()Lorg/apache/harmony/security/pkcs7/SignedData;
+ 
+-    if-nez v4, :cond_d6
++    move-result-object v3
+ 
+-    new-instance v13, Ljava/security/cert/CRLException;
++    if-nez v3, :cond_c3
+ 
+-    const-string v14, "Invalid PKCS7 data provided"
++    new-instance v12, Ljava/security/cert/CRLException;
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
++    const-string v13, "Invalid PKCS7 data provided"
+ 
+-    throw v13
++    invoke-direct {v12, v13}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
+ 
+-    :cond_cd
+-    sget-object v13, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
++    throw v12
+ 
+-    move-object/from16 v0, p1
++    :cond_bc
++    sget-object v12, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
+ 
+-    invoke-virtual {v13, v0}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode(Ljava/io/InputStream;)Ljava/lang/Object;
++    invoke-virtual {v12, p1}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode(Ljava/io/InputStream;)Ljava/lang/Object;
+ 
+-    move-result-object v13
++    move-result-object v9
+ 
+-    goto :goto_b9
++    goto :goto_ac
+ 
+-    :cond_d6
+-    invoke-virtual {v4}, Lorg/apache/harmony/security/pkcs7/SignedData;->getCRLs()Ljava/util/List;
++    :cond_c3
++    invoke-virtual {v3}, Lorg/apache/harmony/security/pkcs7/SignedData;->getCRLs()Ljava/util/List;
+ 
+-    move-result-object v3
++    move-result-object v2
+ 
+-    if-eqz v3, :cond_5b
++    if-eqz v2, :cond_52
+ 
+-    invoke-interface {v3}, Ljava/util/List;->iterator()Ljava/util/Iterator;
++    invoke-interface {v2}, Ljava/util/List;->iterator()Ljava/util/Iterator;
+ 
+-    move-result-object v7
++    move-result-object v6
+ 
+-    :goto_e0
+-    invoke-interface {v7}, Ljava/util/Iterator;->hasNext()Z
++    :goto_cd
++    invoke-interface {v6}, Ljava/util/Iterator;->hasNext()Z
+ 
+-    move-result v13
++    move-result v12
+ 
+-    if-eqz v13, :cond_5b
++    if-eqz v12, :cond_52
+ 
+-    invoke-interface {v7}, Ljava/util/Iterator;->next()Ljava/lang/Object;
++    invoke-interface {v6}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+ 
+-    move-result-object v2
++    move-result-object v1
+ 
+-    check-cast v2, Lorg/apache/harmony/security/x509/CertificateList;
++    check-cast v1, Lorg/apache/harmony/security/x509/CertificateList;
+ 
+-    new-instance v13, Lorg/apache/harmony/security/provider/cert/X509CRLImpl;
++    new-instance v12, Lorg/apache/harmony/security/provider/cert/X509CRLImpl;
+ 
+-    invoke-direct {v13, v2}, Lorg/apache/harmony/security/provider/cert/X509CRLImpl;-><init>(Lorg/apache/harmony/security/x509/CertificateList;)V
++    invoke-direct {v12, v1}, Lorg/apache/harmony/security/provider/cert/X509CRLImpl;-><init>(Lorg/apache/harmony/security/x509/CertificateList;)V
+ 
+-    invoke-virtual {v11, v13}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++    invoke-virtual {v10, v12}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+-    goto :goto_e0
++    goto :goto_cd
+ 
+-    :cond_f5
+-    new-instance v13, Ljava/security/cert/CRLException;
++    :cond_e2
++    new-instance v12, Ljava/security/cert/CRLException;
+ 
+-    const-string v14, "Unsupported encoding"
++    const-string v13, "Unsupported encoding"
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
++    invoke-direct {v12, v13}, Ljava/security/cert/CRLException;-><init>(Ljava/lang/String;)V
+ 
+-    throw v13
+-    :try_end_fd
+-    .catch Ljava/io/IOException; {:try_start_73 .. :try_end_fd} :catch_6c
++    throw v12
++    :try_end_ea
++    .catch Ljava/io/IOException; {:try_start_68 .. :try_end_ea} :catch_61
+ .end method
+ 
+ .method public engineGenerateCertPath(Ljava/io/InputStream;)Ljava/security/cert/CertPath;
+@@ -1608,7 +1588,7 @@
+ .end method
+ 
+ .method public engineGenerateCertificates(Ljava/io/InputStream;)Ljava/util/Collection;
+-    .registers 17
++    .registers 16
+     .annotation system Ldalvik/annotation/Signature;
+         value = {
+             "(",
+@@ -1629,291 +1609,271 @@
+ 
+     if-nez p1, :cond_a
+ 
+-    new-instance v13, Ljava/security/cert/CertificateException;
++    new-instance v12, Ljava/security/cert/CertificateException;
+ 
+-    const-string v14, "inStream == null"
++    const-string v13, "inStream == null"
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
++    invoke-direct {v12, v13}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
+ 
+-    throw v13
++    throw v12
+ 
+     :cond_a
+-    new-instance v11, Ljava/util/ArrayList;
++    new-instance v10, Ljava/util/ArrayList;
+ 
+-    invoke-direct {v11}, Ljava/util/ArrayList;-><init>()V
++    invoke-direct {v10}, Ljava/util/ArrayList;-><init>()V
+ 
+     :try_start_f
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->markSupported()Z
++    invoke-virtual {p1}, Ljava/io/InputStream;->markSupported()Z
+ 
+-    move-result v13
++    move-result v12
+ 
+-    if-nez v13, :cond_1e
++    if-nez v12, :cond_1b
+ 
+-    new-instance v9, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;
++    new-instance v8, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;
+ 
+-    move-object/from16 v0, p1
++    invoke-direct {v8, p1}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;-><init>(Ljava/io/InputStream;)V
+ 
+-    invoke-direct {v9, v0}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl$RestoringInputStream;-><init>(Ljava/io/InputStream;)V
++    move-object p1, v8
+ 
+-    move-object/from16 p1, v9
++    :cond_1b
++    const/4 v5, 0x0
+ 
+-    :cond_1e
+-    const/4 v6, 0x0
++    const/4 v11, -0x1
+ 
+-    const/4 v12, -0x1
++    const/4 v12, 0x1
+ 
+-    const/4 v13, 0x1
++    invoke-virtual {p1, v12}, Ljava/io/InputStream;->mark(I)V
+ 
+-    move-object/from16 v0, p1
++    :goto_21
++    invoke-virtual {p1}, Ljava/io/InputStream;->read()I
+ 
+-    invoke-virtual {v0, v13}, Ljava/io/InputStream;->mark(I)V
++    move-result v2
+ 
+-    :goto_26
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->read()I
++    const/4 v12, -0x1
+ 
+-    move-result v3
++    if-eq v2, v12, :cond_4c
+ 
+-    const/4 v13, -0x1
++    const/16 v12, 0x2d
+ 
+-    if-eq v3, v13, :cond_55
++    if-ne v2, v12, :cond_53
+ 
+-    const/16 v13, 0x2d
++    sget-object v12, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->FREE_BOUND_SUFFIX:[B
+ 
+-    if-ne v3, v13, :cond_5c
++    invoke-direct {p0, p1, v12}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->decodePEM(Ljava/io/InputStream;[B)[B
+ 
+-    sget-object v13, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->FREE_BOUND_SUFFIX:[B
++    move-result-object v5
+ 
+-    move-object/from16 v0, p1
++    :goto_32
++    if-nez v5, :cond_7a
+ 
+-    invoke-direct {p0, v0, v13}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->decodePEM(Ljava/io/InputStream;[B)[B
++    new-instance v7, Lorg/apache/harmony/security/asn1/BerInputStream;
+ 
+-    move-result-object v6
++    invoke-direct {v7, p1}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>(Ljava/io/InputStream;)V
+ 
+     :goto_39
+-    if-nez v6, :cond_85
+-
+-    new-instance v8, Lorg/apache/harmony/security/asn1/BerInputStream;
+-
+-    move-object/from16 v0, p1
+-
+-    invoke-direct {v8, v0}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>(Ljava/io/InputStream;)V
+-
+-    :goto_42
+-    invoke-virtual {v8}, Lorg/apache/harmony/security/asn1/BerInputStream;->next()I
+-
+-    move-result v12
+-
+-    if-nez v6, :cond_4b
+-
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->reset()V
+-
+-    :cond_4b
+-    const/16 v13, 0x30
+-
+-    if-eq v12, v13, :cond_8b
+-
+-    invoke-virtual {v11}, Ljava/util/ArrayList;->size()I
++    invoke-virtual {v7}, Lorg/apache/harmony/security/asn1/BerInputStream;->next()I
+ 
+-    move-result v13
++    move-result v11
+ 
+-    if-nez v13, :cond_5b
++    if-nez v5, :cond_42
+ 
+-    :cond_55
+-    invoke-virtual {v11}, Ljava/util/ArrayList;->size()I
++    invoke-virtual {p1}, Ljava/io/InputStream;->reset()V
+ 
+-    move-result v13
++    :cond_42
++    const/16 v12, 0x30
+ 
+-    if-eqz v13, :cond_a3
++    if-eq v11, v12, :cond_80
+ 
+-    :cond_5b
+-    :goto_5b
+-    return-object v11
++    invoke-virtual {v10}, Ljava/util/ArrayList;->size()I
+ 
+-    :cond_5c
+-    const/16 v13, 0x30
++    move-result v12
+ 
+-    if-ne v3, v13, :cond_73
++    if-nez v12, :cond_52
+ 
+-    const/4 v6, 0x0
++    :cond_4c
++    invoke-virtual {v10}, Ljava/util/ArrayList;->size()I
+ 
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->reset()V
++    move-result v12
+ 
+-    const/16 v13, 0x1c
++    if-eqz v12, :cond_96
+ 
+-    move-object/from16 v0, p1
++    :cond_52
++    :goto_52
++    return-object v10
+ 
+-    invoke-virtual {v0, v13}, Ljava/io/InputStream;->mark(I)V
+-    :try_end_6b
+-    .catch Ljava/io/IOException; {:try_start_f .. :try_end_6b} :catch_6c
++    :cond_53
++    const/16 v12, 0x30
+ 
+-    goto :goto_39
++    if-ne v2, v12, :cond_68
+ 
+-    :catch_6c
+-    move-exception v5
++    const/4 v5, 0x0
+ 
+-    new-instance v13, Ljava/security/cert/CertificateException;
++    invoke-virtual {p1}, Ljava/io/InputStream;->reset()V
+ 
+-    invoke-direct {v13, v5}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/Throwable;)V
++    const/16 v12, 0x1c
+ 
+-    throw v13
++    invoke-virtual {p1, v12}, Ljava/io/InputStream;->mark(I)V
++    :try_end_60
++    .catch Ljava/io/IOException; {:try_start_f .. :try_end_60} :catch_61
+ 
+-    :cond_73
+-    :try_start_73
+-    invoke-virtual {v11}, Ljava/util/ArrayList;->size()I
++    goto :goto_32
+ 
+-    move-result v13
++    :catch_61
++    move-exception v4
+ 
+-    if-nez v13, :cond_81
++    new-instance v12, Ljava/security/cert/CertificateException;
+ 
+-    new-instance v13, Ljava/security/cert/CertificateException;
++    invoke-direct {v12, v4}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/Throwable;)V
+ 
+-    const-string v14, "Unsupported encoding"
++    throw v12
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
++    :cond_68
++    :try_start_68
++    invoke-virtual {v10}, Ljava/util/ArrayList;->size()I
+ 
+-    throw v13
++    move-result v12
+ 
+-    :cond_81
+-    invoke-virtual/range {p1 .. p1}, Ljava/io/InputStream;->reset()V
++    if-nez v12, :cond_76
+ 
+-    goto :goto_5b
++    new-instance v12, Ljava/security/cert/CertificateException;
+ 
+-    :cond_85
+-    new-instance v8, Lorg/apache/harmony/security/asn1/BerInputStream;
++    const-string v13, "Unsupported encoding"
+ 
+-    invoke-direct {v8, v6}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>([B)V
++    invoke-direct {v12, v13}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
+ 
+-    goto :goto_42
++    throw v12
+ 
+-    :cond_8b
+-    if-nez v6, :cond_9b
++    :cond_76
++    invoke-virtual {p1}, Ljava/io/InputStream;->reset()V
+ 
+-    invoke-static/range {p1 .. p1}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCertificate(Ljava/io/InputStream;)Ljava/security/cert/Certificate;
++    goto :goto_52
+ 
+-    move-result-object v13
++    :cond_7a
++    new-instance v7, Lorg/apache/harmony/security/asn1/BerInputStream;
+ 
+-    invoke-virtual {v11, v13}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++    invoke-direct {v7, v5}, Lorg/apache/harmony/security/asn1/BerInputStream;-><init>([B)V
+ 
+-    :goto_94
+-    const/4 v13, 0x1
++    goto :goto_39
+ 
+-    move-object/from16 v0, p1
++    :cond_80
++    if-nez v5, :cond_8e
+ 
+-    invoke-virtual {v0, v13}, Ljava/io/InputStream;->mark(I)V
++    invoke-static {p1}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCertificate(Ljava/io/InputStream;)Ljava/security/cert/Certificate;
+ 
+-    goto :goto_26
++    move-result-object v12
+ 
+-    :cond_9b
+-    invoke-static {v6}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCertificate([B)Ljava/security/cert/Certificate;
++    invoke-virtual {v10, v12}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+-    move-result-object v13
++    :goto_89
++    const/4 v12, 0x1
+ 
+-    invoke-virtual {v11, v13}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++    invoke-virtual {p1, v12}, Ljava/io/InputStream;->mark(I)V
+ 
+-    goto :goto_94
++    goto :goto_21
+ 
+-    :cond_a3
+-    const/4 v13, -0x1
++    :cond_8e
++    invoke-static {v5}, Lorg/apache/harmony/security/provider/cert/X509CertFactoryImpl;->getCertificate([B)Ljava/security/cert/Certificate;
+ 
+-    if-ne v3, v13, :cond_ae
++    move-result-object v12
+ 
+-    new-instance v13, Ljava/security/cert/CertificateException;
++    invoke-virtual {v10, v12}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+-    const-string v14, "There is no data in the stream"
++    goto :goto_89
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
++    :cond_96
++    const/4 v12, -0x1
+ 
+-    throw v13
++    if-ne v2, v12, :cond_a1
+ 
+-    :cond_ae
+-    const/4 v13, 0x6
++    new-instance v12, Ljava/security/cert/CertificateException;
+ 
+-    if-ne v12, v13, :cond_f5
++    const-string v13, "There is no data in the stream"
+ 
+-    if-eqz v6, :cond_cd
++    invoke-direct {v12, v13}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
+ 
+-    sget-object v13, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
++    throw v12
+ 
+-    invoke-virtual {v13, v6}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode([B)Ljava/lang/Object;
++    :cond_a1
++    const/4 v12, 0x6
+ 
+-    move-result-object v13
++    if-ne v11, v12, :cond_e2
+ 
+-    :goto_b9
+-    check-cast v13, Lorg/apache/harmony/security/pkcs7/ContentInfo;
++    if-eqz v5, :cond_bc
+ 
+-    move-object v0, v13
++    sget-object v12, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
+ 
+-    check-cast v0, Lorg/apache/harmony/security/pkcs7/ContentInfo;
++    invoke-virtual {v12, v5}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode([B)Ljava/lang/Object;
+ 
+-    move-object v10, v0
++    move-result-object v9
+ 
+-    invoke-virtual {v10}, Lorg/apache/harmony/security/pkcs7/ContentInfo;->getSignedData()Lorg/apache/harmony/security/pkcs7/SignedData;
++    :goto_ac
++    check-cast v9, Lorg/apache/harmony/security/pkcs7/ContentInfo;
+ 
+-    move-result-object v4
++    invoke-virtual {v9}, Lorg/apache/harmony/security/pkcs7/ContentInfo;->getSignedData()Lorg/apache/harmony/security/pkcs7/SignedData;
+ 
+-    if-nez v4, :cond_d6
++    move-result-object v3
+ 
+-    new-instance v13, Ljava/security/cert/CertificateException;
++    if-nez v3, :cond_c3
+ 
+-    const-string v14, "Invalid PKCS7 data provided"
++    new-instance v12, Ljava/security/cert/CertificateException;
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
++    const-string v13, "Invalid PKCS7 data provided"
+ 
+-    throw v13
++    invoke-direct {v12, v13}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
+ 
+-    :cond_cd
+-    sget-object v13, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
++    throw v12
+ 
+-    move-object/from16 v0, p1
++    :cond_bc
++    sget-object v12, Lorg/apache/harmony/security/pkcs7/ContentInfo;->ASN1:Lorg/apache/harmony/security/asn1/ASN1Sequence;
+ 
+-    invoke-virtual {v13, v0}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode(Ljava/io/InputStream;)Ljava/lang/Object;
++    invoke-virtual {v12, p1}, Lorg/apache/harmony/security/asn1/ASN1Sequence;->decode(Ljava/io/InputStream;)Ljava/lang/Object;
+ 
+-    move-result-object v13
++    move-result-object v9
+ 
+-    goto :goto_b9
++    goto :goto_ac
+ 
+-    :cond_d6
+-    invoke-virtual {v4}, Lorg/apache/harmony/security/pkcs7/SignedData;->getCertificates()Ljava/util/List;
++    :cond_c3
++    invoke-virtual {v3}, Lorg/apache/harmony/security/pkcs7/SignedData;->getCertificates()Ljava/util/List;
+ 
+-    move-result-object v2
++    move-result-object v1
+ 
+-    if-eqz v2, :cond_5b
++    if-eqz v1, :cond_52
+ 
+-    invoke-interface {v2}, Ljava/util/List;->iterator()Ljava/util/Iterator;
++    invoke-interface {v1}, Ljava/util/List;->iterator()Ljava/util/Iterator;
+ 
+-    move-result-object v7
++    move-result-object v6
+ 
+-    :goto_e0
+-    invoke-interface {v7}, Ljava/util/Iterator;->hasNext()Z
++    :goto_cd
++    invoke-interface {v6}, Ljava/util/Iterator;->hasNext()Z
+ 
+-    move-result v13
++    move-result v12
+ 
+-    if-eqz v13, :cond_5b
++    if-eqz v12, :cond_52
+ 
+-    invoke-interface {v7}, Ljava/util/Iterator;->next()Ljava/lang/Object;
++    invoke-interface {v6}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+ 
+-    move-result-object v1
++    move-result-object v0
+ 
+-    check-cast v1, Lorg/apache/harmony/security/x509/Certificate;
++    check-cast v0, Lorg/apache/harmony/security/x509/Certificate;
+ 
+-    new-instance v13, Lorg/apache/harmony/security/provider/cert/X509CertImpl;
++    new-instance v12, Lorg/apache/harmony/security/provider/cert/X509CertImpl;
+ 
+-    invoke-direct {v13, v1}, Lorg/apache/harmony/security/provider/cert/X509CertImpl;-><init>(Lorg/apache/harmony/security/x509/Certificate;)V
++    invoke-direct {v12, v0}, Lorg/apache/harmony/security/provider/cert/X509CertImpl;-><init>(Lorg/apache/harmony/security/x509/Certificate;)V
+ 
+-    invoke-virtual {v11, v13}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++    invoke-virtual {v10, v12}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+-    goto :goto_e0
++    goto :goto_cd
+ 
+-    :cond_f5
+-    new-instance v13, Ljava/security/cert/CertificateException;
++    :cond_e2
++    new-instance v12, Ljava/security/cert/CertificateException;
+ 
+-    const-string v14, "Unsupported encoding"
++    const-string v13, "Unsupported encoding"
+ 
+-    invoke-direct {v13, v14}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
++    invoke-direct {v12, v13}, Ljava/security/cert/CertificateException;-><init>(Ljava/lang/String;)V
+ 
+-    throw v13
+-    :try_end_fd
+-    .catch Ljava/io/IOException; {:try_start_73 .. :try_end_fd} :catch_6c
++    throw v12
++    :try_end_ea
++    .catch Ljava/io/IOException; {:try_start_68 .. :try_end_ea} :catch_61
+ .end method
+ 
+ .method public engineGetCertPathEncodings()Ljava/util/Iterator;

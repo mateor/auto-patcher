@@ -1,0 +1,116 @@
+diff -Npruw stock-framework/smali/android/database/sqlite/SQLiteDatabase.smali pdroid-framework/smali/android/database/sqlite/SQLiteDatabase.smali
+--- stock-framework/smali/android/database/sqlite/SQLiteDatabase.smali	2013-07-15 18:10:55.450628017 -0500
++++ pdroid-framework/smali/android/database/sqlite/SQLiteDatabase.smali	2013-07-15 18:10:48.906628188 -0500
+@@ -2497,7 +2497,7 @@
+ 
+     throw v7
+     :try_end_33
+-    .catchall {:try_start_4 .. :try_end_33} :catchall_bc
++    .catchall {:try_start_4 .. :try_end_33} :catchall_c4
+     .catch Landroid/database/sqlite/SQLiteException; {:try_start_4 .. :try_end_33} :catch_33
+ 
+     :catch_33
+@@ -2541,7 +2541,7 @@
+ 
+     check-cast v4, Landroid/util/Pair;
+     :try_end_56
+-    .catchall {:try_start_3a .. :try_end_56} :catchall_bc
++    .catchall {:try_start_3a .. :try_end_56} :catchall_c4
+ 
+     const/4 v5, 0x0
+ 
+@@ -2588,7 +2588,7 @@
+ 
+     move-result v7
+ 
+-    if-nez v7, :cond_c1
++    if-nez v7, :cond_b5
+ 
+     const-string v8, "SQLiteDatabase"
+ 
+@@ -2626,7 +2626,7 @@
+ 
+     invoke-static {v8, v7}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+     :try_end_ab
+-    .catchall {:try_start_57 .. :try_end_ab} :catchall_b5
++    .catchall {:try_start_57 .. :try_end_ab} :catchall_bd
+ 
+     const/4 v7, 0x0
+ 
+@@ -2635,7 +2635,7 @@
+     :try_start_ae
+     invoke-virtual {v5}, Landroid/database/sqlite/SQLiteStatement;->close()V
+     :try_end_b1
+-    .catchall {:try_start_ae .. :try_end_b1} :catchall_bc
++    .catchall {:try_start_ae .. :try_end_b1} :catchall_c4
+ 
+     :cond_b1
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->releaseReference()V
+@@ -2643,40 +2643,37 @@
+     :goto_b4
+     return v7
+ 
+-    :catchall_b5
++    :cond_b5
++    if-eqz v5, :cond_ba
++
++    :try_start_b7
++    invoke-virtual {v5}, Landroid/database/sqlite/SQLiteStatement;->close()V
++
++    :cond_ba
++    add-int/lit8 v3, v3, 0x1
++
++    goto :goto_4a
++
++    :catchall_bd
+     move-exception v7
+ 
+-    if-eqz v5, :cond_bb
++    if-eqz v5, :cond_c3
+ 
+-    :try_start_b8
+     invoke-virtual {v5}, Landroid/database/sqlite/SQLiteStatement;->close()V
+ 
+-    :cond_bb
++    :cond_c3
+     throw v7
+-    :try_end_bc
+-    .catchall {:try_start_b8 .. :try_end_bc} :catchall_bc
++    :try_end_c4
++    .catchall {:try_start_b7 .. :try_end_c4} :catchall_c4
+ 
+-    :catchall_bc
++    :catchall_c4
+     move-exception v7
+ 
+-    :goto_bd
++    :goto_c5
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->releaseReference()V
+ 
+     throw v7
+ 
+-    :cond_c1
+-    if-eqz v5, :cond_c6
+-
+-    :try_start_c3
+-    invoke-virtual {v5}, Landroid/database/sqlite/SQLiteStatement;->close()V
+-    :try_end_c6
+-    .catchall {:try_start_c3 .. :try_end_c6} :catchall_bc
+-
+-    :cond_c6
+-    add-int/lit8 v3, v3, 0x1
+-
+-    goto :goto_4a
+-
+     :cond_c9
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->releaseReference()V
+ 
+@@ -2689,7 +2686,7 @@
+ 
+     move-object v0, v1
+ 
+-    goto :goto_bd
++    goto :goto_c5
+ .end method
+ 
+ .method public isDbLockedByCurrentThread()Z

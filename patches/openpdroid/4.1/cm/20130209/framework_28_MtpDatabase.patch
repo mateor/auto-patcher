@@ -1,0 +1,861 @@
+diff -Npruw stock-framework/smali/android/mtp/MtpDatabase.smali pdroid-framework/smali/android/mtp/MtpDatabase.smali
+--- stock-framework/smali/android/mtp/MtpDatabase.smali	2013-07-15 18:10:55.810628007 -0500
++++ pdroid-framework/smali/android/mtp/MtpDatabase.smali	2013-07-15 18:10:49.342628176 -0500
+@@ -587,7 +587,7 @@
+     return v0
+ 
+     :cond_8
+-    if-eqz p1, :cond_53
++    if-eqz p1, :cond_4b
+ 
+     const/4 v7, 0x0
+ 
+@@ -616,13 +616,13 @@
+ 
+     move-result-object v7
+ 
+-    if-eqz v7, :cond_bf
++    if-eqz v7, :cond_46
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->getCount()I
+ 
+     move-result v0
+ 
+-    if-lez v0, :cond_bf
++    if-lez v0, :cond_46
+ 
+     const-string v0, "MtpDatabase"
+ 
+@@ -646,8 +646,8 @@
+ 
+     invoke-static {v0, v1}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+     :try_end_3f
+-    .catchall {:try_start_b .. :try_end_3f} :catchall_aa
+-    .catch Landroid/os/RemoteException; {:try_start_b .. :try_end_3f} :catch_46
++    .catchall {:try_start_b .. :try_end_3f} :catchall_b0
++    .catch Landroid/os/RemoteException; {:try_start_b .. :try_end_3f} :catch_a2
+ 
+     const/4 v0, -0x1
+ 
+@@ -657,24 +657,13 @@
+ 
+     goto :goto_7
+ 
+-    :catch_46
+-    move-exception v8
+-
+-    :try_start_47
+-    const-string v0, "MtpDatabase"
+-
+-    const-string v1, "RemoteException in beginSendObject"
+-
+-    invoke-static {v0, v1, v8}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_4e
+-    .catchall {:try_start_47 .. :try_end_4e} :catchall_aa
+-
+-    if-eqz v7, :cond_53
++    :cond_46
++    if-eqz v7, :cond_4b
+ 
+-    :goto_50
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_53
++    :cond_4b
++    :goto_4b
+     const/4 v0, 0x1
+ 
+     iput-boolean v0, p0, Landroid/mtp/MtpDatabase;->mDatabaseModified:Z
+@@ -727,7 +716,7 @@
+ 
+     invoke-virtual {v10, v0, v1}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Long;)V
+ 
+-    :try_start_8f
++    :try_start_87
+     iget-object v0, p0, Landroid/mtp/MtpDatabase;->mMediaProvider:Landroid/content/IContentProvider;
+ 
+     iget-object v1, p0, Landroid/mtp/MtpDatabase;->mObjectsUri:Landroid/net/Uri;
+@@ -736,7 +725,7 @@
+ 
+     move-result-object v9
+ 
+-    if-eqz v9, :cond_b1
++    if-eqz v9, :cond_b7
+ 
+     invoke-virtual {v9}, Landroid/net/Uri;->getPathSegments()Ljava/util/List;
+ 
+@@ -751,29 +740,47 @@
+     check-cast v0, Ljava/lang/String;
+ 
+     invoke-static {v0}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
+-    :try_end_a7
+-    .catch Landroid/os/RemoteException; {:try_start_8f .. :try_end_a7} :catch_b4
++    :try_end_9f
++    .catch Landroid/os/RemoteException; {:try_start_87 .. :try_end_9f} :catch_ba
+ 
+     move-result v0
+ 
+     goto/16 :goto_7
+ 
+-    :catchall_aa
++    :catch_a2
++    move-exception v8
++
++    :try_start_a3
++    const-string v0, "MtpDatabase"
++
++    const-string v1, "RemoteException in beginSendObject"
++
++    invoke-static {v0, v1, v8}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_aa
++    .catchall {:try_start_a3 .. :try_end_aa} :catchall_b0
++
++    if-eqz v7, :cond_4b
++
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
++
++    goto :goto_4b
++
++    :catchall_b0
+     move-exception v0
+ 
+-    if-eqz v7, :cond_b0
++    if-eqz v7, :cond_b6
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_b0
++    :cond_b6
+     throw v0
+ 
+-    :cond_b1
++    :cond_b7
+     const/4 v0, -0x1
+ 
+     goto/16 :goto_7
+ 
+-    :catch_b4
++    :catch_ba
+     move-exception v8
+ 
+     const-string v0, "MtpDatabase"
+@@ -785,11 +792,6 @@
+     const/4 v0, -0x1
+ 
+     goto/16 :goto_7
+-
+-    :cond_bf
+-    if-eqz v7, :cond_53
+-
+-    goto :goto_50
+ .end method
+ 
+ .method private createObjectQuery(III)Landroid/database/Cursor;
+@@ -1138,8 +1140,8 @@
+ 
+     invoke-interface {v7, v0}, Landroid/database/Cursor;->getInt(I)I
+     :try_end_31
+-    .catchall {:try_start_8 .. :try_end_31} :catchall_10a
+-    .catch Landroid/os/RemoteException; {:try_start_8 .. :try_end_31} :catch_f4
++    .catchall {:try_start_8 .. :try_end_31} :catchall_113
++    .catch Landroid/os/RemoteException; {:try_start_8 .. :try_end_31} :catch_fa
+ 
+     move-result v9
+ 
+@@ -1164,7 +1166,6 @@
+ 
+     if-eqz v7, :cond_3c
+ 
+-    :goto_41
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+     goto :goto_3c
+@@ -1172,22 +1173,28 @@
+     :cond_45
+     :try_start_45
+     invoke-direct {p0, v11}, Landroid/mtp/MtpDatabase;->isStorageSubDirectory(Ljava/lang/String;)Z
++    :try_end_48
++    .catchall {:try_start_45 .. :try_end_48} :catchall_113
++    .catch Landroid/os/RemoteException; {:try_start_45 .. :try_end_48} :catch_fa
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_50
++    if-eqz v0, :cond_53
+ 
+     const/16 v0, 0x200d
+ 
+     if-eqz v7, :cond_3c
+ 
+-    goto :goto_41
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_50
++    goto :goto_3c
++
++    :cond_53
+     const/16 v0, 0x3001
+ 
+-    if-ne v9, v0, :cond_9d
++    if-ne v9, v0, :cond_a0
+ 
++    :try_start_57
+     iget-object v0, p0, Landroid/mtp/MtpDatabase;->mVolumeName:Ljava/lang/String;
+ 
+     invoke-static {v0}, Landroid/provider/MediaStore$Files;->getMtpObjectsUri(Ljava/lang/String;)Landroid/net/Uri;
+@@ -1262,7 +1269,7 @@
+ 
+     invoke-interface {v0, v12, v1, v2}, Landroid/content/IContentProvider;->delete(Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I
+ 
+-    :cond_9d
++    :cond_a0
+     iget-object v0, p0, Landroid/mtp/MtpDatabase;->mVolumeName:Ljava/lang/String;
+ 
+     int-to-long v1, p1
+@@ -1281,11 +1288,11 @@
+ 
+     move-result v0
+ 
+-    if-lez v0, :cond_104
++    if-lez v0, :cond_10a
+ 
+     const/16 v0, 0x3001
+ 
+-    if-eq v9, v0, :cond_d4
++    if-eq v9, v0, :cond_d7
+ 
+     sget-object v0, Ljava/util/Locale;->US:Ljava/util/Locale;
+ 
+@@ -1296,17 +1303,17 @@
+     const-string v1, "/.nomedia"
+ 
+     invoke-virtual {v0, v1}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+-    :try_end_bd
+-    .catchall {:try_start_45 .. :try_end_bd} :catchall_10a
+-    .catch Landroid/os/RemoteException; {:try_start_45 .. :try_end_bd} :catch_f4
++    :try_end_c0
++    .catchall {:try_start_57 .. :try_end_c0} :catchall_113
++    .catch Landroid/os/RemoteException; {:try_start_57 .. :try_end_c0} :catch_fa
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_d4
++    if-eqz v0, :cond_d7
+ 
+     const/4 v0, 0x0
+ 
+-    :try_start_c1
++    :try_start_c4
+     const-string v1, "/"
+ 
+     invoke-virtual {v11, v1}, Ljava/lang/String;->lastIndexOf(Ljava/lang/String;)I
+@@ -1324,22 +1331,24 @@
+     const/4 v2, 0x0
+ 
+     invoke-interface {v0, v1, v10, v2}, Landroid/content/IContentProvider;->call(Ljava/lang/String;Ljava/lang/String;Landroid/os/Bundle;)Landroid/os/Bundle;
+-    :try_end_d4
+-    .catchall {:try_start_c1 .. :try_end_d4} :catchall_10a
+-    .catch Landroid/os/RemoteException; {:try_start_c1 .. :try_end_d4} :catch_da
++    :try_end_d7
++    .catchall {:try_start_c4 .. :try_end_d7} :catchall_113
++    .catch Landroid/os/RemoteException; {:try_start_c4 .. :try_end_d7} :catch_e0
+ 
+-    :cond_d4
+-    :goto_d4
++    :cond_d7
++    :goto_d7
+     const/16 v0, 0x2001
+ 
+     if-eqz v7, :cond_3c
+ 
+-    goto/16 :goto_41
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
++
++    goto/16 :goto_3c
+ 
+-    :catch_da
++    :catch_e0
+     move-exception v8
+ 
+-    :try_start_db
++    :try_start_e1
+     const-string v0, "MtpDatabase"
+ 
+     new-instance v1, Ljava/lang/StringBuilder;
+@@ -1361,48 +1370,50 @@
+     move-result-object v1
+ 
+     invoke-static {v0, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_f3
+-    .catchall {:try_start_db .. :try_end_f3} :catchall_10a
+-    .catch Landroid/os/RemoteException; {:try_start_db .. :try_end_f3} :catch_f4
++    :try_end_f9
++    .catchall {:try_start_e1 .. :try_end_f9} :catchall_113
++    .catch Landroid/os/RemoteException; {:try_start_e1 .. :try_end_f9} :catch_fa
+ 
+-    goto :goto_d4
++    goto :goto_d7
+ 
+-    :catch_f4
++    :catch_fa
+     move-exception v8
+ 
+-    :try_start_f5
++    :try_start_fb
+     const-string v0, "MtpDatabase"
+ 
+     const-string v1, "RemoteException in deleteFile"
+ 
+     invoke-static {v0, v1, v8}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_fc
+-    .catchall {:try_start_f5 .. :try_end_fc} :catchall_10a
++    :try_end_102
++    .catchall {:try_start_fb .. :try_end_102} :catchall_113
+ 
+-    if-eqz v7, :cond_101
++    if-eqz v7, :cond_107
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_101
++    :cond_107
+     move v0, v13
+ 
+     goto/16 :goto_3c
+ 
+-    :cond_104
++    :cond_10a
+     const/16 v0, 0x2009
+ 
+     if-eqz v7, :cond_3c
+ 
+-    goto/16 :goto_41
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
++
++    goto/16 :goto_3c
+ 
+-    :catchall_10a
++    :catchall_113
+     move-exception v0
+ 
+-    if-eqz v7, :cond_110
++    if-eqz v7, :cond_119
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_110
++    :cond_119
+     throw v0
+ .end method
+ 
+@@ -1670,12 +1681,12 @@
+ 
+     move-result-object v0
+ 
+-    if-eqz v0, :cond_27
++    if-eqz v0, :cond_11
+ 
+     invoke-interface {v0}, Landroid/database/Cursor;->getCount()I
+     :try_end_a
+-    .catchall {:try_start_1 .. :try_end_a} :catchall_20
+-    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_a} :catch_11
++    .catchall {:try_start_1 .. :try_end_a} :catchall_26
++    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_a} :catch_18
+ 
+     move-result v2
+ 
+@@ -1687,42 +1698,44 @@
+     :goto_10
+     return v2
+ 
+-    :catch_11
++    :cond_11
++    if-eqz v0, :cond_16
++
++    invoke-interface {v0}, Landroid/database/Cursor;->close()V
++
++    :cond_16
++    :goto_16
++    const/4 v2, -0x1
++
++    goto :goto_10
++
++    :catch_18
+     move-exception v1
+ 
+-    :try_start_12
++    :try_start_19
+     const-string v2, "MtpDatabase"
+ 
+     const-string v3, "RemoteException in getNumObjects"
+ 
+     invoke-static {v2, v3, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_19
+-    .catchall {:try_start_12 .. :try_end_19} :catchall_20
++    :try_end_20
++    .catchall {:try_start_19 .. :try_end_20} :catchall_26
+ 
+-    if-eqz v0, :cond_1e
++    if-eqz v0, :cond_16
+ 
+-    :goto_1b
+     invoke-interface {v0}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_1e
+-    const/4 v2, -0x1
++    goto :goto_16
+ 
+-    goto :goto_10
+-
+-    :catchall_20
++    :catchall_26
+     move-exception v2
+ 
+-    if-eqz v0, :cond_26
++    if-eqz v0, :cond_2c
+ 
+     invoke-interface {v0}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_26
++    :cond_2c
+     throw v2
+-
+-    :cond_27
+-    if-eqz v0, :cond_1e
+-
+-    goto :goto_1b
+ .end method
+ 
+ .method private getObjectFilePath(I[C[J)I
+@@ -1852,7 +1865,7 @@
+ 
+     aput-wide v1, p3, v0
+     :try_end_69
+-    .catchall {:try_start_24 .. :try_end_69} :catchall_85
++    .catchall {:try_start_24 .. :try_end_69} :catchall_88
+     .catch Landroid/os/RemoteException; {:try_start_24 .. :try_end_69} :catch_78
+ 
+     if-eqz v7, :cond_6e
+@@ -1869,7 +1882,6 @@
+ 
+     if-eqz v7, :cond_22
+ 
+-    :goto_74
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+     goto :goto_22
+@@ -1884,22 +1896,24 @@
+ 
+     invoke-static {v0, v1, v8}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+     :try_end_80
+-    .catchall {:try_start_79 .. :try_end_80} :catchall_85
++    .catchall {:try_start_79 .. :try_end_80} :catchall_88
+ 
+     const/16 v0, 0x2002
+ 
+     if-eqz v7, :cond_22
+ 
+-    goto :goto_74
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
++
++    goto :goto_22
+ 
+-    :catchall_85
++    :catchall_88
+     move-exception v0
+ 
+-    if-eqz v7, :cond_8b
++    if-eqz v7, :cond_8e
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_8b
++    :cond_8e
+     throw v0
+ .end method
+ 
+@@ -1937,13 +1951,13 @@
+ 
+     move-result-object v8
+ 
+-    if-eqz v8, :cond_8e
++    if-eqz v8, :cond_78
+ 
+     invoke-interface {v8}, Landroid/database/Cursor;->moveToNext()Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_8e
++    if-eqz v1, :cond_78
+ 
+     const/4 v1, 0x0
+ 
+@@ -2037,8 +2051,8 @@
+ 
+     aput-wide v2, p4, v1
+     :try_end_6f
+-    .catchall {:try_start_1 .. :try_end_6f} :catchall_87
+-    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_6f} :catch_78
++    .catchall {:try_start_1 .. :try_end_6f} :catchall_8d
++    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_6f} :catch_7f
+ 
+     const/4 v1, 0x1
+ 
+@@ -2055,42 +2069,44 @@
+ 
+     goto :goto_48
+ 
+-    :catch_78
++    :cond_78
++    if-eqz v8, :cond_7d
++
++    invoke-interface {v8}, Landroid/database/Cursor;->close()V
++
++    :cond_7d
++    :goto_7d
++    const/4 v1, 0x0
++
++    goto :goto_75
++
++    :catch_7f
+     move-exception v9
+ 
+-    :try_start_79
++    :try_start_80
+     const-string v1, "MtpDatabase"
+ 
+     const-string v2, "RemoteException in getObjectInfo"
+ 
+     invoke-static {v1, v2, v9}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_80
+-    .catchall {:try_start_79 .. :try_end_80} :catchall_87
++    :try_end_87
++    .catchall {:try_start_80 .. :try_end_87} :catchall_8d
+ 
+-    if-eqz v8, :cond_85
++    if-eqz v8, :cond_7d
+ 
+-    :goto_82
+     invoke-interface {v8}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_85
+-    const/4 v1, 0x0
++    goto :goto_7d
+ 
+-    goto :goto_75
+-
+-    :catchall_87
++    :catchall_8d
+     move-exception v1
+ 
+-    if-eqz v8, :cond_8d
++    if-eqz v8, :cond_93
+ 
+     invoke-interface {v8}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_8d
++    :cond_93
+     throw v1
+-
+-    :cond_8e
+-    if-eqz v8, :cond_85
+-
+-    goto :goto_82
+ .end method
+ 
+ .method private getObjectList(III)[I
+@@ -2103,8 +2119,8 @@
+     :try_start_2
+     invoke-direct {p0, p1, p2, p3}, Landroid/mtp/MtpDatabase;->createObjectQuery(III)Landroid/database/Cursor;
+     :try_end_5
+-    .catchall {:try_start_2 .. :try_end_5} :catchall_36
+-    .catch Landroid/os/RemoteException; {:try_start_2 .. :try_end_5} :catch_27
++    .catchall {:try_start_2 .. :try_end_5} :catchall_42
++    .catch Landroid/os/RemoteException; {:try_start_2 .. :try_end_5} :catch_34
+ 
+     move-result-object v0
+ 
+@@ -2127,14 +2143,14 @@
+ 
+     move-result v1
+ 
+-    if-lez v1, :cond_43
++    if-lez v1, :cond_2d
+ 
+     new-array v4, v1, [I
+ 
+     const/4 v3, 0x0
+ 
+     :goto_18
+-    if-ge v3, v1, :cond_3d
++    if-ge v3, v1, :cond_27
+ 
+     invoke-interface {v0}, Landroid/database/Cursor;->moveToNext()Z
+ 
+@@ -2146,56 +2162,58 @@
+ 
+     aput v6, v4, v3
+     :try_end_24
+-    .catchall {:try_start_f .. :try_end_24} :catchall_36
+-    .catch Landroid/os/RemoteException; {:try_start_f .. :try_end_24} :catch_27
++    .catchall {:try_start_f .. :try_end_24} :catchall_42
++    .catch Landroid/os/RemoteException; {:try_start_f .. :try_end_24} :catch_34
+ 
+     add-int/lit8 v3, v3, 0x1
+ 
+     goto :goto_18
+ 
+-    :catch_27
+-    move-exception v2
+-
+-    :try_start_28
+-    const-string v6, "MtpDatabase"
++    :cond_27
++    if-eqz v0, :cond_e
+ 
+-    const-string v7, "RemoteException in getObjectList"
++    invoke-interface {v0}, Landroid/database/Cursor;->close()V
+ 
+-    invoke-static {v6, v7, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_2f
+-    .catchall {:try_start_28 .. :try_end_2f} :catchall_36
++    goto :goto_e
+ 
+-    if-eqz v0, :cond_34
++    :cond_2d
++    if-eqz v0, :cond_32
+ 
+-    :goto_31
+     invoke-interface {v0}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_34
++    :cond_32
++    :goto_32
+     move-object v4, v5
+ 
+     goto :goto_e
+ 
+-    :catchall_36
+-    move-exception v5
++    :catch_34
++    move-exception v2
+ 
+-    if-eqz v0, :cond_3c
++    :try_start_35
++    const-string v6, "MtpDatabase"
+ 
+-    invoke-interface {v0}, Landroid/database/Cursor;->close()V
++    const-string v7, "RemoteException in getObjectList"
+ 
+-    :cond_3c
+-    throw v5
++    invoke-static {v6, v7, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_3c
++    .catchall {:try_start_35 .. :try_end_3c} :catchall_42
+ 
+-    :cond_3d
+-    if-eqz v0, :cond_e
++    if-eqz v0, :cond_32
+ 
+     invoke-interface {v0}, Landroid/database/Cursor;->close()V
+ 
+-    goto :goto_e
++    goto :goto_32
++
++    :catchall_42
++    move-exception v5
++
++    if-eqz v0, :cond_48
+ 
+-    :cond_43
+-    if-eqz v0, :cond_34
++    invoke-interface {v0}, Landroid/database/Cursor;->close()V
+ 
+-    goto :goto_31
++    :cond_48
++    throw v5
+ .end method
+ 
+ .method private getObjectPropertyList(JIJII)Landroid/mtp/MtpPropertyList;
+@@ -2339,8 +2357,8 @@
+ 
+     invoke-interface/range {v0 .. v6}, Landroid/content/IContentProvider;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Landroid/os/ICancellationSignal;)Landroid/database/Cursor;
+     :try_end_14
+-    .catchall {:try_start_9 .. :try_end_14} :catchall_45
+-    .catch Landroid/os/RemoteException; {:try_start_9 .. :try_end_14} :catch_36
++    .catchall {:try_start_9 .. :try_end_14} :catchall_51
++    .catch Landroid/os/RemoteException; {:try_start_9 .. :try_end_14} :catch_43
+ 
+     move-result-object v7
+ 
+@@ -2363,14 +2381,14 @@
+ 
+     move-result v8
+ 
+-    if-lez v8, :cond_52
++    if-lez v8, :cond_3c
+ 
+     new-array v11, v8, [I
+ 
+     const/4 v10, 0x0
+ 
+     :goto_27
+-    if-ge v10, v8, :cond_4c
++    if-ge v10, v8, :cond_36
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->moveToNext()Z
+ 
+@@ -2382,56 +2400,58 @@
+ 
+     aput v0, v11, v10
+     :try_end_33
+-    .catchall {:try_start_1e .. :try_end_33} :catchall_45
+-    .catch Landroid/os/RemoteException; {:try_start_1e .. :try_end_33} :catch_36
++    .catchall {:try_start_1e .. :try_end_33} :catchall_51
++    .catch Landroid/os/RemoteException; {:try_start_1e .. :try_end_33} :catch_43
+ 
+     add-int/lit8 v10, v10, 0x1
+ 
+     goto :goto_27
+ 
+-    :catch_36
+-    move-exception v9
+-
+-    :try_start_37
+-    const-string v0, "MtpDatabase"
++    :cond_36
++    if-eqz v7, :cond_1d
+ 
+-    const-string v2, "RemoteException in getObjectList"
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    invoke-static {v0, v2, v9}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_3e
+-    .catchall {:try_start_37 .. :try_end_3e} :catchall_45
++    goto :goto_1d
+ 
+-    if-eqz v7, :cond_43
++    :cond_3c
++    if-eqz v7, :cond_41
+ 
+-    :goto_40
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_43
++    :cond_41
++    :goto_41
+     move-object v11, v12
+ 
+     goto :goto_1d
+ 
+-    :catchall_45
+-    move-exception v0
++    :catch_43
++    move-exception v9
+ 
+-    if-eqz v7, :cond_4b
++    :try_start_44
++    const-string v0, "MtpDatabase"
+ 
+-    invoke-interface {v7}, Landroid/database/Cursor;->close()V
++    const-string v2, "RemoteException in getObjectList"
+ 
+-    :cond_4b
+-    throw v0
++    invoke-static {v0, v2, v9}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_4b
++    .catchall {:try_start_44 .. :try_end_4b} :catchall_51
+ 
+-    :cond_4c
+-    if-eqz v7, :cond_1d
++    if-eqz v7, :cond_41
+ 
+     invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    goto :goto_1d
++    goto :goto_41
+ 
+-    :cond_52
+-    if-eqz v7, :cond_43
++    :catchall_51
++    move-exception v0
++
++    if-eqz v7, :cond_57
++
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
+ 
+-    goto :goto_40
++    :cond_57
++    throw v0
+ .end method
+ 
+ .method private getSupportedCaptureFormats()[I
+@@ -2733,7 +2753,7 @@
+ 
+     invoke-interface {v11, v12, v13}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+     :try_end_5d
+-    .catchall {:try_start_19 .. :try_end_5d} :catchall_7f
++    .catchall {:try_start_19 .. :try_end_5d} :catchall_82
+     .catch Ljava/lang/Exception; {:try_start_19 .. :try_end_5d} :catch_5e
+ 
+     goto :goto_4a
+@@ -2748,7 +2768,7 @@
+ 
+     invoke-static {v1, v2, v11}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+     :try_end_66
+-    .catchall {:try_start_5f .. :try_end_66} :catchall_7f
++    .catchall {:try_start_5f .. :try_end_66} :catchall_82
+ 
+     if-eqz v8, :cond_6b
+ 
+@@ -2757,10 +2777,10 @@
+     :cond_6b
+     if-eqz v0, :cond_70
+ 
+-    :goto_6d
+     invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->close()V
+ 
+     :cond_70
++    :goto_70
+     invoke-virtual {v9}, Ljava/io/File;->delete()Z
+ 
+     :cond_73
+@@ -2770,7 +2790,7 @@
+     :try_start_74
+     invoke-interface {v11}, Landroid/content/SharedPreferences$Editor;->commit()Z
+     :try_end_77
+-    .catchall {:try_start_74 .. :try_end_77} :catchall_7f
++    .catchall {:try_start_74 .. :try_end_77} :catchall_82
+     .catch Ljava/lang/Exception; {:try_start_74 .. :try_end_77} :catch_5e
+ 
+     :cond_77
+@@ -2781,21 +2801,23 @@
+     :cond_7c
+     if-eqz v0, :cond_70
+ 
+-    goto :goto_6d
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->close()V
++
++    goto :goto_70
+ 
+-    :catchall_7f
++    :catchall_82
+     move-exception v1
+ 
+-    if-eqz v8, :cond_85
++    if-eqz v8, :cond_88
+ 
+     invoke-interface {v8}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_85
+-    if-eqz v0, :cond_8a
++    :cond_88
++    if-eqz v0, :cond_8d
+ 
+     invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->close()V
+ 
+-    :cond_8a
++    :cond_8d
+     throw v1
+ .end method
+ 
