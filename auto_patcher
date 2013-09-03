@@ -1796,13 +1796,16 @@ context_editor (){
      print_to_log "Matching the created file: ContextImpl\$$NUMBER"
 
      # Only returns patches that create new files- it matches patches w/no subtracted lines.
-     CORRECT_CONTEXT_MATCH=( $(find ./patches/$P/$A/$PROBE_RESULTS -name *'ContextImpl$'$NUMBER* | xargs grep -HL '^-    ' ) )
+     CORRECT_CONTEXT_MATCH=( $(find ./patches/$P/$A/$PROBE_RESULTS -name "*ContextImpl*$NUMBER*" | xargs grep -HL '^-    ' ) )
+     print_to_log "CORRECT_CONTEXT_MATCH is ${CORRECT_CONTEXT_MATCH[@]}"
+     print_to_log "Number of CORRECT_CONTEXT_MATCH is ${#CORRECT_CONTEXT_MATCH[@]}"
 
      # only proceed if match is found
      if ( [[ ${#CORRECT_CONTEXT_MATCH[@]} -gt 0 ]] ); then
           for context_match in ${CORRECT_CONTEXT_MATCH[@]}; do
                # strips file name to return path
                POSSIBLE_CONTEXT_DIR=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
+               print_to_log "POSSIBLE_CONTEXT_DIR is $POSSIBLE_CONTEXT_DIR"
                break
           done
      else
