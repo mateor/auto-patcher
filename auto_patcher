@@ -156,7 +156,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.3"
+VERSION="v3.1.35"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130906"
 CURRENT_ANDROID="4.3.0"
@@ -1792,20 +1792,20 @@ context_editor (){
      CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
 
      # NUMBER will become the OpD-added subclass
-     NUMBER=$((${#CONTEXT_FILES[@]} - 3))
-     print_to_log "Matching the created file: ContextImpl\$$NUMBER"
+     CONTEXT_NUMBER=$((${#CONTEXT_FILES[@]} - 3))
+     print_to_log "Matching the created file: ContextImpl\$$CONTEXT_NUMBER"
 
-     # Only returns patches that create new files- it matches patches w/no subtracted lines.
-     CORRECT_CONTEXT_MATCH=( $(find ./patches/$P/$A/$PROBE_RESULTS -name *ContextImpl*$NUMBER* | xargs grep -HL '^-    ' ) )
-     print_to_log "CORRECT_CONTEXT_MATCH is ${CORRECT_CONTEXT_MATCH[@]}"
-     print_to_log "Number of CORRECT_CONTEXT_MATCH is ${#CORRECT_CONTEXT_MATCH[@]}"
+     # Only returns patches that create new files- it matches patches w/no subtracted lines
+     CORRECT_CONTEXT_MATCH=( $(find patches/$P/$A/$PROBE_RESULTS -type f -name *ContextImpl* -and -name *"$CONTEXT_NUMBER"*) )
+     for c in ${CONTEXT_MATCH[@]}; do
+          CORRECT_CONTEXT_MATCH=( ${CORRECT_CONTEXT_MATCH[@]} $(grep -HL '^-    ' $c) )
+     done
 
-     # only proceed if match is found
+     # only proceed if match is found TODO change to check for non-zero
      if ( [[ ${#CORRECT_CONTEXT_MATCH[@]} -gt 0 ]] ); then
           for context_match in ${CORRECT_CONTEXT_MATCH[@]}; do
                # strips file name to return path
                POSSIBLE_CONTEXT_DIR=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
-               print_to_log "POSSIBLE_CONTEXT_DIR is $POSSIBLE_CONTEXT_DIR"
                break
           done
      else
@@ -1818,6 +1818,7 @@ context_editor (){
 
      # Add the proper ContextImpl patches to the PATCH_QUEUE
      print_to_log "There are ${#CORRECT_CONTEXT_MATCH[@]} Context match; Using: $POSSIBLE_CONTEXT_DIR"
+     print_to_log ""
      CONTEXT_PATCHES=($POSSIBLE_CONTEXT_DIR/*ContextImpl*)
      for C in ${CONTEXT_PATCHES[@]}; do
           PATCH_QUEUE+=($C)
@@ -1831,18 +1832,24 @@ patch_matcher () {
      MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
 
      # filter out patches that create new files...number one cause of silent failure
-     POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name "*$MATCHED_FILE*" | xargs grep -Hl '^-    ' )
+     unset POSSIBLE_MATCHES # needed?
+     PREP_POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name *"$MATCHED_FILE"* )
+
+     for possible in ${PREP_POSSIBLE_MATCHES[@]}; do
+          CHECKED_MATCHES=$(grep -Hl '^-    ' $possible)
+          POSSIBLE_MATCHES=( ${POSSIBLE_MATCHES[@]} "$CHECKED_MATCHES" )
+     done
 
      # Somewhere here we need to test for empty and test for too large (100?) #TODO IMPORTANT!
 
      # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
      MATCH_SUCCESS=false
-     for p in $POSSIBLE_MATCHES; do
+     for p in ${POSSIBLE_MATCHES[@]}; do
           $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
           # I was originally just testing the patch command for success...but all ignored fails that way 
           if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
                     # This below is temporary debug logging.
-                    print_to_log "Succesful match found! Swapping $FAILED_PATCH for $p!!"
+                    print_to_log "Succesful match found! Swapping $p for $FAILED_PATCH!!"
                     PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
                     PATCH_QUEUE+=( "$p" )
                     FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
