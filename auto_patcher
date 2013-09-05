@@ -156,9 +156,9 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.4"
+VERSION="v3.1.41"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20130907"
+PATCHES_VERSION="20130908"
 CURRENT_ANDROID="4.3.0"
 
 # pass variables to children
@@ -1879,14 +1879,6 @@ patch_matcher () {
           fi
           
           printtask "... apply $NAME.patch ..."
-
-          # In a test, this failed when retitled framework_00_preloaded.patch and added to QUEUE. But why?
-          if ( [[ "$NAME" == "framework" ]] && [ -f $PARB/preloaded.patch ] ); then
-                    printtask "... apply preloaded.patch ..."
-                    $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
-                    [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
-          fi
-
 
           declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
           [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )

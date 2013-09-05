@@ -14,11 +14,11 @@ if [ $# -gt 0 ]; then
 fi
 
 
-dirs=$(find patches/openpdroid/4.2 -name 2013*)
-dirs+=$(find patches/openpdroid/4.3 -name 2013*)
+dirs=$(find patches/openpdroid/4.2 -name 201*)
+dirs+=$(find patches/openpdroid/4.3 -name 201*)
 
 for d in $dirs; do 
      cd ~/android/auto3/$d
      ~/android/auto3/ap_scripts/split_opd.sh ${args[@]}
-     #mv preloaded.patch framework_preloaded_preloaded.patch
+     [[ -f preloaded.patch ]] && mv -v preloaded.patch framework_00_preloaded.patch
 done
