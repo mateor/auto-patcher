@@ -1,0 +1,627 @@
+diff -Npru stock-framework/smali/android/provider/Settings$Secure.smali opd-framework/smali/android/provider/Settings$Secure.smali
+--- stock-framework/smali/android/provider/Settings$Secure.smali	2013-02-01 00:19:41.242412358 -0600
++++ opd-framework/smali/android/provider/Settings$Secure.smali	2013-02-01 00:20:11.462562210 -0600
+@@ -312,6 +312,8 @@
+ 
+ .field public static final PREFERRED_TTY_MODE:Ljava/lang/String; = "preferred_tty_mode"
+ 
++.field private static final PRIVACY_TAG:Ljava/lang/String; = "PM,SecureSettings"
++
+ .field public static final READ_EXTERNAL_STORAGE_ENFORCED_DEFAULT:Ljava/lang/String; = "read_external_storage_enforced_default"
+ 
+ .field public static final REBOOT_INTERVAL:Ljava/lang/String; = "reboot_interval"
+@@ -597,6 +599,14 @@
+ 
+ .field public static final WTF_IS_FATAL:Ljava/lang/String; = "wtf_is_fatal"
+ 
++.field private static context:Landroid/content/Context;
++
++.field private static mPm:Landroid/content/pm/IPackageManager;
++
++.field private static pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++.field private static privacyMode:Z
++
+ .field private static sIsSystemProcess:Z
+ 
+ .field private static sLockSettings:Lcom/android/internal/widget/ILockSettings;
+@@ -612,6 +622,8 @@
+ 
+     const/4 v3, 0x3
+ 
++    const/4 v2, 0x0
++
+     sput-object v0, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
+ 
+     sput-object v0, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
+@@ -664,6 +676,8 @@
+ 
+     invoke-virtual {v0, v1}, Ljava/util/HashSet;->add(Ljava/lang/Object;)Z
+ 
++    sput-boolean v2, Landroid/provider/Settings$Secure;->privacyMode:Z
++
+     const-string v0, "content://settings/secure"
+ 
+     invoke-static {v0}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+@@ -676,11 +690,9 @@
+ 
+     new-array v0, v0, [Ljava/lang/String;
+ 
+-    const/4 v1, 0x0
+-
+-    const-string v2, "adb_enabled"
++    const-string v1, "adb_enabled"
+ 
+-    aput-object v2, v0, v1
++    aput-object v1, v0, v2
+ 
+     const/4 v1, 0x1
+ 
+@@ -1143,126 +1155,430 @@
+     goto :goto_a
+ .end method
+ 
++.method private static getPackageName()[Ljava/lang/String;
++    .registers 5
++
++    :try_start_0
++    sget-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    if-eqz v3, :cond_f
++
++    invoke-static {}, Landroid/os/Process;->myUid()I
++
++    move-result v2
++
++    sget-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    invoke-interface {v3, v2}, Landroid/content/pm/IPackageManager;->getPackagesForUid(I)[Ljava/lang/String;
++
++    move-result-object v1
++
++    :goto_e
++    return-object v1
++
++    :cond_f
++    const-string/jumbo v3, "package"
++
++    invoke-static {v3}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v3
++
++    invoke-static {v3}, Landroid/content/pm/IPackageManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/content/pm/IPackageManager;
++
++    move-result-object v3
++
++    sput-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    invoke-static {}, Landroid/os/Process;->myUid()I
++
++    move-result v2
++
++    sget-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    invoke-interface {v3, v2}, Landroid/content/pm/IPackageManager;->getPackagesForUid(I)[Ljava/lang/String;
++    :try_end_25
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_25} :catch_27
++
++    move-result-object v1
++
++    goto :goto_e
++
++    :catch_27
++    move-exception v0
++
++    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
++
++    const-string v3, "PM,SecureSettings"
++
++    const-string/jumbo v4, "something went wrong with getting package name"
++
++    invoke-static {v3, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v1, 0x0
++
++    goto :goto_e
++.end method
++
+ .method public static declared-synchronized getString(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;
+-    .registers 7
++    .registers 22
+ 
+-    const-class v1, Landroid/provider/Settings$Secure;
++    const-class v19, Landroid/provider/Settings$Secure;
+ 
+-    monitor-enter v1
++    monitor-enter v19
+ 
+     :try_start_3
+-    sget-object v0, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
++    sget-object v2, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
+ 
+-    if-nez v0, :cond_15
++    if-nez v2, :cond_15
+ 
+-    new-instance v0, Landroid/provider/Settings$NameValueCache;
++    new-instance v2, Landroid/provider/Settings$NameValueCache;
+ 
+-    const-string/jumbo v2, "sys.settings_secure_version"
++    const-string/jumbo v3, "sys.settings_secure_version"
+ 
+-    sget-object v3, Landroid/provider/Settings$Secure;->CONTENT_URI:Landroid/net/Uri;
++    sget-object v4, Landroid/provider/Settings$Secure;->CONTENT_URI:Landroid/net/Uri;
+ 
+-    const-string v4, "GET_secure"
++    const-string v5, "GET_secure"
+ 
+-    invoke-direct {v0, v2, v3, v4}, Landroid/provider/Settings$NameValueCache;-><init>(Ljava/lang/String;Landroid/net/Uri;Ljava/lang/String;)V
++    invoke-direct {v2, v3, v4, v5}, Landroid/provider/Settings$NameValueCache;-><init>(Ljava/lang/String;Landroid/net/Uri;Ljava/lang/String;)V
+ 
+-    sput-object v0, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
++    sput-object v2, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
+ 
+     :cond_15
+-    sget-object v0, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
++    const-string v2, "android_id"
+ 
+-    if-nez v0, :cond_30
++    move-object/from16 v0, p1
+ 
+-    const-string v0, "lock_settings"
++    invoke-virtual {v0, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    invoke-static {v0}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++    move-result v2
+ 
+-    move-result-object v0
++    if-eqz v2, :cond_d0
+ 
+-    invoke-static {v0}, Lcom/android/internal/widget/ILockSettings$Stub;->asInterface(Landroid/os/IBinder;)Lcom/android/internal/widget/ILockSettings;
++    invoke-static {}, Landroid/provider/Settings$Secure;->initiate()V
++    :try_end_22
++    .catchall {:try_start_3 .. :try_end_22} :catchall_119
+ 
+-    move-result-object v0
++    :try_start_22
++    sget-object v2, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
+ 
+-    sput-object v0, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
++    if-nez v2, :cond_3a
++
++    new-instance v2, Landroid/privacy/PrivacySettingsManager;
++
++    sget-object v3, Landroid/provider/Settings$Secure;->context:Landroid/content/Context;
++
++    const-string/jumbo v4, "privacy"
++
++    invoke-static {v4}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v4
++
++    invoke-static {v4}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v4
++
++    invoke-direct {v2, v3, v4}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    sput-object v2, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    :cond_3a
++    sget-object v2, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    if-nez v2, :cond_4b
++
++    const-string/jumbo v2, "package"
++
++    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v2
++
++    invoke-static {v2}, Landroid/content/pm/IPackageManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/content/pm/IPackageManager;
++
++    move-result-object v2
++
++    sput-object v2, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    :cond_4b
++    const/16 v18, 0x0
++
++    invoke-static {}, Landroid/provider/Settings$Secure;->getPackageName()[Ljava/lang/String;
++
++    move-result-object v17
++
++    if-eqz v17, :cond_be
++
++    move-object/from16 v0, v17
++
++    array-length v2, v0
++
++    if-lez v2, :cond_be
++
++    const/16 v16, 0x0
++
++    :goto_5a
++    move-object/from16 v0, v17
++
++    array-length v2, v0
++
++    move/from16 v0, v16
++
++    if-ge v0, v2, :cond_d0
++
++    sget-object v2, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    aget-object v3, v17, v16
++
++    invoke-virtual {v2, v3}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++
++    move-result-object v18
++
++    if-eqz v18, :cond_9e
++
++    invoke-virtual/range {v18 .. v18}, Landroid/privacy/PrivacySettings;->getAndroidIdSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_9e
++
++    invoke-virtual/range {v18 .. v18}, Landroid/privacy/PrivacySettings;->getAndroidID()Ljava/lang/String;
++
++    move-result-object v7
++
++    if-eqz v7, :cond_88
++
++    sget-object v2, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    aget-object v3, v17, v16
++
++    const/4 v4, 0x0
++
++    invoke-virtual/range {v18 .. v18}, Landroid/privacy/PrivacySettings;->getAndroidIdSetting()B
++
++    move-result v5
++
++    const-string v6, "android_id"
++
++    const/4 v8, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_86
++    .catchall {:try_start_22 .. :try_end_86} :catchall_119
++    .catch Ljava/lang/Exception; {:try_start_22 .. :try_end_86} :catch_10d
++
++    :goto_86
++    monitor-exit v19
++
++    return-object v7
++
++    :cond_88
++    :try_start_88
++    sget-object v8, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    aget-object v9, v17, v16
++
++    const/4 v10, 0x0
++
++    invoke-virtual/range {v18 .. v18}, Landroid/privacy/PrivacySettings;->getAndroidIdSetting()B
++
++    move-result v11
++
++    const-string v12, "android_id"
++
++    const-string/jumbo v13, "q4a5w896ay21dr46"
++
++    const/4 v14, 0x0
++
++    invoke-virtual/range {v8 .. v14}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    const-string/jumbo v7, "q4a5w896ay21dr46"
++
++    goto :goto_86
++
++    :cond_9e
++    move-object/from16 v0, v17
++
++    array-length v2, v0
++
++    add-int/lit8 v2, v2, -0x1
++
++    move/from16 v0, v16
++
++    if-ne v0, v2, :cond_b9
++
++    sget-object v8, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, v17
++
++    array-length v2, v0
++
++    add-int/lit8 v2, v2, -0x1
++
++    aget-object v9, v17, v2
++
++    const/4 v10, 0x0
++
++    const/4 v11, 0x0
++
++    const-string v12, "android_id"
++
++    const/4 v13, 0x0
++
++    const/4 v14, 0x0
++
++    invoke-virtual/range {v8 .. v14}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    :cond_b9
++    const/16 v18, 0x0
++
++    add-int/lit8 v16, v16, 0x1
++
++    goto :goto_5a
++
++    :cond_be
++    sget-object v8, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, v17
++
++    array-length v2, v0
++
++    add-int/lit8 v2, v2, -0x1
++
++    aget-object v9, v17, v2
++
++    const/4 v10, 0x0
++
++    const/4 v11, 0x0
++
++    const-string v12, "android_id"
++
++    const/4 v13, 0x0
++
++    const/4 v14, 0x0
++
++    invoke-virtual/range {v8 .. v14}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_d0
++    .catchall {:try_start_88 .. :try_end_d0} :catchall_119
++    .catch Ljava/lang/Exception; {:try_start_88 .. :try_end_d0} :catch_10d
++
++    :cond_d0
++    :goto_d0
++    :try_start_d0
++    sget-object v2, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
++
++    if-nez v2, :cond_eb
++
++    const-string v2, "lock_settings"
++
++    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v2
++
++    invoke-static {v2}, Lcom/android/internal/widget/ILockSettings$Stub;->asInterface(Landroid/os/IBinder;)Lcom/android/internal/widget/ILockSettings;
++
++    move-result-object v2
++
++    sput-object v2, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
+ 
+     invoke-static {}, Landroid/os/Process;->myUid()I
+ 
+-    move-result v0
++    move-result v2
+ 
+-    const/16 v2, 0x3e8
++    const/16 v3, 0x3e8
+ 
+-    if-ne v0, v2, :cond_4e
++    if-ne v2, v3, :cond_11c
+ 
+-    const/4 v0, 0x1
++    const/4 v2, 0x1
+ 
+-    :goto_2e
+-    sput-boolean v0, Landroid/provider/Settings$Secure;->sIsSystemProcess:Z
++    :goto_e9
++    sput-boolean v2, Landroid/provider/Settings$Secure;->sIsSystemProcess:Z
+ 
+-    :cond_30
+-    sget-object v0, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
++    :cond_eb
++    sget-object v2, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
+ 
+-    if-eqz v0, :cond_51
++    if-eqz v2, :cond_11f
+ 
+-    sget-boolean v0, Landroid/provider/Settings$Secure;->sIsSystemProcess:Z
++    sget-boolean v2, Landroid/provider/Settings$Secure;->sIsSystemProcess:Z
+ 
+-    if-nez v0, :cond_51
++    if-nez v2, :cond_11f
+ 
+-    sget-object v0, Landroid/provider/Settings$Secure;->MOVED_TO_LOCK_SETTINGS:Ljava/util/HashSet;
++    sget-object v2, Landroid/provider/Settings$Secure;->MOVED_TO_LOCK_SETTINGS:Ljava/util/HashSet;
+ 
+-    invoke-virtual {v0, p1}, Ljava/util/HashSet;->contains(Ljava/lang/Object;)Z
+-    :try_end_3d
+-    .catchall {:try_start_3 .. :try_end_3d} :catchall_58
++    move-object/from16 v0, p1
+ 
+-    move-result v0
++    invoke-virtual {v2, v0}, Ljava/util/HashSet;->contains(Ljava/lang/Object;)Z
++    :try_end_fa
++    .catchall {:try_start_d0 .. :try_end_fa} :catchall_119
+ 
+-    if-eqz v0, :cond_51
++    move-result v2
++
++    if-eqz v2, :cond_11f
+ 
+-    :try_start_40
+-    sget-object v0, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
++    :try_start_fd
++    sget-object v2, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
+ 
+-    const-string v2, "0"
++    const-string v3, "0"
+ 
+     invoke-static {}, Landroid/os/UserId;->getCallingUserId()I
+ 
+-    move-result v3
++    move-result v4
+ 
+-    invoke-interface {v0, p1, v2, v3}, Lcom/android/internal/widget/ILockSettings;->getString(Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;
+-    :try_end_4b
+-    .catchall {:try_start_40 .. :try_end_4b} :catchall_58
+-    .catch Landroid/os/RemoteException; {:try_start_40 .. :try_end_4b} :catch_50
++    move-object/from16 v0, p1
+ 
+-    move-result-object v0
++    invoke-interface {v2, v0, v3, v4}, Lcom/android/internal/widget/ILockSettings;->getString(Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;
++    :try_end_10a
++    .catchall {:try_start_fd .. :try_end_10a} :catchall_119
++    .catch Landroid/os/RemoteException; {:try_start_fd .. :try_end_10a} :catch_11e
+ 
+-    :goto_4c
+-    monitor-exit v1
++    move-result-object v7
+ 
+-    return-object v0
++    goto/16 :goto_86
+ 
+-    :cond_4e
+-    const/4 v0, 0x0
++    :catch_10d
++    move-exception v15
+ 
+-    goto :goto_2e
++    :try_start_10e
++    invoke-virtual {v15}, Ljava/lang/Exception;->printStackTrace()V
+ 
+-    :catch_50
+-    move-exception v0
++    const-string v2, "PM,SecureSettings"
+ 
+-    :cond_51
+-    :try_start_51
+-    sget-object v0, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
++    const-string v3, "Got exception in  getString()"
+ 
+-    invoke-virtual {v0, p0, p1}, Landroid/provider/Settings$NameValueCache;->getString(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;
+-    :try_end_56
+-    .catchall {:try_start_51 .. :try_end_56} :catchall_58
++    invoke-static {v2, v3}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_118
++    .catchall {:try_start_10e .. :try_end_118} :catchall_119
+ 
+-    move-result-object v0
++    goto :goto_d0
+ 
+-    goto :goto_4c
++    :catchall_119
++    move-exception v2
+ 
+-    :catchall_58
+-    move-exception v0
++    monitor-exit v19
++
++    throw v2
++
++    :cond_11c
++    const/4 v2, 0x0
++
++    goto :goto_e9
++
++    :catch_11e
++    move-exception v2
++
++    :cond_11f
++    :try_start_11f
++    sget-object v2, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, p1
+ 
+-    monitor-exit v1
++    invoke-virtual {v2, v0, v1}, Landroid/provider/Settings$NameValueCache;->getString(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;
++    :try_end_128
++    .catchall {:try_start_11f .. :try_end_128} :catchall_119
+ 
+-    throw v0
++    move-result-object v7
++
++    goto/16 :goto_86
+ .end method
+ 
+ .method public static getUriFor(Ljava/lang/String;)Landroid/net/Uri;
+@@ -1277,6 +1593,71 @@
+     return-object v0
+ .end method
+ 
++.method private static initiate()V
++    .registers 4
++
++    const/4 v1, 0x0
++
++    :try_start_1
++    sput-object v1, Landroid/provider/Settings$Secure;->context:Landroid/content/Context;
++
++    new-instance v1, Landroid/privacy/PrivacySettingsManager;
++
++    sget-object v2, Landroid/provider/Settings$Secure;->context:Landroid/content/Context;
++
++    const-string/jumbo v3, "privacy"
++
++    invoke-static {v3}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v3
++
++    invoke-static {v3}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v3
++
++    invoke-direct {v1, v2, v3}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    sput-object v1, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string/jumbo v1, "package"
++
++    invoke-static {v1}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v1
++
++    invoke-static {v1}, Landroid/content/pm/IPackageManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/content/pm/IPackageManager;
++
++    move-result-object v1
++
++    sput-object v1, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    const/4 v1, 0x1
++
++    sput-boolean v1, Landroid/provider/Settings$Secure;->privacyMode:Z
++    :try_end_27
++    .catch Ljava/lang/Exception; {:try_start_1 .. :try_end_27} :catch_28
++
++    :goto_27
++    return-void
++
++    :catch_28
++    move-exception v0
++
++    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
++
++    const-string v1, "PM,SecureSettings"
++
++    const-string v2, "Something went wrong with initalize variables"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v1, 0x0
++
++    sput-boolean v1, Landroid/provider/Settings$Secure;->privacyMode:Z
++
++    goto :goto_27
++.end method
++
+ .method public static final isLocationProviderEnabled(Landroid/content/ContentResolver;Ljava/lang/String;)Z
+     .registers 4
+ 

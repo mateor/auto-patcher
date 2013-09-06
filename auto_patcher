@@ -148,15 +148,17 @@
 # 2013.08.07. (v3.0.0) Support for Android-4.3 (Opendproid only- CM and AOSP).
 # 2013.08.09. (v3.0.1) Build date and patch date matching for multiple mods- all mods will now use best available match.
 # 2013.08.12. (v3.0.2) OpD support for Evervolv, PACman and PA and CM10 returns
-
+# 2013.08.26. (v3.1.0) The big switch to SMALI.patch instead of JAR.patch. It begins...
+# 2013.08.30. (v3.1.1) Some debugging and add Carbon support
+# 2013.09.04. (v3.1.4) Update context_editor- still struggling with some Cygwin line endings.
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.0.295"
+VERSION="v3.1.41"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20130901"
+PATCHES_VERSION="20130908"
 CURRENT_ANDROID="4.3.0"
 
 # pass variables to children
@@ -165,6 +167,7 @@ set -a
 # Set any environmental variables
 LANG=C
 CYGWIN=false
+
 # unused for now...for experiments with "-s" flag and new patches made with it.
 BAKSMALI_BINARY=baksmali.jar
 SMALI_BINARY=smali.jar
@@ -208,10 +211,14 @@ printusage_help () {
 }
 
 brief_help () {
-     echo "    usage:     ./auto_patcher <ROM> <MODS> <ROMTYPE>"
-     echo "    example:   ./auto_patcher CM10.zip $PID cm"
+     echo "    usage:     ./auto_patcher <ROM> <MODS>"
+     echo "    example:   ./auto_patcher CM10.zip $PID"
      echo ""
      echo "Use ./auto_patcher -h for the help menu"
+     echo ""
+     printtask "  If your rom is not on the supported list and you want it added:"
+     printtask "\t- Upload your log and a link to the rom's source code (mandatory)"
+     printtask "\t   and be patient, please!"
      echo ""
      cleanup
      exit
@@ -222,15 +229,17 @@ usage_help () {
      mods_display
      echo "Multiple MODS can be combined by separating them with a comma and NO SPACES!!!"
      echo ""
-     echo "    usage:     ./auto_patcher <ROM> <MODS> <ROMTYPE>"
+     echo "    usage:     ./auto_patcher <ROM> <MODS>"
      echo ""
-     echo "    example:   ./auto_patcher CM10.zip openpdroid,3gdongle cm"
+     echo "    example:   ./auto_patcher CM10.zip openpdroid,3gdongle"
+     echo ""
+     echo "  You no longer need to enter a ROMTYPE...EVER! It will hurt, not help."
      echo ""
      usage_more_help
 }
 
 usage_more_help () {
-     echo "* press 'q' available patches or CTRL-c to quit the help menu *"
+     echo "* press 'q' to see available patches and then CTRL-c to quit the help menu *"
 }
 
 display_help () {
@@ -239,13 +248,14 @@ display_help () {
      echo "AVAILABLE PATCHES"
      echo ""
      echo "*******************************************************************"
-     echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]."
+     echo "Note: There are ONLY 4 ROMTYPES: [pa, cm, aokp, and aosp]"
+     echo ""
+     echo "   Specifying ROMTYPE is DEPRECATED as of Autopatcherv3.1.0"
      echo ""
      find -H *  \( -name aokp -o -name cm -o -name aosp -o -name pa -o -name all -o -name generic \) -prune | column -c 85 | more -d -7
      echo ""
-     echo "!!! Do not put Android Version number on command line !!!!"
      echo "*****************************************************************"
-     echo "Specific auto_patcher script options"
+     echo "Specific auto_patcher help options"
      echo "    ./auto_patcher -h mods      Lists mods"
      echo "                   -h <MODNAME> Specific <MOD> info"
      echo "                   -h advanced  Advanced usage+lists all available patch dates"
@@ -259,9 +269,8 @@ romtype_help () {
      echo ""
      echo "!!!There are only four supported ROMTYPES: 1) cm  2) aokp  3) aosp  4) pa"
      echo ""
-     echo "Find out which of the above ROMTYPES your rom is based on and try again!"
-     echo "**********************************************"
-     echo ""
+     echo "Specifying a romtype is no longer needed for any mod and is DEPRECATED."
+     echo -e "  Try w/o it first, okay?"
      cleanup
      brief_help
 }
@@ -273,14 +282,16 @@ advanced_help () {
      echo ""
      echo "For those of you determined to try everything..."
      echo ""
-     echo "You can also try adding a patch date as a final argument."
+     echo "  You can also try adding a patch date as a final argument."
      echo ""
      echo "      ./auto_patcher <ROM> <MOD> <ROMTYPE> <DATE>"
      echo ""
-     echo "Please note: There are only four ROMTYPES: {pa, aokp, aosp and cm}"
-     echo "      -The various appellations after that are for internal use only!"
+     echo "  Please note: There are only four ROMTYPES: {pa, aokp, aosp and cm}"
+     echo "      and you should really not need this anymore."
      echo ""
-     echo "The Auto-Patcher has a pretty great rom probe, specifying the date is"
+     echo "Odds are good that if you have a problem, specifying a ROMTYPE or PATCHDATE won't fix it!"
+     echo ""
+     echo "The Auto-Patcher has a pretty great rom probe, specifying the date and romtype is"
      echo " deprecated...you don't need to, we promise."
      echo ""
 }
@@ -361,7 +372,8 @@ date_error () {
      printtask "!!! error: $@"
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      echo ""
-     echo "Please put a ROMTYPE before the patch date and run again!!"
+     echo " !! Manually specifying a date is DEPRECATED and no longer necessary. But if you insist..."
+     echo "      Please put a ROMTYPE before the patch date and run again!!"
      romtype_help
 }
 
@@ -453,8 +465,9 @@ copy_prepatched_provisional () {
 
 prep_alternate_patch () {
      # Use alt.patch, if exists. Increment in case there are multiple alternates.
+     # DEPRECATED as of the upcoming 3.1.0
      mv -v $ALTERNATIVE_PATCH $PARB/${NAME}.patch >> "$LOG"
-     ALT_PATCH_NUMBER=$((PATCH_NUMBER + 1))
+     ALT_PATCH_NUMBER=$(($ALT_PATCH_NUMBER + 1))
 
      # Get fresh files/variables + decompile again (use rm b/c privacy files wouldn't get overwritten)
      # TODO: test patch -R instead of re-decompiling. Should work.
@@ -513,7 +526,7 @@ establish_repo() {
           if ($NETWORK); then
                mv -v auto-patcher/".git" . >> "$LOG"
                rm -rf auto-patcher
-               git checkout -q master || auto_update_error
+               git checkout -q 3.1 || auto_update_error
                git reset --hard 2>&1 >> "$LOG"
                echo ""
           fi
@@ -605,6 +618,7 @@ mods_info () {
      CEILING=$CURRENT_ANDROID
      ROM_CONFLICTS=(None)
      UNKNOWN_MOD=false
+     DEVICE_LIMIT="None"
      case $PID in
      mods)
           mods_display
@@ -635,7 +649,7 @@ mods_info () {
           ;;
      v6 | v6supercharger)
           FLOOR=4.0.0
-          CEILING=4.2.2
+          CEILING=4.3.0
           DESC="A memory-management tool. It requires smali edits for Android roms 4.0+. The Auto-Patcher applies all 50+ edits recommended by the dev."
           DEV="Zeppelinrox"
           DEPENDENCY="The V6 Supercharger Script. Get it at the link"
@@ -669,6 +683,10 @@ mods_info () {
           DEV="CollegeDev/FFU5y/wbedard/mateorod/Community"
           DEPENDENCY="PDroidManager(opensource) or PDroid2.0(CollegeDev)"
           WEBSITE="http://forum.xda-developers.com/showthread.php?t=1994860"
+          if [[ $ANDR == "4.1" ]]; then
+               # Still borked, perhaps never to be fixed. PDroid works, and we SHOULD output a helpful message.
+               ROM_CONFLICTS=( pa cm )
+          fi
           ;;
      opendroid)
           echo ""
@@ -691,11 +709,16 @@ mods_info () {
           ;;
      3gdongle)
           FLOOR=4.1.0
-          CEILING=4.2.2
+          CEILING=4.3.0
           DESC="Allows 3gdongles to work on wifi tablets w/o 3rd party applications."
           DEV="trevd"
           DEPENDENCY="None, but read the troubleshooting guide at the link"
           WEBSITE="http://forum.xda-developers.com/showthread.php?t=1798631"
+          DEVICE_LIMIT=( grouper )
+          if [[ $ANDR == "4.3" ]]; then
+               # at least. Looks like CM merged this mod. Probably other roms have as well.
+               ROM_CONFLICTS=( cm )
+          fi
           ;;
      tabletUI)
           FLOOR=4.1.0
@@ -721,6 +744,7 @@ mods_info () {
 
      # strip decimals from android version (i.e. 2.3.7 becomes 237) so we can do math
      NVID=${VID//[.]/}
+     NVID=${NVID:0:3}
      COMPATF=${FLOOR//[.]/}
      COMPATC=${CEILING//[.]/}
      if [[ ${#NVID} -lt 3 ]]; then
@@ -782,15 +806,31 @@ compat_check () {
 
 rom_compat_check () {
      N=${#ROM_CONFLICTS[@]}
-          for ((i=0; i < $N; i++)); do
-               if [[ $RID == ${ROM_CONFLICTS[$i]} ]]; then
-                    rom_compat_error
-               fi
-          done
+     for ((i=0; i < $N; i++)); do
+          if [[ $RID == ${ROM_CONFLICTS[$i]} ]]; then
+               rom_compat_error
+          fi
+     done
 }
 
 rom_compat_error () {
-     print_error "$RID is incompatible with $PID!!!"
+     print_error "$PID is incompatible with $RID!!!"
+}
+
+device_compat_check () {
+     O=${#DEVICE_LIMIT[@]}
+     for ((i=0; i < $O; i++)); do
+          if [[ $DID == ${DEVICE_LIMIT[$i]} ]]; then
+               DEVICE_MATCHED=true
+          fi
+     done
+     if [[ ! "$DEVICE_MATCHED" == true ]]; then
+          device_compat_error
+     fi
+}
+
+device_compat_error () {
+     print_error "$PID is not available for $DID!!! Supported devices: ${DEVICE_LIMIT[@]}"
 }
 
 extpath () {
@@ -916,7 +956,7 @@ proberom () {
      if [ ${#VID} -lt 4 ]; then # in case of non-standard versioning in build.prop (defy!)
           ANDR=$VID
      else
-          ANDR="${VID%.*}" # Cut to 1 significant digit to cover specific range or release.
+          ANDR="${VID:0:3}" # Cut to 1 significant digit to cover specific range or release.
      fi
      if [ "$ANDR" == "2.3" ]; then
           FLAVR=gingerbread
@@ -994,7 +1034,7 @@ proberom () {
                     # hack to account for Final builds with old code and current build dates. Huge hack, but if there
                     # is one thing I don't believe in, it's "educating the user-base". Not happening. So hack it is.
                     if [[ "$CMID" == "10.1.2"* ]] || [[ "$CMID" == "10.1.3"* ]]; then
-                         echo " ### CMID: $CMID: Selecting CM Final Build patches" >> "$LOG"
+                         print_to_log " ### CMID: $CMID: Selecting CM Final Build patches"
                          BID_OVERRIDE=20130516
                     fi
                     ;;
@@ -1011,6 +1051,9 @@ proberom () {
                ev*|Ever*)
                     RID=".aosp-ever";
                     ;;
+               carbon*)
+                    RID=".aosp-carbon"
+                    ;;
                *)
                     RID="$(ever_check)";
                     ;;
@@ -1020,7 +1063,7 @@ proberom () {
      fi
      # romtype_set allows hiding ".aosp-*" types from users while leaving them as options on CLI
      romtype_set
-     echo "... result of ROM check: version= $VID rom= $ROMTYPE ..."
+     echo "... result of ROM check: version= $VID ..."
 }
 
 
@@ -1034,11 +1077,11 @@ UTC=$(getbuildprop ro.build.date.utc)
 case $(uname -s) in
 [Dd]arwin)
      BDID=$(date -r $UTC +%Y%m%d)
-     echo "#### Darwin Build Query used ####" >> "$LOG"
+     print_to_log "#### Darwin Build Query used ####"
      ;;
 *)
      BDID=$(date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d")
-     echo "#### Standard Build Query ####" >> "$LOG"
+     print_to_log "#### Standard Build Query ####"
      ;;
 esac
 
@@ -1091,7 +1134,6 @@ else
                     if [[ -n "$BID_OVERRIDE" ]]; then
                          BID="$BID_OVERRIDE"
                     fi
-                    printtask "... $P patch date has been set to: $BID ..."
                     MODS_LIST[$PATCH_COUNTER]=$P
                     PATCH_DATE_LIST[$PATCH_COUNTER]=$BID
                     PATCH_COUNTER=$(($PATCH_COUNTER + 1))
@@ -1174,6 +1216,7 @@ ROOT="$(abspath "$(dirname "$(abspath "$(type -p "$0")")")")"
 TOOL="$ROOT/patch_tools.tgz"
 PTCH="$ROOT/patch_patches.tgz"
 cleanup
+
 # set temporary directory
 DATE=$(date +%Y%m%d%H%M%S)
 TEMP="$ROOT/tmp$DATE"
@@ -1182,6 +1225,10 @@ TMPDIR="$ROOT/tmp$DATE"
 mkdir "$TEMP"
 ROM=$(abspath "$1")
 ROMX=$(extpath "$1")
+ERR="$TEMP"/ERR
+
+exec 2>> ${ERR}.log
+
 PATCH_BINARY=patch
 PINGCOUNT="-c1"
 
@@ -1246,7 +1293,7 @@ if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
           if !("$NETWORK"); then
                printtask "Updater: not able to run auto_update."
           else
-               COMMITS_BEHIND=$(git rev-list HEAD..origin/master --count)
+               COMMITS_BEHIND=$(git rev-list HEAD..origin/3.1 --count)
                case "$COMMITS_BEHIND" in
                0)
                     printtask "Updater: Auto-Patcher is already up to date"
@@ -1256,7 +1303,7 @@ if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
                     printtask "... Updater: update found ..."
                     backup_script
                     printtask "... Updating Auto-Patcher ..."
-                    git merge --no-edit origin/master 2>&1 >> "$LOG" || auto_update_error
+                    git merge --no-edit origin/3.1 2>&1 >> "$LOG" || auto_update_error
                     export_log_and_variables
                     printtask "### updated, now rerunning script with latest version ###"
                     $0 "$@"
@@ -1283,7 +1330,7 @@ if ( [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]] || [ -f *".updated.log" ] ); then
 fi
 
 #remove old zips, if built under identical parameters.
-\rm -f $RESTORE.zip $UPDATE.zip
+\rm -f $RESTORE $UPDATE
 
 CHK=$(getconf LONG_BIT) 
 if [[ $CHK = "64" ]]; then
@@ -1346,6 +1393,7 @@ jar -xvf "$ROMX" system/build.prop 2>> "$LOG" || print_error "failed extracting 
 proberil
 printtask "### probe rom type ###"
 proberom
+PROBE_RESULTS=$RID
 
 # rom type
 if [ $# -gt 1 ]; then
@@ -1393,6 +1441,8 @@ if [ $# -gt 2 ]; then
           rom_error "$RID is not a valid ROMTYPE!!"
           ;;
      esac
+
+     # Most of this needs to go...it is misleading and adds unnecessary steps for users. Available to devs only.
      romtype_set
      echo "... Using $ROMTYPE patches ..."
 else
@@ -1446,10 +1496,13 @@ compat_check
 
 # Make sure mod and rom don't conflict (e.g. pa and tabletUI)
 for T in ${PID[@]}; do
-     PID=$T                  #Set PID so mods_info function returns different values for each mod
-     mods_info
+     PID=$T                  # Set PID so mods_info function returns different values for each mod
+     mods_info               # Populate variables for each PID
      if [[ ${ROM_CONFLICTS[@]} != "None" ]]; then
           rom_compat_check
+     fi
+     if [[ ${DEVICE_LIMIT[@]} != "None" ]]; then
+          device_compat_check
      fi
 done
 # reset to original ordered list
@@ -1523,12 +1576,12 @@ for P in ${PID[@]}; do
           esac
      done
 done
-echo "### DELETE FILES= ${EID[@]}" >> "$LOG"
-echo "### COPY FILES= ${CID[@]}" >> "$LOG"
-echo "### JAR FILES= ${JID[@]}" >> "$LOG"
-echo "### APK FILES= ${AID[@]}" >> "$LOG"
-echo "### IMG FILES= ${IID[@]}" >> "$LOG"
-echo "### TXT FILES= ${TID[@]}" >> "$LOG"
+print_to_log "### DELETE FILES= ${EID[@]}"
+print_to_log "### COPY FILES= ${CID[@]}"
+print_to_log "### JAR FILES= ${JID[@]}"
+print_to_log "### APK FILES= ${AID[@]}"
+print_to_log "### IMG FILES= ${IID[@]}"
+print_to_log "### TXT FILES= ${TID[@]}"
 
 # extract system files
 printtask "### unzip rom ###"
@@ -1539,8 +1592,11 @@ jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_err
 printtask "### create updater script ###"
 UPDATER_LOC=META-INF/com/google/android
 UPDS=updater-script
-UPDATE="update-$ROMTYPE-$DID-$BDID-${PIL// /-}"
-RESTORE="restore-$ROMTYPE-$DID-$BDID"
+ROM_NAME=${ROMX##*/}
+ROM_NAME=${ROM_NAME##*\\}
+UPDATE="update-${PIL// /-}-$BDID.zip"
+RESTORE="restore-from-${PIL// /-}-$BDID.zip"
+
 
 jar -xvf "$ROMX" $UPDATER_LOC/$UPDS $UPDATER_LOC/update-binary
 jar -xvf "$ROMX" $UPDATER_LOC/update-binary-installer 1> /dev/null 2> /dev/null
@@ -1586,7 +1642,7 @@ cat $UPDS >> "$LOG"
 printtask "### create restore.zip ###"
 jar -cvf tmp.zip ${JID[@]} ${AID[@]} ${IID[@]} META-INF > /dev/null 2>> "$LOG"
 java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
-\mv signed.zip $RESTORE.zip
+\mv signed.zip $RESTORE
 \rm -f tmp.zip
 
 
@@ -1609,8 +1665,8 @@ done
 if [ ${#AID[@]} -gt 0 ]; then
      jar -xvf "$ROMX" system/framework/framework-res.apk >> "$LOG"
      printtask "... installing framework files ..."
-     java -jar apktool.jar if system/framework/framework-res.apk
-   # Decompile APKs
+     # have to redirect to /dev/null...oddly framework installation is reported as stderr; bug in apktool.
+     java -jar apktool.jar if system/framework/framework-res.apk >> /dev/null 2>&1
      for FILE in ${AID[@]}; do
           APK=${FILE##*/}
           if [ -f $FILE ]; then
@@ -1684,8 +1740,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           esac
      done
 
-     [[ -n ${COPY[@]} ]] && echo "### copy patch $P/$A/$ROMTYPE/$B ###"
-     echo "### copy patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${COPY[@]} ]] && printtask "### copy patch $P/$A ###"
      for FILE in ${COPY[@]}; do
           printtask "... copying $FILE ..."
           DEST=${FILE%/*}
@@ -1695,7 +1750,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                \cp -av patches/$P/$A/$R/$B/$FILE ./$DEST >> "$LOG" 2>&1
           elif [ -e patches/$P/common/$FILE ]; then
                printtask "... overwriting $FILE from $P ..."
-               echo " ### SOMETHING WENT WRONG!! Could not find file-- using common. ###" >> "$LOG"
+               print_to_log " ### SOMETHING WENT WRONG!! Could not find file-- using common. ###"
                \cp -av patches/$P/common/$FILE ./$DEST >> "$LOG" 2>&1
           else
                print_error "$FILE is missing in the patch. Please upload your logfile to the support thread!"
@@ -1719,23 +1774,101 @@ for ((i=0; i < ${#PID[@]}; i++)); do
            fi
      done
 
-     [[ -n ${DELS[@]} ]] && echo "### delete patch $P/$A/$ROMTYPE/$B ###"
-     echo "### delete patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${DELS[@]} ]] && printtask "### delete patch $P/$A ###"
      for FILE in ${DELS[@]}; do
           printtask "... deleting $FILE ..."
           \rm -rf ./$FILE
      done
-     [[ -n ${JARS[@]} ]] && echo "### jar patch $P/$A/$ROMTYPE/$B ###"
-     echo "### jar patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$A ###"
+
 
      # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
+
+context_editor (){
+     # This manages a troublesome class, ContextImpl. We create a new floating subclass, with a different
+     #   file name for different roms ($ContextImpl$45, or $46 or $41, etc).
+
+     # Counts the number of ContextImpl patches in the decompiled stock jar. Easy enough.
+     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
+
+     # NUMBER will become the OpD-added subclass
+     CONTEXT_NUMBER=$((${#CONTEXT_FILES[@]} - 3))
+     print_to_log "Matching the created file: ContextImpl\$$CONTEXT_NUMBER"
+
+     # Only returns patches that create new files- it matches patches w/no subtracted lines
+     CORRECT_CONTEXT_MATCH=( $(find patches/$P/$A/$PROBE_RESULTS -type f -name *ContextImpl* -and -name *"$CONTEXT_NUMBER"*) )
+     for c in ${CONTEXT_MATCH[@]}; do
+          CORRECT_CONTEXT_MATCH=( ${CORRECT_CONTEXT_MATCH[@]} $(grep -HL '^-    ' $c) )
+     done
+
+     # only proceed if match is found TODO change to check for non-zero
+     if ( [[ ${#CORRECT_CONTEXT_MATCH[@]} -gt 0 ]] ); then
+          for context_match in ${CORRECT_CONTEXT_MATCH[@]}; do
+               # strips file name to return path
+               POSSIBLE_CONTEXT_DIR=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
+               break
+          done
+     else
+          print_error "No patch sets create the proper ContextImpl file. Please upload log!"
+     fi
+
+     # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
+     FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
+     PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
+
+     # Add the proper ContextImpl patches to the PATCH_QUEUE
+     print_to_log "There are ${#CORRECT_CONTEXT_MATCH[@]} Context match; Using: $POSSIBLE_CONTEXT_DIR"
+     print_to_log ""
+     CONTEXT_PATCHES=($POSSIBLE_CONTEXT_DIR/*ContextImpl*)
+     for C in ${CONTEXT_PATCHES[@]}; do
+          PATCH_QUEUE+=($C)
+     done
+}
+
+patch_matcher () {
+     # Strip level - If this project continues, we need to simply standardize strip levels.
+
+     FAILED_FILE=${FAILED_PATCH##*/}     # strip path from file
+     MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
+
+     # filter out patches that create new files...number one cause of silent failure
+     unset POSSIBLE_MATCHES # needed?
+     PREP_POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name *"$MATCHED_FILE"* )
+
+     for possible in ${PREP_POSSIBLE_MATCHES[@]}; do
+          CHECKED_MATCHES=$(grep -Hl '^-    ' $possible)
+          POSSIBLE_MATCHES=( ${POSSIBLE_MATCHES[@]} "$CHECKED_MATCHES" )
+     done
+
+     # Somewhere here we need to test for empty and test for too large (100?) #TODO IMPORTANT!
+
+     # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
+     MATCH_SUCCESS=false
+     for p in ${POSSIBLE_MATCHES[@]}; do
+          $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
+          # I was originally just testing the patch command for success...but all ignored fails that way 
+          if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
+                    # This below is temporary debug logging.
+                    print_to_log "Succesful match found! Swapping $p for $FAILED_PATCH!!"
+                    PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
+                    PATCH_QUEUE+=( "$p" )
+                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
+                    MATCH_SUCCESS=true
+                    break
+               fi
+     done
+     cat MATCH.log >> "$LOG" # for now...I have seen some stderr get hidden without this.
+     [ $MATCH_SUCCESS == true ] || print_to_log "We did not find a working patch for $p...looking for other solutions!"                       
+}
+
      for (( current_jar=0; current_jar < ${#JARS[@]}; current_jar++)); do
           FILE=${JARS[$current_jar]}
           JAR=${FILE##*/}
+          STRIP_LEVEL=1
           if [[ $FILE == *".jar" ]]; then # allows for *.apks to be decompiled by baksmali
                NAME=${JAR%.jar}
           else
-               # check for abscense of any apks decompiled by baksmali (~* in files.txt). Missing jars will still error
+          # check for abscense of any apks decompiled by baksmali (~* in files.txt). Missing jar will still error
                if [ ! -d "tmp/${FILE}.out" ] ; then
                     echo "No $JAR in your ROM. Not able to patch this file."
                     echo "## No $JAR in ROM ###" >> "$LOG"
@@ -1744,52 +1877,59 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                fi
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
+          
           printtask "... apply $NAME.patch ..."
-          $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/${NAME}.patch 2>&1 > ${JAR}.log
-          for INCREMENTAL in $(ls $PARB/${NAME}-*.patch 2>/dev/null); do
-               printtask "... apply $(basename $INCREMENTAL) ..."
-               $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $INCREMENTAL 2>&1 >> ${JAR}.log
+
+          declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
+          [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )
+          declare -a FAILED_PATCH_QUEUE
+          rm -rf {JAR}.log # Needed since we append the patch output now
+          [[ "$NAME" == "framework" ]] && context_editor
+          for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+               # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
+               $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
           done
-          cat ${JAR}.log >> "$LOG"
-          case "$NAME" in
-          framework)
-               # patch preloaded-classes only if a patch exists
-               if [ -f $PARB/preloaded.patch ]; then
-                    printtask "... apply preloaded.patch ..."
-                    $PATCH_BINARY -Nls -p1 -d tmp/${FILE}.out < $PARB/preloaded.patch 2>&1 > preloaded.log
-                    cat preloaded.log >> "$LOG"
-                    [[ $(grep FAILED preloaded.log) != "" ]] && print_error "failed preloaded.patch"
-               fi
-               ;;
-          *)
-               echo -n ""     # do nothing else
-               ;;
-          esac
-          # substitute failed smali with provisional (a prepatched smali file)
-          unset FAILS
-          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
-          ALT_PATCH_NUMBER=2
-          if [[ -n ${FAILS[@]} ]]; then
-               print_to_log "!!! PATCHING FAILED FOR ${FAILS[@]} !!!"
-               echo "### replace ${FAILS[@]} ###" > ${JAR}.log
-               for FAIL in ${FAILS[@]}; do
+
+          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))          
+          #[[ -n ${FAILED_PATCH_QUEUE[@]} ]] && 
+          for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+              patch_matcher
+          done
+          if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then # while ?
+               for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+               # Mostly unartful workarounds so we can manipulate either the patch in FAIL or the FILE
+
+                    FAILED_FILE=${FAILED_PATCH##*/}            #strip path from file
+                    MATCHED_FILE=${FAILED_FILE##*_}            #strip headers from file name
+
+                    # MATCH_PATTERN includes period (e.g. 'FILE.') to avoid globbing extra files (e.g.FILE$2)
+                    MATCH_PATTERN=${MATCHED_FILE%patch}
+
+                    for ITEM in ${FAILS[@]}; do
+                         [[ "$ITEM" =~ "${MATCH_PATTERN}" ]] && FAIL=$ITEM && break
+                    done
+
                     PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
-                    ALTERNATIVE_PATCH=$(ls $PARB/${NAME}$ALT_PATCH_NUMBER*.patch 2>/dev/null)
                     if [ ! -f "$PROVISIONAL" ]; then
-                         if [ -f "$ALTERNATIVE_PATCH" ]; then
-                              printtask "## trying alternative ${NAME} patch ###"
-                              prep_alternate_patch
-                         else
-                              print_error "failed $FAIL in $JAR cannot be remedied"
-                         fi
+                         print_error $MATCH_PATTERN"patch in $JAR cannot be remedied"
                     else
-                         echo "!!! patch error for $FAIL !!!" >> "$LOG"
-                         [[ ${SID[@]} =~ $FAIL ]] && print_error "$FAIL was already replaced before"
+                         print_to_log "!!! patch error for $FAIL !!!"
+                         [[ ${SID[@]} =~ $MATCHED_FILE ]] && print_error "$MATCHED_FILE was already replaced before"
                          copy_prepatched_provisional
+                         patch_matcher
                     fi
                done
           fi
-          [[ $(grep FAILED ${JAR}.log) != "" ]] &&  print_error "failed $NAME.patch"
+          rm -rf ${JAR}.log # needs to be cleared and for the same reason as above
+
+          # Actual application of patches occurs here!
+          for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+               print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
+          done
+          # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
+          [[ $(grep FAILED ${JAR}.log) != "" ]] && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
+          cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
 
      # run special $JAR.sh scripts if any JAR needs special attention 
@@ -1800,13 +1940,29 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           fi
      done
 
-     [[ -n ${APKS[@]} ]] && echo "### apk patch $P/$A/$ROMTYPE/$B ###"
-     echo "### apk patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${APKS[@]} ]] && printtask "### apk patch $P/$A ###"
      for FILE in ${APKS[@]}; do
           APK=${FILE##*/}
+          STRIP_LEVEL=2
+
           if [ -d "tmp/${FILE}.out" ] ; then
+
+          # 3.1 additions here
+          declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$APK"_*patch)
+          unset FAILED_PATCH_QUEUE
+               for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
+                    $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${APK}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
+               done
+               for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+                    patch_matcher
+               done
+
                printtask "... apply $APK.patch ..."
-               $PATCH_BINARY -Nls -p2 -d tmp/${FILE}.out < $PARB/${APK}.patch 2>&1 > ${APK}.log
+          for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+               print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${APK}.log 2>&1
+          done
                cat ${APK}.log >> "$LOG"
 
                if [[ $(grep FAILED ${APK}.log) != "" ]]; then
@@ -1819,22 +1975,22 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                echo "## No $APK in ROM ###" >> "$LOG"
           fi
      done
-     [[ -n ${IMGS[@]} ]] && echo "### img patch $P/$A/$ROMTYPE/$B ###"
-     echo "### img patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$A ###"
      for FILE in ${IMGS[@]}; do
           IMG=${FILE##*/}
+          STRIP_LEVEL=1
           printtask "... applying $IMG.patch ..."
-          $PATCH_BINARY -Nls -p1 -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
+          $PATCH_BINARY -Nls -p$STRIP_LEVEL -d boot/ramdisk < $PARB/${IMG}.patch >> "$LOG" || print_error "failed patching $FILE"
      done
 
 # Text Editing Functions --this can really do just about anything. Needs a working restore!
-     [[ -n ${TXTS[@]} ]] && echo "### text patch $P/$A/$ROMTYPE/$B ###"
-     echo "### text patch $P/$A/$R/$B ###" >> "$LOG"
+     [[ -n ${TXTS[@]} ]] && printtask "### text patch $P/$A ###"
      for FILE in ${TXTS[@]}; do
           TXT=${FILE##*/}
+          STRIP_LEVEL=2
           if [[ -f $PARB/${TXT}.patch ]]; then
                printtask "... apply $TXT.patch ..."
-               $PATCH_BINARY -Nls -p2 -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d system/ < $PARB/${TXT}.patch 2>&1 > ${TXT}.log 
                #cat ${TXT}.log | tee -a "$LOG"
                [[ $(grep FAILED ${TXT}.log) != "" ]] && print_error "failed $TXT.patch"
           fi
@@ -1920,11 +2076,18 @@ for FILE in ${IID[@]}; do
      esac
 done
 
-printtask "### create $UPDATE.zip ###"
-jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
-java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip $UPDATE.zip 2>> "$LOG"
+# Check ERR.log
+cat ${ERR}.log
+if ( [ -s ${ERR}.log ] ); then
+     print_to_log "Unhandled error!" && cat ${ERR}.log >> "$LOG"
+     print_error "There was an unhandled error! Please submit your log!"
+fi
 
-\mv $RESTORE.zip $UPDATE.zip ..
+printtask "### create $UPDATE ###"
+jar -cfv tmp.zip ${IID[@]} ${JID[@]} ${AID[@]} ${CID[@]} ${TID[@]} META-INF >> "$LOG" 2>> "$LOG"
+java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip $UPDATE 2>> "$LOG"
+
+\mv $RESTORE $UPDATE ..
 printtask "### finished ###"
 printtask ""
 printtask "$(colorize_bold ${red}Congratulations), the patching was $(colorize_bold ${red}successful)."
@@ -1933,10 +2096,10 @@ printtask ""
 printtask "!!! Only file a bug report if the software is $(colorize_bold ${grn}not) behaving as expected !!!"
 printtask ""
 echo "to install patched files, flash:"
-printtask "---$(colorize_bold ${grn}$UPDATE.zip)"
+printtask "--- $(colorize_bold ${grn}$UPDATE)"
 echo ""
 printtask "to restore original system, flash:"
-printtask "---$(colorize_bold ${grn}$RESTORE.zip)"
+printtask "--- $(colorize_bold ${grn}$RESTORE)"
 echo ""
 
      # add announcement- optional.

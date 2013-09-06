@@ -1,0 +1,31 @@
+diff -Npru stock-framework/smali/android/app/ContextImpl$41.smali pdroid-framework/smali/android/app/ContextImpl$41.smali
+--- stock-framework/smali/android/app/ContextImpl$41.smali	2013-08-10 20:37:46.163213594 -0700
++++ pdroid-framework/smali/android/app/ContextImpl$41.smali	2013-08-10 20:37:40.619213363 -0700
+@@ -26,17 +26,21 @@
+ 
+ # virtual methods
+ .method public createService(Landroid/app/ContextImpl;)Ljava/lang/Object;
+-    .registers 3
++    .registers 5
+ 
+-    iget-object v0, p1, Landroid/app/ContextImpl;->mMainThread:Landroid/app/ActivityThread;
++    const-string v2, "appops"
+ 
+-    invoke-virtual {v0}, Landroid/app/ActivityThread;->getHandler()Landroid/os/Handler;
++    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+ 
+     move-result-object v0
+ 
+-    invoke-static {p1, v0}, Landroid/net/wimax/WimaxHelper;->createWimaxService(Landroid/content/Context;Landroid/os/Handler;)Ljava/lang/Object;
++    invoke-static {v0}, Lcom/android/internal/app/IAppOpsService$Stub;->asInterface(Landroid/os/IBinder;)Lcom/android/internal/app/IAppOpsService;
+ 
+-    move-result-object v0
++    move-result-object v1
++
++    new-instance v2, Landroid/app/AppOpsManager;
++
++    invoke-direct {v2, p1, v1}, Landroid/app/AppOpsManager;-><init>(Landroid/content/Context;Lcom/android/internal/app/IAppOpsService;)V
+ 
+-    return-object v0
++    return-object v2
+ .end method
