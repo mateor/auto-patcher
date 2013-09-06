@@ -1033,12 +1033,6 @@ proberom () {
                case "$MID" in
                cm*|cyanogenmod*)
                     RID=cm;
-                    # hack to account for Final builds with old code and current build dates. Huge hack, but if there
-                    # is one thing I don't believe in, it's "educating the user-base". Not happening. So hack it is.
-                    if [[ "$CMID" == "10.1.2"* ]] || [[ "$CMID" == "10.1.3"* ]]; then
-                         print_to_log " ### CMID: $CMID: Selecting CM Final Build patches"
-                         BID_OVERRIDE=20130516
-                    fi
                     ;;
                aokp*|teamkang)
                     RID=aokp;
@@ -1169,6 +1163,83 @@ if [ -d ../".git" ]; then
      echo "" >> "$LOG"
 fi
 
+}
+
+context_editor (){
+     # This manages a troublesome class for OpD, ContextImpl. We create a new floating subclass, with
+     #   a different file name for different roms ($ContextImpl$45, or $46 or $41, etc).
+
+     # Counts the number of ContextImpl patches in the decompiled stock jar. Easy enough.
+     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
+
+     # NUMBER will become the OpD-added new subclass
+     CONTEXT_NUMBER=$((${#CONTEXT_FILES[@]} - 3))
+     print_to_log "Matching the created file: ContextImpl\$$CONTEXT_NUMBER"
+
+     # Only returns patches that create new files- it only matches patches with zero subtracted lines
+     CORRECT_CONTEXT_MATCH=( $(find patches/$P/$A/$PROBE_RESULTS -type f -name *ContextImpl* -and -name *"$CONTEXT_NUMBER"*) )
+     for c in ${CONTEXT_MATCH[@]}; do
+          CORRECT_CONTEXT_MATCH=( ${CORRECT_CONTEXT_MATCH[@]} $(grep -HL '^-    ' $c) )
+     done
+
+     # only proceed if match is found TODO change to check for non-zero
+     if ( [[ ${#CORRECT_CONTEXT_MATCH[@]} -gt 0 ]] ); then
+          for context_match in ${CORRECT_CONTEXT_MATCH[@]}; do
+               # strips file name to return path
+               POSSIBLE_CONTEXT_DIR=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
+               break
+          done
+     else
+          print_error "No patch sets create the proper ContextImpl file. Please upload log!"
+     fi
+
+     # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
+     FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
+     PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
+
+     # Add the proper ContextImpl patches to the PATCH_QUEUE
+     print_to_log "There are ${#CORRECT_CONTEXT_MATCH[@]} Context match; Using: $POSSIBLE_CONTEXT_DIR"
+     print_to_log ""
+     CONTEXT_PATCHES=($POSSIBLE_CONTEXT_DIR/*ContextImpl*)
+     for C in ${CONTEXT_PATCHES[@]}; do
+          PATCH_QUEUE+=($C)
+     done
+}
+
+patch_matcher () {
+     # Parse the FAILED_PATCH into a FILE- consequence of switching to "patch" matching instead of file.
+     FAILED_FILE=${FAILED_PATCH##*/}     # strip path from file
+     MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
+
+     unset POSSIBLE_MATCHES
+     PREP_POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name *"$MATCHED_FILE"* )
+
+     # Test for empty and test for too large (100?)
+     ( [ "${#PREP_POSSIBLE_MATCHES[@]}" = 0 ] || [[ "${#PREP_POSSIBLE_MATCHES[@]}" -gt 100 ]] ) && print_error "There are ${#PREP_POSSIBLE_MATCHES[@]} possible matches, that's a problem!"
+
+     # filter out patches that create new files, a silent failure since skipping those patches is stdout
+     for possible in ${PREP_POSSIBLE_MATCHES[@]}; do
+          CHECKED_MATCHES=$(grep -Hl '^-    ' $possible)
+          POSSIBLE_MATCHES=( ${POSSIBLE_MATCHES[@]} "$CHECKED_MATCHES" )
+     done
+
+     # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
+     #    cannot use success of patch process, skipped patch is stderr but okay for us.
+     MATCH_SUCCESS=false
+     for p in ${POSSIBLE_MATCHES[@]}; do
+          $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
+          if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
+                    # This below is temporary debug logging.
+                    print_to_log "Succesful match found! Swapping $p for $FAILED_PATCH!!"
+                    PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
+                    PATCH_QUEUE+=( "$p" )
+                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
+                    MATCH_SUCCESS=true
+                    break
+         fi
+     done
+     cat MATCH.log >> "$LOG" # for now...I have seen some stderr get hidden without this.
+     [ $MATCH_SUCCESS == true ] || print_to_log "We did not find a working patch for $p...looking for other solutions!"                       
 }
 
 if [[ $1 == -h ]]; then
@@ -1650,7 +1721,6 @@ java -jar signapk.jar updatecert.pem updatekey.pk8 tmp.zip signed.zip 2>> "$LOG"
 
 # Begin patching process
 
-     # decompile system files
 printtask "### decompile system files ###"
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
@@ -1663,11 +1733,11 @@ for FILE in ${JID[@]}; do
      fi
 done
 
-     # install framework-files for APK...
+     # install framework-files for apktool
 if [ ${#AID[@]} -gt 0 ]; then
      jar -xvf "$ROMX" system/framework/framework-res.apk >> "$LOG"
      printtask "... installing framework files ..."
-     # have to redirect to /dev/null...oddly framework installation is reported as stderr; bug in apktool.
+     # have to redirect to /dev/null...oddly framework installation reported as stderr; bug in apktool (confirmed).
      java -jar apktool.jar if system/framework/framework-res.apk >> /dev/null 2>&1
      for FILE in ${AID[@]}; do
           APK=${FILE##*/}
@@ -1759,7 +1829,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           fi
      done
 
-     # unconditional smali copying- For particularly troublesome files
+     # unconditional smali copying- For particularly troublesome files TODO: remove. Not needed as of 3.1
      [ -f patches/$P/smali.txt ] && SMALI=$(cat patches/$P/smali.txt)
      [ -f patches/$P/$A/smali.txt ] && SMALI=$(cat patches/$P/$A/smali.txt)
      [ -f patches/$P/$A/$R/smali.txt ] && SMALI=$(cat patches/$P/$A/$R/smali.txt)
@@ -1784,85 +1854,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
      [[ -n ${JARS[@]} ]] && printtask "### jar patch $P/$A ###"
 
 
-     # Iterate through jars and patch. If fails, try prepatched provisionals or look for alternative patch.
-
-context_editor (){
-     # This manages a troublesome class, ContextImpl. We create a new floating subclass, with a different
-     #   file name for different roms ($ContextImpl$45, or $46 or $41, etc).
-
-     # Counts the number of ContextImpl patches in the decompiled stock jar. Easy enough.
-     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
-
-     # NUMBER will become the OpD-added subclass
-     CONTEXT_NUMBER=$((${#CONTEXT_FILES[@]} - 3))
-     print_to_log "Matching the created file: ContextImpl\$$CONTEXT_NUMBER"
-
-     # Only returns patches that create new files- it matches patches w/no subtracted lines
-     CORRECT_CONTEXT_MATCH=( $(find patches/$P/$A/$PROBE_RESULTS -type f -name *ContextImpl* -and -name *"$CONTEXT_NUMBER"*) )
-     for c in ${CONTEXT_MATCH[@]}; do
-          CORRECT_CONTEXT_MATCH=( ${CORRECT_CONTEXT_MATCH[@]} $(grep -HL '^-    ' $c) )
-     done
-
-     # only proceed if match is found TODO change to check for non-zero
-     if ( [[ ${#CORRECT_CONTEXT_MATCH[@]} -gt 0 ]] ); then
-          for context_match in ${CORRECT_CONTEXT_MATCH[@]}; do
-               # strips file name to return path
-               POSSIBLE_CONTEXT_DIR=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
-               break
-          done
-     else
-          print_error "No patch sets create the proper ContextImpl file. Please upload log!"
-     fi
-
-     # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
-     FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
-     PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
-
-     # Add the proper ContextImpl patches to the PATCH_QUEUE
-     print_to_log "There are ${#CORRECT_CONTEXT_MATCH[@]} Context match; Using: $POSSIBLE_CONTEXT_DIR"
-     print_to_log ""
-     CONTEXT_PATCHES=($POSSIBLE_CONTEXT_DIR/*ContextImpl*)
-     for C in ${CONTEXT_PATCHES[@]}; do
-          PATCH_QUEUE+=($C)
-     done
-}
-
-patch_matcher () {
-     # Strip level - If this project continues, we need to simply standardize strip levels.
-
-     FAILED_FILE=${FAILED_PATCH##*/}     # strip path from file
-     MATCHED_FILE=${FAILED_FILE##*_}     # strip headers from file name (e.g.returns 'SipPhone.patch')
-
-     # filter out patches that create new files...number one cause of silent failure
-     unset POSSIBLE_MATCHES # needed?
-     PREP_POSSIBLE_MATCHES=$( find patches/$P/$ANDR -name *"$MATCHED_FILE"* )
-
-     for possible in ${PREP_POSSIBLE_MATCHES[@]}; do
-          CHECKED_MATCHES=$(grep -Hl '^-    ' $possible)
-          POSSIBLE_MATCHES=( ${POSSIBLE_MATCHES[@]} "$CHECKED_MATCHES" )
-     done
-
-     # Somewhere here we need to test for empty and test for too large (100?) #TODO IMPORTANT!
-
-     # MATCH_SUCCESS is solely used to provide a fail message to log. Is there another way?
-     MATCH_SUCCESS=false
-     for p in ${POSSIBLE_MATCHES[@]}; do
-          $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
-          # I was originally just testing the patch command for success...but all ignored fails that way 
-          if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
-                    # This below is temporary debug logging.
-                    print_to_log "Succesful match found! Swapping $p for $FAILED_PATCH!!"
-                    PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
-                    PATCH_QUEUE+=( "$p" )
-                    FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
-                    MATCH_SUCCESS=true
-                    break
-               fi
-     done
-     cat MATCH.log >> "$LOG" # for now...I have seen some stderr get hidden without this.
-     [ $MATCH_SUCCESS == true ] || print_to_log "We did not find a working patch for $p...looking for other solutions!"                       
-}
-
+     # Iterate through jars and patch. If fails, try other patches and prepatched provisionals.
      for (( current_jar=0; current_jar < ${#JARS[@]}; current_jar++)); do
           FILE=${JARS[$current_jar]}
           JAR=${FILE##*/}
@@ -1870,7 +1862,7 @@ patch_matcher () {
           if [[ $FILE == *".jar" ]]; then # allows for *.apks to be decompiled by baksmali
                NAME=${JAR%.jar}
           else
-          # check for abscense of any apks decompiled by baksmali (~* in files.txt). Missing jar will still error
+          # check for abscense of any apks decompiled by baksmali ('@'* in files.txt).
                if [ ! -d "tmp/${FILE}.out" ] ; then
                     echo "No $JAR in your ROM. Not able to patch this file."
                     echo "## No $JAR in ROM ###" >> "$LOG"
@@ -1883,30 +1875,37 @@ patch_matcher () {
           printtask "... apply $NAME.patch ..."
 
           declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
+          declare -a FAILED_PATCH_QUEUE
           # Sanity check for glob
           [[ "${PATCH_QUEUE[0]}" == "patches/$P/$A/$R/$B/$NAME"'_*patch' ]] && print_error "No matching patches!!"
+          # check for INCREMENTAL patches- for hotfixes. To keep us from having to rebuild all patches for small bugs
           [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )
-          declare -a FAILED_PATCH_QUEUE
-          rm -rf {JAR}.log # Needed since we append the patch output now
+
+          # Context Editor handles the ContextImpl class for OpD, which enables the end of user-space romtyping
           [[ "$NAME" == "framework" ]] && [[ "$P" == "openpdroid" ]] && context_editor
+
+          # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
+          rm -rf {JAR}.log # Needed since we append the patch output now
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
-               # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
                $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
           done
 
-          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))          
-          #[[ -n ${FAILED_PATCH_QUEUE[@]} ]] && 
+          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
+
+          # For each fail, try every available patch in the repo-- think of it as an 'exhaustive' patching      
           for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
               patch_matcher
           done
-          if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then # while ?
-               for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
-               # Mostly unartful workarounds so we can manipulate either the patch in FAIL or the FILE
 
+          # If no succesful patches are found- try PROVISIONALS- swap in files we KNOW can patch. USE SPARINGLY!!!
+          if [[ -n ${FAILED_PATCH_QUEUE[@]} ]]; then
+               for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
+
+                    # Mostly unartful workarounds so we can manipulate either the patch in FAIL or the FILE
                     FAILED_FILE=${FAILED_PATCH##*/}            #strip path from file
                     MATCHED_FILE=${FAILED_FILE##*_}            #strip headers from file name
 
-                    # MATCH_PATTERN includes period (e.g. 'FILE.') to avoid globbing extra files (e.g.FILE$2)
+                    # MATCH_PATTERN includes period (e.g. 'FILE.') to avoid globbing extra subclasses (e.g.FILE$2)
                     MATCH_PATTERN=${MATCHED_FILE%patch}
 
                     for ITEM in ${FAILS[@]}; do
@@ -1924,14 +1923,14 @@ patch_matcher () {
                     fi
                done
           fi
-          rm -rf ${JAR}.log # needs to be cleared and for the same reason as above
+          rm -rf ${JAR}.log # needs to be cleared
 
           # Actual application of patches occurs here!
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
                $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
           done
-          # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional (or fail-possible?
+          # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional or fail-possible?
           [[ $(grep FAILED ${JAR}.log) != "" ]] && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
           cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
@@ -1950,12 +1949,10 @@ patch_matcher () {
           STRIP_LEVEL=2
 
           if [ -d "tmp/${FILE}.out" ] ; then
-
-          # 3.1 additions here
-          declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$APK"_*patch)
-          # Sanity check for glob
-          [[ "${PATCH_QUEUE[0]}" == "patches/$P/$A/$R/$B/$APK"'_*patch' ]] && print_error "No matching patches!!"
-          unset FAILED_PATCH_QUEUE
+               declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$APK"_*patch)
+               # Sanity check for glob
+               [[ "${PATCH_QUEUE[0]}" == "patches/$P/$A/$R/$B/$APK"'_*patch' ]] && print_error "No matching patches!!"
+               unset FAILED_PATCH_QUEUE
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
                     $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${APK}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
@@ -1964,11 +1961,12 @@ patch_matcher () {
                     patch_matcher
                done
 
+               # Actual patching done here
                printtask "... apply $APK.patch ..."
-          for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
-               print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
-               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${APK}.log 2>&1
-          done
+               for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
+                    print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
+                    $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${APK}.log 2>&1
+               done
                cat ${APK}.log >> "$LOG"
 
                if [[ $(grep FAILED ${APK}.log) != "" ]]; then
@@ -1977,10 +1975,12 @@ patch_matcher () {
                fi
                garbage tmp/${FILE}.out
           else
+               # For the moment, we allow APKs to be skipped (e.g. Mms.apk for Wifi tablets)
                echo "No $APK in your ROM. Not able to patch this file."
                echo "## No $APK in ROM ###" >> "$LOG"
           fi
      done
+
      [[ -n ${IMGS[@]} ]] && printtask "### img patch $P/$A ###"
      for FILE in ${IMGS[@]}; do
           IMG=${FILE##*/}
@@ -2082,7 +2082,7 @@ for FILE in ${IID[@]}; do
      esac
 done
 
-# Check ERR.log
+# Check ERR.log and return failure if there is any unhandled error.
 cat ${ERR}.log
 if ( [ -s ${ERR}.log ] ); then
      print_to_log "Unhandled error!" && cat ${ERR}.log >> "$LOG"
