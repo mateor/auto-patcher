@@ -151,14 +151,16 @@
 # 2013.08.26. (v3.1.0) The big switch to SMALI.patch instead of JAR.patch. It begins...
 # 2013.08.30. (v3.1.1) Some debugging and add Carbon support
 # 2013.09.04. (v3.1.4) Update context_editor- still struggling with some Cygwin line endings.
+# 2013.09.05. (v3.1.5) Push the 3.1 branch to master...if your rom fails please upload rom and sources!
+
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.41"
+VERSION="v3.1.5"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20130908"
+PATCHES_VERSION="20130909"
 CURRENT_ANDROID="4.3.0"
 
 # pass variables to children
@@ -526,7 +528,7 @@ establish_repo() {
           if ($NETWORK); then
                mv -v auto-patcher/".git" . >> "$LOG"
                rm -rf auto-patcher
-               git checkout -q 3.1 || auto_update_error
+               git checkout -q master || auto_update_error
                git reset --hard 2>&1 >> "$LOG"
                echo ""
           fi
@@ -1293,7 +1295,7 @@ if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
           if !("$NETWORK"); then
                printtask "Updater: not able to run auto_update."
           else
-               COMMITS_BEHIND=$(git rev-list HEAD..origin/3.1 --count)
+               COMMITS_BEHIND=$(git rev-list HEAD..origin/master --count)
                case "$COMMITS_BEHIND" in
                0)
                     printtask "Updater: Auto-Patcher is already up to date"
@@ -1303,7 +1305,7 @@ if [[ "$AUTO_UPDATE" == true ]] && [[ "$GIT" == true ]]; then
                     printtask "... Updater: update found ..."
                     backup_script
                     printtask "... Updating Auto-Patcher ..."
-                    git merge --no-edit origin/3.1 2>&1 >> "$LOG" || auto_update_error
+                    git merge --no-edit origin/master 2>&1 >> "$LOG" || auto_update_error
                     export_log_and_variables
                     printtask "### updated, now rerunning script with latest version ###"
                     $0 "$@"
