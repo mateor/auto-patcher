@@ -10,12 +10,16 @@ rtext = re.compile('^diff -Npru.*/(.*)\.txt$')
 
 if (len(sys.argv) > 1):
     for arg in sys.argv:
-        print arg
         patches.append(arg)
     del patches[0]
 else:
     patches = [ 'core', 'framework', 'services', 'telephony-common', 'Mms.apk' ]
- 
+
+print
+print "Files to be split are: "
+print patches
+print ""
+
 for p in patches:
     name_in = p + '.patch'
     fmt_name_out = p + '_%d_%s.patch'
