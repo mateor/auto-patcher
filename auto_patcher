@@ -1883,6 +1883,8 @@ patch_matcher () {
           printtask "... apply $NAME.patch ..."
 
           declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
+          # Sanity check for glob
+          [[ "${PATCH_QUEUE[0]}" == "patches/$P/$A/$R/$B/$NAME"'_*patch' ]] && print_error "No matching patches!!"
           [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )
           declare -a FAILED_PATCH_QUEUE
           rm -rf {JAR}.log # Needed since we append the patch output now
@@ -1951,6 +1953,8 @@ patch_matcher () {
 
           # 3.1 additions here
           declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$APK"_*patch)
+          # Sanity check for glob
+          [[ "${PATCH_QUEUE[0]}" == "patches/$P/$A/$R/$B/$APK"'_*patch' ]] && print_error "No matching patches!!"
           unset FAILED_PATCH_QUEUE
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
