@@ -158,7 +158,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.55"
+VERSION="v3.1.56"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130913"
 CURRENT_ANDROID="4.3.0"
@@ -1451,6 +1451,7 @@ tar xzf "$TOOL" > /dev/null || print_error "failed extracting tools !!!"
           \mv cygwin/patch.* .
           \mv cygwin/*.exe boot/
           \rm -rf cygwin # why? If you want to we can keep/add it to mac/linux, though.
+          chmod +x patch$EXE # for now. Should already be fixed, I hope.
           ;;
      [Dd]arwin)
           \mv mac/aapt .
@@ -1464,7 +1465,6 @@ tar xzf "$TOOL" > /dev/null || print_error "failed extracting tools !!!"
      esac
 # Ensure aapt permissions - possibly to one day be expanded to all tools in a function.
 chmod a+x aapt$EXE
-chmod +x patch$EXE
 
 printtask "### unzip patch patches ###"
 tar xzf "$PTCH" > /dev/null || print_error "failed extracting patches !!!"
@@ -1879,6 +1879,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                     declare -a JID=( ${JID[@]/$FILE/} )
                     break;
                fi
+               # TODO-- did I mean to have this line after an 'else'?
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
           
