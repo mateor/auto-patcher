@@ -152,6 +152,7 @@
 # 2013.08.30. (v3.1.1) Some debugging and add Carbon support
 # 2013.09.04. (v3.1.4) Update context_editor- still struggling with some Cygwin line endings.
 # 2013.09.05. (v3.1.5) Push the 3.1 branch to master...if your rom fails please upload rom and sources!
+# 2013.09.09.          Fix INCREMENTAL patches
 
 
 # SHELL PROGRAMMING NOTES:
@@ -1944,6 +1945,10 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
           done
           # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional or fail-possible?
+          for ((k=0;k < ${#INCREMENTAL[@]}; k++)) do
+               print_to_log " ...applying ${INCREMENTAL[$k]} ..."
+               $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${INCREMENTAL[$k]} >> ${JAR}.log 2>&1
+          done
           [[ $(grep FAILED ${JAR}.log) != "" ]] && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
           cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
