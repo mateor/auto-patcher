@@ -159,7 +159,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.75"
+VERSION="v3.1.76"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130917"
 CURRENT_ANDROID="4.3.0"
@@ -1925,9 +1925,18 @@ for ((i=0; i < ${#PID[@]}; i++)); do
 
                     for ITEM in ${FAILS[@]}; do
                          [[ "$ITEM" =~ "${MATCH_PATTERN}" ]] && FAIL=$ITEM && break
+                         # debuggging
+                         print_to_log "FAILED_FILE is $FAILED_FILE"
+                         print_to_log "MATCHED_FILE is $MATCHED_FILE"
+                         print_to_log "MATCH_PATTERN IS $MATCH_PATTERN"
+                         print_to_log "ITEM IS $ITEM and FAIL is $FAIL"
                     done
 
                     PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
+                    # debugging
+                    print_to_log "Provisional is $PROVISIONAL"
+                    print_to_log "The contents of the provisional directory are: "
+                    ls patches/$P/$ANDR/.provisionals/${FILE}.out/smali
                     if [ ! -f "$PROVISIONAL" ]; then
                          print_error $MATCH_PATTERN"patch in $JAR cannot be remedied"
                     else
