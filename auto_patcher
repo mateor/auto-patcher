@@ -159,7 +159,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.1.76"
+VERSION="v3.1.77"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20130917"
 CURRENT_ANDROID="4.3.0"
@@ -446,39 +446,6 @@ printtask () {
 
 print_to_log () {
      echo "$@" >> "$LOG"
-}
-
-copy_prepatched_provisional () {
-     print_to_log "File for which patching failed:"
-     print_to_log "---------------------------------------------"
-     print_to_log ""
-     print_to_log "${FAIL##*/}"
-     print_to_log ""
-     print_to_log "---------------------------------------------"
-     print_to_log ""
-     print_to_log "We are adding a pre-patched copy of those files."
-     print_to_log ""
-     print_to_log "Please only file a bug report if running the program gives you problems!!!"
-     print_to_log "... replace $FAIL ..."
-     \rm -rf tmp/${FILE}.out/smali/${FAIL} tmp/${FILE}.out/smali/${FAIL}.orig tmp/${FILE}.out/smali/${FAIL}.rej
-     \cp -av  "$PROVISIONAL" tmp/${FILE}.out/smali/${FAIL} >> "$LOG" 2>&1
-     SID=(${SID[@]} $FAIL)
-     print_to_log "... failed patch sucessfully resolved ..."
-}
-
-prep_alternate_patch () {
-     # Use alt.patch, if exists. Increment in case there are multiple alternates.
-     # DEPRECATED as of the upcoming 3.1.0
-     mv -v $ALTERNATIVE_PATCH $PARB/${NAME}.patch >> "$LOG"
-     ALT_PATCH_NUMBER=$(($ALT_PATCH_NUMBER + 1))
-
-     # Get fresh files/variables + decompile again (use rm b/c privacy files wouldn't get overwritten)
-     # TODO: test patch -R instead of re-decompiling. Should work.
-     rm -rf tmp/${FILE}.out/smali
-     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
-     unset FAILS && unset SID
-     current_jar=$(($current_jar - 1))
-     break
 }
 
 no_network_access () {
@@ -1896,7 +1863,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           unset INCREMENTAL
           [ -f "patches/$P/$A/$R/$B/$NAME"-* ] && declare -a INCREMENTAL=( "patches/$P/$A/$R/$B/$NAME"-* )
 
-          # Context Editor handles the ContextImpl class for OpD, which enables the end of user-space romtyping
+          # Context Editor handles the ContextImpl class for OpD, which enables the end ROMTYPES
           [[ "$NAME" == "framework" ]] && [[ "$P" == "openpdroid" ]] && context_editor
 
           # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
@@ -1905,9 +1872,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
           done
 
-          FAILS=($(grep FAILED ${JAR}.log | sed -e 's/.*smali\///' | sed -e 's/\.rej//'))
-
-          # For each fail, try every available patch in the repo-- think of it as an 'exhaustive' patching      
+          # For each failed patch, try all available patches-- think of it as 'exhaustive' patching
           for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
               patch_matcher
           done
@@ -1922,27 +1887,21 @@ for ((i=0; i < ${#PID[@]}; i++)); do
 
                     # MATCH_PATTERN includes period (e.g. 'FILE.') to avoid globbing extra subclasses (e.g.FILE$2)
                     MATCH_PATTERN=${MATCHED_FILE%patch}
+                    PROVISIONAL_DIR="patches/$P/$ANDR/.provisionals/${FILE}.out"
+                    PROVISIONAL=$(find $PROVISIONAL_DIR -name *"$MATCH_PATTERN"* )
 
-                    for ITEM in ${FAILS[@]}; do
-                         [[ "$ITEM" =~ "${MATCH_PATTERN}" ]] && FAIL=$ITEM && break
-                         # debuggging
-                         print_to_log "FAILED_FILE is $FAILED_FILE"
-                         print_to_log "MATCHED_FILE is $MATCHED_FILE"
-                         print_to_log "MATCH_PATTERN IS $MATCH_PATTERN"
-                         print_to_log "ITEM IS $ITEM and FAIL is $FAIL"
-                    done
-
-                    PROVISIONAL="patches/$P/$ANDR/.provisionals/${FILE}.out/smali/${FAIL}"
-                    # debugging
+                    # debug
+                    print_to_log "FAILED_FILE is $FAILED_FILE"
+                    print_to_log "MATCHED_FILE is $MATCHED_FILE"
+                    print_to_log "MATCH_PATTERN IS $MATCH_PATTERN"
                     print_to_log "Provisional is $PROVISIONAL"
-                    print_to_log "The contents of the provisional directory are: "
-                    ls patches/$P/$ANDR/.provisionals/${FILE}.out/smali
+
                     if [ ! -f "$PROVISIONAL" ]; then
                          print_error $MATCH_PATTERN"patch in $JAR cannot be remedied"
                     else
-                         print_to_log "!!! patch error for $FAIL !!!"
-                         [[ ${SID[@]} =~ $MATCHED_FILE ]] && print_error "$MATCHED_FILE was already replaced before"
-                         copy_prepatched_provisional
+                         print_to_log "!!! patch error for ${MATCH_PATTERN}smali !!!"
+                         print_to_log "We are substituting a patchable version of ${MATCH_PATTERN}smali"
+                         \mv -v  "$PROVISIONAL" tmp/${FILE}.out/${PROVISIONAL##*.out/} >> "$LOG" 2>&1 && print_to_log "... failed patch sucessfully resolved ..."
                          patch_matcher
                     fi
                done
