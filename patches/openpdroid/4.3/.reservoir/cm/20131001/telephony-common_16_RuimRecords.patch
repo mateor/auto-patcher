@@ -1,0 +1,169 @@
+diff -Npruw stock-telephony/smali/com/android/internal/telephony/uicc/RuimRecords.smali pdroid-telephony/smali/com/android/internal/telephony/uicc/RuimRecords.smali
+--- stock-telephony/smali/com/android/internal/telephony/uicc/RuimRecords.smali	2013-10-01 11:49:15.506218566 -0500
++++ pdroid-telephony/smali/com/android/internal/telephony/uicc/RuimRecords.smali	2013-10-01 11:49:05.826218852 -0500
+@@ -1761,18 +1761,17 @@
+     :try_start_32
+     iget v6, p1, Landroid/os/Message;->what:I
+ 
+-    sparse-switch v6, :sswitch_data_11c
++    sparse-switch v6, :sswitch_data_11e
+ 
+     invoke-super {p0, p1}, Lcom/android/internal/telephony/uicc/IccRecords;->handleMessage(Landroid/os/Message;)V
+     :try_end_3a
+-    .catchall {:try_start_32 .. :try_end_3a} :catchall_55
++    .catchall {:try_start_32 .. :try_end_3a} :catchall_58
+     .catch Ljava/lang/RuntimeException; {:try_start_32 .. :try_end_3a} :catch_44
+ 
+     :cond_3a
+     :goto_3a
+     if-eqz v4, :cond_31
+ 
+-    :goto_3c
+     invoke-virtual {p0}, Lcom/android/internal/telephony/uicc/RuimRecords;->onRecordLoaded()V
+ 
+     goto :goto_31
+@@ -1781,7 +1780,7 @@
+     :try_start_40
+     invoke-virtual {p0}, Lcom/android/internal/telephony/uicc/RuimRecords;->onReady()V
+     :try_end_43
+-    .catchall {:try_start_40 .. :try_end_43} :catchall_55
++    .catchall {:try_start_40 .. :try_end_43} :catchall_58
+     .catch Ljava/lang/RuntimeException; {:try_start_40 .. :try_end_43} :catch_44
+ 
+     goto :goto_3a
+@@ -1796,35 +1795,37 @@
+ 
+     invoke-static {v6, v7, v3}, Landroid/telephony/Rlog;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+     :try_end_4c
+-    .catchall {:try_start_45 .. :try_end_4c} :catchall_55
++    .catchall {:try_start_45 .. :try_end_4c} :catchall_58
+ 
+     if-eqz v4, :cond_31
+ 
+-    goto :goto_3c
++    invoke-virtual {p0}, Lcom/android/internal/telephony/uicc/RuimRecords;->onRecordLoaded()V
++
++    goto :goto_31
+ 
+-    :sswitch_4f
+-    :try_start_4f
++    :sswitch_52
++    :try_start_52
+     const-string v6, "Event EVENT_GET_DEVICE_IDENTITY_DONE Received"
+ 
+     invoke-virtual {p0, v6}, Lcom/android/internal/telephony/uicc/RuimRecords;->log(Ljava/lang/String;)V
+-    :try_end_54
+-    .catchall {:try_start_4f .. :try_end_54} :catchall_55
+-    .catch Ljava/lang/RuntimeException; {:try_start_4f .. :try_end_54} :catch_44
++    :try_end_57
++    .catchall {:try_start_52 .. :try_end_57} :catchall_58
++    .catch Ljava/lang/RuntimeException; {:try_start_52 .. :try_end_57} :catch_44
+ 
+     goto :goto_3a
+ 
+-    :catchall_55
++    :catchall_58
+     move-exception v6
+ 
+-    if-eqz v4, :cond_5b
++    if-eqz v4, :cond_5e
+ 
+     invoke-virtual {p0}, Lcom/android/internal/telephony/uicc/RuimRecords;->onRecordLoaded()V
+ 
+-    :cond_5b
++    :cond_5e
+     throw v6
+ 
+-    :sswitch_5c
+-    :try_start_5c
++    :sswitch_5f
++    :try_start_5f
+     iget-object v1, p1, Landroid/os/Message;->obj:Ljava/lang/Object;
+ 
+     check-cast v1, Landroid/os/AsyncResult;
+@@ -1897,7 +1898,7 @@
+ 
+     goto :goto_3a
+ 
+-    :sswitch_a0
++    :sswitch_a3
+     const/4 v4, 0x1
+ 
+     iget-object v1, p1, Landroid/os/Message;->obj:Ljava/lang/Object;
+@@ -1952,7 +1953,7 @@
+ 
+     goto/16 :goto_3a
+ 
+-    :sswitch_d3
++    :sswitch_d6
+     iget-object v1, p1, Landroid/os/Message;->obj:Ljava/lang/Object;
+ 
+     check-cast v1, Landroid/os/AsyncResult;
+@@ -1971,7 +1972,7 @@
+ 
+     goto/16 :goto_3a
+ 
+-    :sswitch_e6
++    :sswitch_e9
+     const-string v6, "RuimRecords"
+ 
+     new-instance v7, Ljava/lang/StringBuilder;
+@@ -1998,14 +1999,14 @@
+ 
+     goto/16 :goto_3a
+ 
+-    :sswitch_102
++    :sswitch_105
+     const-string v6, "Event EVENT_GET_SST_DONE Received"
+ 
+     invoke-virtual {p0, v6}, Lcom/android/internal/telephony/uicc/RuimRecords;->log(Ljava/lang/String;)V
+ 
+     goto/16 :goto_3a
+ 
+-    :sswitch_109
++    :sswitch_10c
+     const/4 v4, 0x0
+ 
+     iget-object v1, p1, Landroid/os/Message;->obj:Ljava/lang/Object;
+@@ -2021,27 +2022,25 @@
+     check-cast v6, Lcom/android/internal/telephony/uicc/IccRefreshResponse;
+ 
+     invoke-direct {p0, v6}, Lcom/android/internal/telephony/uicc/RuimRecords;->handleRuimRefresh(Lcom/android/internal/telephony/uicc/IccRefreshResponse;)V
+-    :try_end_119
+-    .catchall {:try_start_5c .. :try_end_119} :catchall_55
+-    .catch Ljava/lang/RuntimeException; {:try_start_5c .. :try_end_119} :catch_44
++    :try_end_11c
++    .catchall {:try_start_5f .. :try_end_11c} :catchall_58
++    .catch Ljava/lang/RuntimeException; {:try_start_5f .. :try_end_11c} :catch_44
+ 
+     goto/16 :goto_3a
+ 
+-    nop
+-
+-    :sswitch_data_11c
++    :sswitch_data_11e
+     .sparse-switch
+         0x1 -> :sswitch_40
+-        0x4 -> :sswitch_4f
+-        0x5 -> :sswitch_a0
+-        0xa -> :sswitch_5c
+-        0xe -> :sswitch_d3
+-        0x11 -> :sswitch_102
+-        0x12 -> :sswitch_e6
+-        0x13 -> :sswitch_e6
+-        0x15 -> :sswitch_e6
+-        0x16 -> :sswitch_e6
+-        0x1f -> :sswitch_109
++        0x4 -> :sswitch_52
++        0x5 -> :sswitch_a3
++        0xa -> :sswitch_5f
++        0xe -> :sswitch_d6
++        0x11 -> :sswitch_105
++        0x12 -> :sswitch_e9
++        0x13 -> :sswitch_e9
++        0x15 -> :sswitch_e9
++        0x16 -> :sswitch_e9
++        0x1f -> :sswitch_10c
+     .end sparse-switch
+ .end method
+ 
