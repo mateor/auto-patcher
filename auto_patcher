@@ -222,7 +222,7 @@ brief_help () {
      echo ""
      echo "Use ./auto_patcher -h for the help menu"
      echo ""
-     printtask "  If your deodexed rom is not on the supported list and you want it added:"
+     printtask "  If your rom is not on the supported list and you want it added:"
      printtask "\t- Upload your log and a link to the rom's source code (mandatory)"
      printtask "\t   and be patient, please!"
      echo ""
@@ -420,7 +420,7 @@ misspatch_error () {
 }
 
 misstools_error () {
-     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      printtask "!! error: $@ "
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      printtask "Your set-up is missing a dependency."
@@ -449,21 +449,6 @@ printtask () {
 
 print_to_log () {
      echo "$@" >> "$LOG"
-}
-
-check_odex () {
-     jar -xvf "$ROMX" system/framework/framework.odex >> "$LOG" && odex_error "You are attempting to patch a stock odexed rom!"
-}
-
-odex_error () {
-     echo ""
-     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-     printtask "!! error: $@ "
-     printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-     echo ""
-     printtask "At this point, we only support deodexed roms, like CyanogenMod or AOKP."
-     echo ""
-     brief_help
 }
 
 no_network_access () {
@@ -1732,7 +1717,7 @@ printtask "### decompile system files ###"
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... decompile $JAR ..."
-     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG" || check_odex
+     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG"
      if [ $FILE == "system/framework/framework.jar" ]; then
           printtask "... extract preloaded-classes ..."
           jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
