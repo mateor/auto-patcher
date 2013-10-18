@@ -162,7 +162,7 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.2.11"
+VERSION="v3.2.12"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20131015"
 CURRENT_ANDROID="4.3.1"
@@ -1076,17 +1076,14 @@ proberom () {
 build_query() {
 UTC=$(getbuildprop ro.build.date.utc)
 
-# Difference in how OS X and Linux/Cygwin handles 'date' utility
-case $(uname -s) in
-[Dd]arwin)
-     BDID=$(date -r $UTC +%Y%m%d)
-     print_to_log "#### Darwin Build Query used ####"
-     ;;
-*)
+# Determine whether using BSD or GNU date utility
+if date --version >/dev/null 2>&1 ; then
      BDID=$(date -d "1970-01-01 UTC $UTC seconds" +"%Y%m%d")
-     print_to_log "#### Standard Build Query ####"
-     ;;
-esac
+     print_to_log "#### GNU Build Query ####"
+else
+     BDID=$(date -r $UTC +%Y%m%d)
+     print_to_log "#### BSD Build Query used ####"
+fi
 
 # If patch date is specified on CLI, use that patch date
 if [ $# -gt 3 ]; then
