@@ -9,7 +9,7 @@ if [ $# -gt 0 ]; then
      args=( ${args[@]//*'split_patch'*} )
 fi
 
-python ~/android/auto3/ap_scripts/split_patch_opd.py ${args[@]}
+python ~/android/auto-patcher/ap_scripts/split_patch_opd.py ${args[@]}
 
 files=(*_*_*patch)
 echo "files are ${files[@]}"
