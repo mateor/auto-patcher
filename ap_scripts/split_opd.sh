@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+
 # This allows to pass arguments, so can split AND remove files at once.
 if [ $# -gt 0 ]; then
      for FILE in $@; do
@@ -30,10 +31,12 @@ if [ $# -gt 0 ]; then
      args=( ${args[@]//*'split_patch'*} )
 fi
 
-python ~/android/auto-patcher/ap_scripts/split_patch_opd.py ${args[@]}
+python ~/android/auto-patcher/ap_scripts/split_patch_mod.py ${args[@]}
 
 files=(*_*_*patch)
 echo "files are ${files[@]}"
+
+# TODO make sure there is only one of each, as in delete all old ${smali}.patches before splitting.
 
 wanted_patches=( "*preloaded*" "*ContextImpl*patch" "*Instrumentation*patch" "*ContentResolver*patch" "*Camera*patch" "*NetworkInfo*patch" "*SystemProperties*patch" "*Settings*patch" "*MicrophoneInput*patch" "*AudioRecord*patch" "*MediaRecorder*patch" "*preloaded-classes*patch" "*IPrivacy*patch"  "*Privacy*patch" "*BroadcastQueue*patch" "*PhoneStateListener*patch" "*ServiceState*patch" "*WifiInfo*patch" "*ProcessManager*patch" "*HttpUtils*patch" "*ServerThread*patch" "*TelephonyRegistry*patch" "*CDMAPhone*patch" "Cdma*patch" "*Ruim*patch" "*GSMPhone*patch" "*GsmServiceStateTracker*patch" "*SimSmsInterfaceManager*patch" "*VoiceMailConstants*patch" "*PhoneFactory*patch" "*RIL*Sender*patch" "*Sip*patch" "*SMSDispatcher*patch" "*IccSmsInterfaceManager*patch")
 for f in ${files[@]}; do
