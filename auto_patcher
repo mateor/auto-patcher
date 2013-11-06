@@ -1482,6 +1482,8 @@ tar xzf "$TOOL" > /dev/null || print_error "failed extracting tools !!!"
           \mv cygwin/*.exe boot/
           \rm -rf cygwin # why? If you want to we can keep/add it to mac/linux, though.
           chmod +x patch$EXE # for now. Should already be fixed, I hope.
+          print_to_log "patch is $(whereis patch)"
+          print_to_log ""
           ;;
      [Dd]arwin)
           \mv mac/aapt .
@@ -1950,16 +1952,9 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                     PROVISIONAL_DIR="patches/$P/$ANDR/.provisionals/${FILE}.out"
                     PROVISIONAL=$(find $PROVISIONAL_DIR -name *"$MATCH_PATTERN"* )
 
-                    # debug
-                    print_to_log "FAILED_FILE is $FAILED_FILE"
-                    print_to_log "MATCHED_FILE is $MATCHED_FILE"
-                    print_to_log "MATCH_PATTERN IS $MATCH_PATTERN"
-                    print_to_log "Provisional is $PROVISIONAL"
-
                     if [ ! -f "$PROVISIONAL" ]; then
                          print_error $MATCH_PATTERN"patch in $JAR cannot be remedied"
                     else
-                         print_to_log "!!! patch error for ${MATCH_PATTERN}smali !!!"
                          print_to_log "We are substituting a patchable version of ${MATCH_PATTERN}smali"
                          \mv -v  "$PROVISIONAL" tmp/${FILE}.out/${PROVISIONAL##*.out/} >> "$LOG" 2>&1 && print_to_log "... failed patch sucessfully resolved ..."
                          patch_matcher
