@@ -1,7 +1,7 @@
 diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.smali pdroid-framework*/smali/android/privacy/PrivacyPersistenceAdapter.smali
 --- stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.smali	1969-12-31 18:00:00.000000000 -0600
-+++ pdroid-framework*/smali/android/privacy/PrivacyPersistenceAdapter.smali	2013-11-10 01:24:58.623420785 -0600
-@@ -0,0 +1,5140 @@
++++ pdroid-framework*/smali/android/privacy/PrivacyPersistenceAdapter.smali	2013-11-11 23:28:41.299074099 -0600
+@@ -0,0 +1,5162 @@
 +.class public final Landroid/privacy/PrivacyPersistenceAdapter;
 +.super Ljava/lang/Object;
 +.source "PrivacyPersistenceAdapter.java"
@@ -14,7 +14,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.field private static final CREATE_TABLE_SETTINGS:Ljava/lang/String; = "CREATE TABLE IF NOT EXISTS settings (  _id INTEGER PRIMARY KEY AUTOINCREMENT,  packageName TEXT,  uid INTEGER,  deviceIdSetting INTEGER,  deviceId TEXT,  line1NumberSetting INTEGER,  line1Number TEXT,  locationGpsSetting INTEGER,  locationGpsLat TEXT,  locationGpsLon TEXT,  locationNetworkSetting INTEGER,  locationNetworkLat TEXT,  locationNetworkLon TEXT,  networkInfoSetting INTEGER,  simInfoSetting INTEGER,  simSerialNumberSetting INTEGER,  simSerialNumber TEXT,  subscriberIdSetting INTEGER,  subscriberId TEXT,  accountsSetting INTEGER,  accountsAuthTokensSetting INTEGER,  outgoingCallsSetting INTEGER,  incomingCallsSetting INTEGER,  contactsSetting INTEGER,  calendarSetting INTEGER,  mmsSetting INTEGER,  smsSetting INTEGER,  callLogSetting INTEGER,  bookmarksSetting INTEGER,  systemLogsSetting INTEGER,  externalStorageSetting INTEGER,  cameraSetting INTEGER,  recordAudioSetting INTEGER,  notificationSetting INTEGER,  intentBootCompletedSetting INTEGER, smsSendSetting INTEGER, phoneCallSetting INTEGER, ipTableProtectSetting INTEGER, iccAccessSetting INTEGER, addOnManagementSetting INTEGER, androidIdSetting INTEGER, androidId TEXT, wifiInfoSetting INTEGER, switchConnectivitySetting INTEGER, sendMmsSetting INTEGER, forceOnlineState INTEGER, switchWifiStateSetting INTEGER);"
 +
-+.field private static final DATABASE_FIELDS:[Ljava/lang/String; = null
++.field private static final DATABASE_FIELDS:[Ljava/lang/String;
 +
 +.field private static final DATABASE_FILE:Ljava/lang/String; = "/data/system/privacy.db"
 +
@@ -406,6 +406,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method public constructor <init>(Landroid/content/Context;)V
 +    .registers 4
++    .param p1    # Landroid/content/Context;
 +
 +    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 +
@@ -602,7 +603,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    const/4 v3, 0x0
 +
-+    const/high16 v4, 0x1000
++    const/high16 v4, 0x10000000
 +
 +    invoke-static {v2, v3, v4}, Landroid/database/sqlite/SQLiteDatabase;->openDatabase(Ljava/lang/String;Landroid/database/sqlite/SQLiteDatabase$CursorFactory;I)Landroid/database/sqlite/SQLiteDatabase;
 +
@@ -690,6 +691,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method private deleteRecursive(Ljava/io/File;)V
 +    .registers 7
++    .param p1    # Ljava/io/File;
 +
 +    invoke-virtual {p1}, Ljava/io/File;->isDirectory()Z
 +
@@ -824,6 +826,15 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method private query(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
 +    .registers 16
++    .param p1    # Landroid/database/sqlite/SQLiteDatabase;
++    .param p2    # Ljava/lang/String;
++    .param p3    # [Ljava/lang/String;
++    .param p4    # Ljava/lang/String;
++    .param p5    # [Ljava/lang/String;
++    .param p6    # Ljava/lang/String;
++    .param p7    # Ljava/lang/String;
++    .param p8    # Ljava/lang/String;
++    .param p9    # Ljava/lang/String;
 +    .annotation system Ldalvik/annotation/Throws;
 +        value = {
 +            Ljava/lang/Exception;
@@ -901,6 +912,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method private rawQuery(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;)Landroid/database/Cursor;
 +    .registers 9
++    .param p1    # Landroid/database/sqlite/SQLiteDatabase;
++    .param p2    # Ljava/lang/String;
 +    .annotation system Ldalvik/annotation/Throws;
 +        value = {
 +            Ljava/lang/Exception;
@@ -1039,8 +1052,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    monitor-enter v15
 +    :try_end_35
-+    .catchall {:try_start_32 .. :try_end_35} :catchall_11e
 +    .catch Landroid/database/SQLException; {:try_start_32 .. :try_end_35} :catch_e6
++    .catchall {:try_start_32 .. :try_end_35} :catchall_11e
 +
 +    :try_start_35
 +    sget-object v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
@@ -1084,8 +1097,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v14}, Ljava/util/concurrent/locks/Lock;->lock()V
 +    :try_end_5b
-+    .catchall {:try_start_46 .. :try_end_5b} :catchall_11e
 +    .catch Landroid/database/SQLException; {:try_start_46 .. :try_end_5b} :catch_e6
++    .catchall {:try_start_46 .. :try_end_5b} :catchall_11e
 +
 +    :try_start_5b
 +    sget v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
@@ -1239,8 +1252,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +    :try_start_e5
 +    throw v14
 +    :try_end_e6
-+    .catchall {:try_start_e5 .. :try_end_e6} :catchall_11e
 +    .catch Landroid/database/SQLException; {:try_start_e5 .. :try_end_e6} :catch_e6
++    .catchall {:try_start_e5 .. :try_end_e6} :catchall_11e
 +
 +    :catch_e6
 +    move-exception v4
@@ -1290,8 +1303,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v14}, Ljava/util/concurrent/locks/Lock;->unlock()V
 +    :try_end_109
-+    .catchall {:try_start_100 .. :try_end_109} :catchall_11e
 +    .catch Landroid/database/SQLException; {:try_start_100 .. :try_end_109} :catch_e6
++    .catchall {:try_start_100 .. :try_end_109} :catchall_11e
 +
 +    :cond_109
 +    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
@@ -1322,8 +1335,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    throw v14
 +    :try_end_11e
-+    .catchall {:try_start_114 .. :try_end_11e} :catchall_11e
 +    .catch Landroid/database/SQLException; {:try_start_114 .. :try_end_11e} :catch_e6
++    .catchall {:try_start_114 .. :try_end_11e} :catchall_11e
 +
 +    :catchall_11e
 +    move-exception v14
@@ -1352,6 +1365,9 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method private writeExternalSettings(Ljava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)Z
 +    .registers 12
++    .param p1    # Ljava/lang/String;
++    .param p2    # Ljava/lang/String;
++    .param p3    # Landroid/privacy/PrivacySettings;
 +    .annotation system Ldalvik/annotation/Throws;
 +        value = {
 +            Ljava/lang/Exception;
@@ -1505,8 +1521,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-virtual {v4}, Ljava/io/OutputStreamWriter;->close()V
 +    :try_end_99
-+    .catchall {:try_start_51 .. :try_end_99} :catchall_d1
 +    .catch Ljava/io/IOException; {:try_start_51 .. :try_end_99} :catch_c7
++    .catchall {:try_start_51 .. :try_end_99} :catchall_d1
 +
 +    const/4 v1, 0x1
 +
@@ -1554,8 +1570,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-virtual {v4, v5}, Ljava/io/OutputStreamWriter;->append(Ljava/lang/CharSequence;)Ljava/io/Writer;
 +    :try_end_c6
-+    .catchall {:try_start_a4 .. :try_end_c6} :catchall_d1
 +    .catch Ljava/io/IOException; {:try_start_a4 .. :try_end_c6} :catch_c7
++    .catchall {:try_start_a4 .. :try_end_c6} :catchall_d1
 +
 +    goto :goto_93
 +
@@ -1591,6 +1607,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +# virtual methods
 +.method public deleteSettings(Ljava/lang/String;)Z
 +    .registers 16
++    .param p1    # Ljava/lang/String;
 +
 +    const/4 v11, 0x1
 +
@@ -1601,9 +1618,9 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    monitor-enter v2
 +    :try_end_5
-+    .catchall {:try_start_2 .. :try_end_5} :catchall_14d
 +    .catch Landroid/database/sqlite/SQLiteException; {:try_start_2 .. :try_end_5} :catch_103
 +    .catch Ljava/lang/Exception; {:try_start_2 .. :try_end_5} :catch_140
++    .catchall {:try_start_2 .. :try_end_5} :catchall_14d
 +
 +    :try_start_5
 +    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
@@ -1639,9 +1656,9 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->lock()V
 +    :try_end_23
-+    .catchall {:try_start_16 .. :try_end_23} :catchall_14d
 +    .catch Landroid/database/sqlite/SQLiteException; {:try_start_16 .. :try_end_23} :catch_103
 +    .catch Ljava/lang/Exception; {:try_start_16 .. :try_end_23} :catch_140
++    .catchall {:try_start_16 .. :try_end_23} :catchall_14d
 +
 +    :try_start_23
 +    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->beginTransaction()V
@@ -1867,9 +1884,9 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->unlock()V
 +    :try_end_fc
-+    .catchall {:try_start_f3 .. :try_end_fc} :catchall_14d
 +    .catch Landroid/database/sqlite/SQLiteException; {:try_start_f3 .. :try_end_fc} :catch_103
 +    .catch Ljava/lang/Exception; {:try_start_f3 .. :try_end_fc} :catch_140
++    .catchall {:try_start_f3 .. :try_end_fc} :catchall_14d
 +
 +    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
 +
@@ -1887,9 +1904,9 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +    :try_start_102
 +    throw v1
 +    :try_end_103
-+    .catchall {:try_start_102 .. :try_end_103} :catchall_14d
 +    .catch Landroid/database/sqlite/SQLiteException; {:try_start_102 .. :try_end_103} :catch_103
 +    .catch Ljava/lang/Exception; {:try_start_102 .. :try_end_103} :catch_140
++    .catchall {:try_start_102 .. :try_end_103} :catchall_14d
 +
 +    :catch_103
 +    move-exception v9
@@ -1967,9 +1984,9 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    throw v1
 +    :try_end_140
-+    .catchall {:try_start_136 .. :try_end_140} :catchall_14d
 +    .catch Landroid/database/sqlite/SQLiteException; {:try_start_136 .. :try_end_140} :catch_103
 +    .catch Ljava/lang/Exception; {:try_start_136 .. :try_end_140} :catch_140
++    .catchall {:try_start_136 .. :try_end_140} :catchall_14d
 +
 +    :catch_140
 +    move-exception v9
@@ -1999,6 +2016,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method public getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
 +    .registers 59
++    .param p1    # Ljava/lang/String;
 +
 +    const/16 v56, 0x0
 +
@@ -2152,8 +2170,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-static {v1, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_85
-+    .catchall {:try_start_4b .. :try_end_85} :catchall_35f
 +    .catch Ljava/lang/Exception; {:try_start_4b .. :try_end_85} :catch_363
++    .catchall {:try_start_4b .. :try_end_85} :catchall_35f
 +
 +    move-object/from16 v3, v56
 +
@@ -2168,8 +2186,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-virtual {v1, v0, v3}, Landroid/util/LruCache;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 +    :try_end_90
-+    .catchall {:try_start_89 .. :try_end_90} :catchall_33e
 +    .catch Ljava/lang/Exception; {:try_start_89 .. :try_end_90} :catch_307
++    .catchall {:try_start_89 .. :try_end_90} :catchall_33e
 +
 +    :goto_90
 +    if-eqz v54, :cond_95
@@ -2779,8 +2797,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-direct/range {v3 .. v51}, Landroid/privacy/PrivacySettings;-><init>(Ljava/lang/Integer;Ljava/lang/String;IBLjava/lang/String;BLjava/lang/String;BLjava/lang/String;Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;BBBLjava/lang/String;BLjava/lang/String;BBBBBBBBBBBBBBBB[IBBBBBBLjava/lang/String;BBBBB)V
 +    :try_end_2b9
-+    .catchall {:try_start_b6 .. :try_end_2b9} :catchall_35f
 +    .catch Ljava/lang/Exception; {:try_start_b6 .. :try_end_2b9} :catch_363
++    .catchall {:try_start_b6 .. :try_end_2b9} :catchall_35f
 +
 +    :try_start_2b9
 +    const-string v6, "allowed_contacts"
@@ -2870,8 +2888,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    aput v4, v52, v1
 +    :try_end_306
-+    .catchall {:try_start_2b9 .. :try_end_306} :catchall_33e
 +    .catch Ljava/lang/Exception; {:try_start_2b9 .. :try_end_306} :catch_307
++    .catchall {:try_start_2b9 .. :try_end_306} :catchall_33e
 +
 +    goto :goto_2f3
 +
@@ -2931,8 +2949,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-virtual {v3, v0}, Landroid/privacy/PrivacySettings;->setAllowedContacts([I)V
 +    :try_end_33c
-+    .catchall {:try_start_337 .. :try_end_33c} :catchall_33e
 +    .catch Ljava/lang/Exception; {:try_start_337 .. :try_end_33c} :catch_307
++    .catchall {:try_start_337 .. :try_end_33c} :catchall_33e
 +
 +    goto/16 :goto_87
 +
@@ -2969,8 +2987,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-virtual {v1, v0, v4}, Landroid/util/LruCache;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 +    :try_end_35d
-+    .catchall {:try_start_351 .. :try_end_35d} :catchall_33e
 +    .catch Ljava/lang/Exception; {:try_start_351 .. :try_end_35d} :catch_307
++    .catchall {:try_start_351 .. :try_end_35d} :catchall_33e
 +
 +    goto/16 :goto_90
 +
@@ -2996,6 +3014,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method public getValue(Ljava/lang/String;)Ljava/lang/String;
 +    .registers 15
++    .param p1    # Ljava/lang/String;
 +
 +    const/4 v0, 0x0
 +
@@ -3167,8 +3186,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v10}, Landroid/database/Cursor;->close()V
 +    :try_end_87
-+    .catchall {:try_start_4f .. :try_end_87} :catchall_d1
 +    .catch Ljava/lang/Exception; {:try_start_4f .. :try_end_87} :catch_ae
++    .catchall {:try_start_4f .. :try_end_87} :catchall_d1
 +
 +    :goto_87
 +    :try_start_87
@@ -3213,8 +3232,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-static {v0, v2}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_ad
-+    .catchall {:try_start_95 .. :try_end_ad} :catchall_d1
 +    .catch Ljava/lang/Exception; {:try_start_95 .. :try_end_ad} :catch_ae
++    .catchall {:try_start_95 .. :try_end_ad} :catchall_d1
 +
 +    goto :goto_87
 +
@@ -3329,8 +3348,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    monitor-enter v4
 +    :try_end_30
-+    .catchall {:try_start_2d .. :try_end_30} :catchall_11b
 +    .catch Ljava/lang/Exception; {:try_start_2d .. :try_end_30} :catch_56
++    .catchall {:try_start_2d .. :try_end_30} :catchall_11b
 +
 +    :try_start_30
 +    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
@@ -3366,8 +3385,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-static {v2, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_4e
-+    .catchall {:try_start_41 .. :try_end_4e} :catchall_11b
 +    .catch Ljava/lang/Exception; {:try_start_41 .. :try_end_4e} :catch_56
++    .catchall {:try_start_41 .. :try_end_4e} :catchall_11b
 +
 +    const/4 v2, 0x0
 +
@@ -3387,8 +3406,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +    :try_start_55
 +    throw v2
 +    :try_end_56
-+    .catchall {:try_start_55 .. :try_end_56} :catchall_11b
 +    .catch Ljava/lang/Exception; {:try_start_55 .. :try_end_56} :catch_56
++    .catchall {:try_start_55 .. :try_end_56} :catchall_11b
 +
 +    :catch_56
 +    move-exception v16
@@ -3423,8 +3442,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v2}, Ljava/util/concurrent/locks/Lock;->lock()V
 +    :try_end_71
-+    .catchall {:try_start_68 .. :try_end_71} :catchall_11b
 +    .catch Ljava/lang/Exception; {:try_start_68 .. :try_end_71} :catch_56
++    .catchall {:try_start_68 .. :try_end_71} :catchall_11b
 +
 +    const/4 v15, 0x0
 +
@@ -3589,8 +3608,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v2}, Ljava/util/concurrent/locks/Lock;->unlock()V
 +    :try_end_101
-+    .catchall {:try_start_f8 .. :try_end_101} :catchall_11b
 +    .catch Ljava/lang/Exception; {:try_start_f8 .. :try_end_101} :catch_56
++    .catchall {:try_start_f8 .. :try_end_101} :catchall_11b
 +
 +    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
 +
@@ -3625,8 +3644,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    throw v2
 +    :try_end_11b
-+    .catchall {:try_start_111 .. :try_end_11b} :catchall_11b
 +    .catch Ljava/lang/Exception; {:try_start_111 .. :try_end_11b} :catch_56
++    .catchall {:try_start_111 .. :try_end_11b} :catchall_11b
 +
 +    :catchall_11b
 +    move-exception v2
@@ -3638,6 +3657,7 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method public saveSettings(Landroid/privacy/PrivacySettings;)Z
 +    .registers 25
++    .param p1    # Landroid/privacy/PrivacySettings;
 +
 +    const/16 v19, 0x0
 +
@@ -4265,8 +4285,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    monitor-enter v5
 +    :try_end_2ab
-+    .catchall {:try_start_2a8 .. :try_end_2ab} :catchall_33b
 +    .catch Ljava/lang/Exception; {:try_start_2a8 .. :try_end_2ab} :catch_310
++    .catchall {:try_start_2a8 .. :try_end_2ab} :catchall_33b
 +
 +    :try_start_2ab
 +    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
@@ -4310,8 +4330,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->lock()V
 +    :try_end_2d1
-+    .catchall {:try_start_2bc .. :try_end_2d1} :catchall_33b
 +    .catch Ljava/lang/Exception; {:try_start_2bc .. :try_end_2d1} :catch_310
++    .catchall {:try_start_2bc .. :try_end_2d1} :catchall_33b
 +
 +    :try_start_2d1
 +    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->beginTransaction()V
@@ -4390,8 +4410,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    throw v4
 +    :try_end_310
-+    .catchall {:try_start_306 .. :try_end_310} :catchall_33b
 +    .catch Ljava/lang/Exception; {:try_start_306 .. :try_end_310} :catch_310
++    .catchall {:try_start_306 .. :try_end_310} :catchall_33b
 +
 +    :catch_310
 +    move-exception v14
@@ -4447,8 +4467,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +    :try_start_33a
 +    throw v4
 +    :try_end_33b
-+    .catchall {:try_start_33a .. :try_end_33b} :catchall_33b
 +    .catch Ljava/lang/Exception; {:try_start_33a .. :try_end_33b} :catch_310
++    .catchall {:try_start_33a .. :try_end_33b} :catchall_33b
 +
 +    :catchall_33b
 +    move-exception v4
@@ -4919,8 +4939,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->unlock()V
 +    :try_end_4f6
-+    .catchall {:try_start_4ed .. :try_end_4f6} :catchall_33b
 +    .catch Ljava/lang/Exception; {:try_start_4ed .. :try_end_4f6} :catch_310
++    .catchall {:try_start_4ed .. :try_end_4f6} :catchall_33b
 +
 +    const/16 v19, 0x1
 +
@@ -4932,6 +4952,8 @@ diff -Npruw stock-framework*/smali/android/privacy/PrivacyPersistenceAdapter.sma
 +
 +.method public setValue(Ljava/lang/String;Ljava/lang/String;)Z
 +    .registers 11
++    .param p1    # Ljava/lang/String;
++    .param p2    # Ljava/lang/String;
 +
 +    const/4 v3, 0x0
 +

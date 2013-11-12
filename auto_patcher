@@ -183,15 +183,16 @@
 # 2013.11.05. (v3.2.5) Bugfixes. Update reservoirs- test mobile data error
 # 2013.11.05. (v3.5.0) Kitkat support for aosp OpD
 # 2013.11.05. (v3.5.2) Kitkat support for cm
+# 2013.11.12. (v3.5.5) Use baksmali-2.0 for KitKat. Replace all 4.4 patches for that. Clean up.
 
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.5.26"
+VERSION="v3.5.5"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20131112"
+PATCHES_VERSION="20131114"
 CURRENT_ANDROID="4.4.0"
 
 # pass variables to children
@@ -202,8 +203,8 @@ LANG=C
 CYGWIN=false
 
 # unused for now...for experiments with "-s" flag and also to test various smali binaries.
-BAKSMALI_BINARY=baksmali.jar
-SMALI_BINARY=smali.jar
+BAKSMALI_BINARY=baksmali-1.4.3-dev.jar
+SMALI_BINARY=smali-1.4.3-dev.jar
 declare -a MODS_LIST
 declare -a PATCH_DATE_LIST
 
@@ -362,7 +363,7 @@ smali_error () {
           printtask "... attempting fix ..."
           . patches/.common/framework.jar.sh 2>&1 > ${JAR}.log
           printtask "... rebuild framework.jar ..."
-          java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+          java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
           [ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
      else
           printtask "!!! This error is generally due to an unknown bug in the smali binary!"
@@ -1066,10 +1067,11 @@ proberom () {
           if [ "$ANDR" == "4.3" ]; then
                API=18
           elif [ "$ANDR" == "4.4" ]; then
-               #BAKSMALI_BINARY=baksmali-2.0.jar
-               #SMALI_BINARY=smali-2.0.jar
+               BAKSMALI_BINARY=baksmali-2.0.2-dev.jar
+               SMALI_BINARY=smali-2.0.2-dev.jar
                FLAVR=kitkat
                API=19
+               echo "... Using $BAKSMALI_BINARY ..." #debug
           fi
           CMID=$(getbuildprop ro.cm.version)
           MID=$(getbuildprop ro.build.display.id)
@@ -1774,7 +1776,7 @@ printtask "### decompile system files ###"
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... decompile $JAR ..."
-     java -jar baksmali.jar -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG" || check_odex
+     java -jar $BAKSMALI_BINARY -b -a $API -o tmp/${FILE}.out/smali ${FILE} >> "$LOG" 2>> "$LOG" || check_odex
      if [ $FILE == "system/framework/framework.jar" ]; then
           printtask "... extract preloaded-classes ..."
           jar -xvf ${FILE} preloaded-classes >> "$LOG" 2>> "$LOG"
@@ -2083,7 +2085,7 @@ fi
 for FILE in ${JID[@]}; do
      JAR=${FILE##*/}
      printtask "... rebuild $JAR ..."
-     java -Xmx512M -jar smali.jar -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
+     java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
      [ -f tmp/${FILE}.out/classes.dex ] || smali_error "failed compiling $JAR !!!"
      jar -ufv ${FILE} -C tmp/${FILE}.out/ classes.dex >> "$LOG" 2>> "$LOG"
      if [ $FILE == "system/framework/framework.jar" ]; then

@@ -1,7 +1,7 @@
-diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.smali pdroid-services/smali/com/android/server/PrivacyTelephonyRegistry.smali
---- stock-services/smali/com/android/server/PrivacyTelephonyRegistry.smali	1969-12-31 18:00:00.000000000 -0600
-+++ pdroid-services/smali/com/android/server/PrivacyTelephonyRegistry.smali	2013-11-06 20:29:31.314505701 -0600
-@@ -0,0 +1,1422 @@
+diff -Npruw stock-services.jar/smali/com/android/server/PrivacyTelephonyRegistry.smali pdroid-services.jar/smali/com/android/server/PrivacyTelephonyRegistry.smali
+--- stock-services.jar/smali/com/android/server/PrivacyTelephonyRegistry.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-services.jar/smali/com/android/server/PrivacyTelephonyRegistry.smali	2013-11-12 09:43:01.402107890 -0600
+@@ -0,0 +1,1455 @@
 +.class public Lcom/android/server/PrivacyTelephonyRegistry;
 +.super Lcom/android/server/TelephonyRegistry;
 +.source "PrivacyTelephonyRegistry.java"
@@ -32,6 +32,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +# direct methods
 +.method public constructor <init>(Landroid/content/Context;)V
 +    .registers 4
++    .param p1    # Landroid/content/Context;
 +
 +    invoke-direct {p0, p1}, Lcom/android/server/TelephonyRegistry;-><init>(Landroid/content/Context;)V
 +
@@ -104,6 +105,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method private isPackageAllowed(ILjava/lang/String;)Z
 +    .registers 8
++    .param p1    # I
++    .param p2    # Ljava/lang/String;
 +
 +    const/4 v2, 0x1
 +
@@ -233,6 +236,9 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +# virtual methods
 +.method public bridge synthetic dump(Ljava/io/FileDescriptor;Ljava/io/PrintWriter;[Ljava/lang/String;)V
 +    .registers 4
++    .param p1    # Ljava/io/FileDescriptor;
++    .param p2    # Ljava/io/PrintWriter;
++    .param p3    # [Ljava/lang/String;
 +
 +    invoke-super {p0, p1, p2, p3}, Lcom/android/server/TelephonyRegistry;->dump(Ljava/io/FileDescriptor;Ljava/io/PrintWriter;[Ljava/lang/String;)V
 +
@@ -241,6 +247,10 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public listen(Ljava/lang/String;Lcom/android/internal/telephony/IPhoneStateListener;IZ)V
 +    .registers 19
++    .param p1    # Ljava/lang/String;
++    .param p2    # Lcom/android/internal/telephony/IPhoneStateListener;
++    .param p3    # I
++    .param p4    # Z
 +
 +    :try_start_0
 +    invoke-direct {p0}, Lcom/android/server/PrivacyTelephonyRegistry;->registerPrivacy()V
@@ -338,8 +348,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +    :cond_49
 +    invoke-interface {v10, v5}, Lcom/android/internal/telephony/IPhoneStateListener;->onSignalStrengthChanged(I)V
 +    :try_end_4c
-+    .catchall {:try_start_3c .. :try_end_4c} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_3c .. :try_end_4c} :catch_d5
++    .catchall {:try_start_3c .. :try_end_4c} :catchall_d2
 +
 +    :cond_4c
 +    :goto_4c
@@ -354,8 +364,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12}, Lcom/android/internal/telephony/IPhoneStateListener;->onMessageWaitingIndicatorChanged(Z)V
 +    :try_end_57
-+    .catchall {:try_start_50 .. :try_end_57} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_50 .. :try_end_57} :catch_dd
++    .catchall {:try_start_50 .. :try_end_57} :catchall_d2
 +
 +    :cond_57
 +    :goto_57
@@ -370,8 +380,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12}, Lcom/android/internal/telephony/IPhoneStateListener;->onCallForwardingIndicatorChanged(Z)V
 +    :try_end_62
-+    .catchall {:try_start_5b .. :try_end_62} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_5b .. :try_end_62} :catch_e5
++    .catchall {:try_start_5b .. :try_end_62} :catchall_d2
 +
 +    :cond_62
 +    :goto_62
@@ -393,8 +403,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12, v13}, Lcom/android/internal/telephony/IPhoneStateListener;->onCallStateChanged(ILjava/lang/String;)V
 +    :try_end_73
-+    .catchall {:try_start_6a .. :try_end_73} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_6a .. :try_end_73} :catch_ed
++    .catchall {:try_start_6a .. :try_end_73} :catchall_d2
 +
 +    :cond_73
 +    :goto_73
@@ -411,8 +421,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12, v13}, Lcom/android/internal/telephony/IPhoneStateListener;->onDataConnectionStateChanged(II)V
 +    :try_end_80
-+    .catchall {:try_start_77 .. :try_end_80} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_77 .. :try_end_80} :catch_f4
++    .catchall {:try_start_77 .. :try_end_80} :catchall_d2
 +
 +    :cond_80
 +    :goto_80
@@ -429,8 +439,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12}, Lcom/android/internal/telephony/IPhoneStateListener;->onDataActivity(I)V
 +    :try_end_8d
-+    .catchall {:try_start_86 .. :try_end_8d} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_86 .. :try_end_8d} :catch_fb
++    .catchall {:try_start_86 .. :try_end_8d} :catchall_d2
 +
 +    :cond_8d
 +    :goto_8d
@@ -447,8 +457,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12}, Lcom/android/internal/telephony/IPhoneStateListener;->onSignalStrengthsChanged(Landroid/telephony/SignalStrength;)V
 +    :try_end_9a
-+    .catchall {:try_start_93 .. :try_end_9a} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_93 .. :try_end_9a} :catch_102
++    .catchall {:try_start_93 .. :try_end_9a} :catchall_d2
 +
 +    :cond_9a
 +    :goto_9a
@@ -465,8 +475,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v10, v12}, Lcom/android/internal/telephony/IPhoneStateListener;->onOtaspChanged(I)V
 +    :try_end_a7
-+    .catchall {:try_start_a0 .. :try_end_a7} :catchall_d2
 +    .catch Landroid/os/RemoteException; {:try_start_a0 .. :try_end_a7} :catch_109
++    .catchall {:try_start_a0 .. :try_end_a7} :catchall_d2
 +
 +    :cond_a7
 +    :goto_a7
@@ -630,6 +640,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyCallForwardingChanged(Z)V
 +    .registers 2
++    .param p1    # Z
 +
 +    invoke-super {p0, p1}, Lcom/android/server/TelephonyRegistry;->notifyCallForwardingChanged(Z)V
 +
@@ -638,6 +649,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyCallState(ILjava/lang/String;)V
 +    .registers 3
++    .param p1    # I
++    .param p2    # Ljava/lang/String;
 +
 +    invoke-super {p0, p1, p2}, Lcom/android/server/TelephonyRegistry;->notifyCallState(ILjava/lang/String;)V
 +
@@ -782,8 +795,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-static {v5, v7}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_78
-+    .catchall {:try_start_27 .. :try_end_78} :catchall_82
 +    .catch Landroid/os/RemoteException; {:try_start_27 .. :try_end_78} :catch_79
++    .catchall {:try_start_27 .. :try_end_78} :catchall_82
 +
 +    goto :goto_14
 +
@@ -844,8 +857,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-static {v5, v7}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_aa
-+    .catchall {:try_start_85 .. :try_end_aa} :catchall_82
 +    .catch Landroid/os/RemoteException; {:try_start_85 .. :try_end_aa} :catch_79
++    .catchall {:try_start_85 .. :try_end_aa} :catchall_82
 +
 +    goto/16 :goto_14
 +
@@ -862,6 +875,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public notifyCellLocation(Landroid/os/Bundle;)V
 +    .registers 14
++    .param p1    # Landroid/os/Bundle;
 +
 +    const-string v8, "notifyCellLocation()"
 +
@@ -893,8 +907,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-virtual {p1, v8}, Landroid/os/Bundle;->containsKey(Ljava/lang/String;)Z
 +    :try_end_15
-+    .catchall {:try_start_10 .. :try_end_15} :catchall_7f
 +    .catch Ljava/lang/Exception; {:try_start_10 .. :try_end_15} :catch_84
++    .catchall {:try_start_10 .. :try_end_15} :catchall_7f
 +
 +    move-result v8
 +
@@ -996,8 +1010,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-static {v8, v10}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_75
-+    .catchall {:try_start_32 .. :try_end_75} :catchall_7f
 +    .catch Landroid/os/RemoteException; {:try_start_32 .. :try_end_75} :catch_76
++    .catchall {:try_start_32 .. :try_end_75} :catchall_7f
 +
 +    goto :goto_1f
 +
@@ -1083,8 +1097,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-static {v8, v10}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_ba
-+    .catchall {:try_start_87 .. :try_end_ba} :catchall_7f
 +    .catch Landroid/os/RemoteException; {:try_start_87 .. :try_end_ba} :catch_76
++    .catchall {:try_start_87 .. :try_end_ba} :catchall_7f
 +
 +    goto/16 :goto_1f
 +
@@ -1101,6 +1115,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyDataActivity(I)V
 +    .registers 2
++    .param p1    # I
 +
 +    invoke-super {p0, p1}, Lcom/android/server/TelephonyRegistry;->notifyDataActivity(I)V
 +
@@ -1109,6 +1124,15 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyDataConnection(IZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/net/LinkProperties;Landroid/net/LinkCapabilities;IZ)V
 +    .registers 10
++    .param p1    # I
++    .param p2    # Z
++    .param p3    # Ljava/lang/String;
++    .param p4    # Ljava/lang/String;
++    .param p5    # Ljava/lang/String;
++    .param p6    # Landroid/net/LinkProperties;
++    .param p7    # Landroid/net/LinkCapabilities;
++    .param p8    # I
++    .param p9    # Z
 +
 +    invoke-super/range {p0 .. p9}, Lcom/android/server/TelephonyRegistry;->notifyDataConnection(IZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroid/net/LinkProperties;Landroid/net/LinkCapabilities;IZ)V
 +
@@ -1117,6 +1141,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyDataConnectionFailed(Ljava/lang/String;Ljava/lang/String;)V
 +    .registers 3
++    .param p1    # Ljava/lang/String;
++    .param p2    # Ljava/lang/String;
 +
 +    invoke-super {p0, p1, p2}, Lcom/android/server/TelephonyRegistry;->notifyDataConnectionFailed(Ljava/lang/String;Ljava/lang/String;)V
 +
@@ -1125,6 +1151,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyMessageWaitingChanged(Z)V
 +    .registers 2
++    .param p1    # Z
 +
 +    invoke-super {p0, p1}, Lcom/android/server/TelephonyRegistry;->notifyMessageWaitingChanged(Z)V
 +
@@ -1133,6 +1160,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifyOtaspChanged(I)V
 +    .registers 2
++    .param p1    # I
 +
 +    invoke-super {p0, p1}, Lcom/android/server/TelephonyRegistry;->notifyOtaspChanged(I)V
 +
@@ -1141,6 +1169,9 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public notifyPrivacyCallState(ILjava/lang/String;Ljava/lang/String;)V
 +    .registers 10
++    .param p1    # I
++    .param p2    # Ljava/lang/String;
++    .param p3    # Ljava/lang/String;
 +
 +    iget-object v4, p0, Lcom/android/server/PrivacyTelephonyRegistry;->mRecords:Ljava/util/ArrayList;
 +
@@ -1188,8 +1219,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v3, p1, p2}, Lcom/android/internal/telephony/IPhoneStateListener;->onCallStateChanged(ILjava/lang/String;)V
 +    :try_end_28
-+    .catchall {:try_start_1b .. :try_end_28} :catchall_32
 +    .catch Landroid/os/RemoteException; {:try_start_1b .. :try_end_28} :catch_29
++    .catchall {:try_start_1b .. :try_end_28} :catchall_32
 +
 +    goto :goto_9
 +
@@ -1227,6 +1258,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public notifyServiceState(Landroid/telephony/ServiceState;)V
 +    .registers 9
++    .param p1    # Landroid/telephony/ServiceState;
 +
 +    const-string v3, "notifyServiceState()"
 +
@@ -1333,8 +1365,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-interface {v3, v5}, Lcom/android/internal/telephony/IPhoneStateListener;->onServiceStateChanged(Landroid/telephony/ServiceState;)V
 +    :try_end_62
-+    .catchall {:try_start_27 .. :try_end_62} :catchall_6c
 +    .catch Landroid/os/RemoteException; {:try_start_27 .. :try_end_62} :catch_63
++    .catchall {:try_start_27 .. :try_end_62} :catchall_6c
 +
 +    goto :goto_14
 +
@@ -1391,8 +1423,8 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +    invoke-static {v3, v5}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_8f
-+    .catchall {:try_start_6f .. :try_end_8f} :catchall_6c
 +    .catch Landroid/os/RemoteException; {:try_start_6f .. :try_end_8f} :catch_63
++    .catchall {:try_start_6f .. :try_end_8f} :catchall_6c
 +
 +    goto :goto_58
 +
@@ -1411,6 +1443,7 @@ diff -Npruw stock-services/smali/com/android/server/PrivacyTelephonyRegistry.sma
 +
 +.method public bridge synthetic notifySignalStrength(Landroid/telephony/SignalStrength;)V
 +    .registers 2
++    .param p1    # Landroid/telephony/SignalStrength;
 +
 +    invoke-super {p0, p1}, Lcom/android/server/TelephonyRegistry;->notifySignalStrength(Landroid/telephony/SignalStrength;)V
 +

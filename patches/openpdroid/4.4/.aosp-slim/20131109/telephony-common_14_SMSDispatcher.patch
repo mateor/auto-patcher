@@ -1,6 +1,6 @@
 diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDispatcher.smali pdroid-telephony-common*/smali/com/android/internal/telephony/SMSDispatcher.smali
---- stock-telephony-common*/smali/com/android/internal/telephony/SMSDispatcher.smali	2013-11-10 01:24:48.375421053 -0600
-+++ pdroid-telephony-common*/smali/com/android/internal/telephony/SMSDispatcher.smali	2013-11-10 01:25:02.267420689 -0600
+--- stock-telephony-common*/smali/com/android/internal/telephony/SMSDispatcher.smali	2013-11-11 23:28:14.419074803 -0600
++++ pdroid-telephony-common*/smali/com/android/internal/telephony/SMSDispatcher.smali	2013-11-11 23:28:51.079073842 -0600
 @@ -15,6 +15,10 @@
  
  
@@ -30,7 +30,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  
  # direct methods
  .method static constructor <clinit>()V
-@@ -211,6 +219,27 @@
+@@ -213,6 +221,27 @@
  
      invoke-virtual {v0, v3, v2, v4}, Landroid/content/ContentResolver;->registerContentObserver(Landroid/net/Uri;ZLandroid/database/ContentObserver;)V
  
@@ -58,7 +58,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      iget-object v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->mContext:Landroid/content/Context;
  
      invoke-virtual {v0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-@@ -233,11 +262,11 @@
+@@ -235,11 +264,11 @@
  
      move-result v0
  
@@ -72,7 +72,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      iput-boolean v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsSendDisabled:Z
  
      const-string v0, "SMSDispatcher"
-@@ -292,10 +321,10 @@
+@@ -294,10 +323,10 @@
  
      return-void
  
@@ -85,7 +85,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  .end method
  
  .method private denyIfQueueLimitReached(Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;)Z
-@@ -948,6 +977,26 @@
+@@ -968,6 +997,26 @@
  .method public abstract getImsSmsFormat()Ljava/lang/String;
  .end method
  
@@ -111,13 +111,15 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
 +
  .method public getPremiumSmsPermission(Ljava/lang/String;)I
      .registers 3
- 
-@@ -1845,9 +1894,351 @@
+     .param p1    # Ljava/lang/String;
+@@ -1872,9 +1921,356 @@
      return-void
  .end method
  
 +.method protected isAllowed([Ljava/lang/String;I)Z
 +    .registers 12
++    .param p1    # [Ljava/lang/String;
++    .param p2    # I
 +
 +    const/4 v8, -0x1
 +
@@ -414,6 +416,9 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  
 +.method protected notify(ILjava/lang/String;B)V
 +    .registers 11
++    .param p1    # I
++    .param p2    # Ljava/lang/String;
++    .param p3    # B
 +
 +    const/4 v2, 0x0
 +
@@ -464,7 +469,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  .method protected abstract sendData(Ljava/lang/String;Ljava/lang/String;I[BLandroid/app/PendingIntent;Landroid/app/PendingIntent;)V
  .end method
  
-@@ -2059,6 +2450,8 @@
+@@ -2089,6 +2485,8 @@
  
      const/4 v12, 0x4
  
@@ -473,7 +478,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      const/4 v11, 0x1
  
      iget-object v3, p1, Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;->mData:Ljava/util/HashMap;
-@@ -2079,49 +2472,82 @@
+@@ -2109,49 +2507,82 @@
  
      iget-boolean v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsSendDisabled:Z
  
@@ -575,7 +580,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      iget-object v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mContext:Landroid/content/Context;
  
      invoke-virtual {v9}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
-@@ -2136,31 +2562,31 @@
+@@ -2166,31 +2597,31 @@
  
      move-result-object v4
  
@@ -616,7 +621,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      move-exception v2
  
      const-string v9, "SMSDispatcher"
-@@ -2169,19 +2595,19 @@
+@@ -2199,19 +2630,19 @@
  
      invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
  
@@ -641,7 +646,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  
      move-result-object v0
  
-@@ -2189,7 +2615,7 @@
+@@ -2219,7 +2650,7 @@
  
      move-result v9
  
@@ -650,7 +655,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  
      iget-object v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mUsageMonitor:Lcom/android/internal/telephony/SmsUsageMonitor;
  
-@@ -2199,7 +2625,7 @@
+@@ -2229,7 +2660,7 @@
  
      move-result v9
  
@@ -659,7 +664,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
  
      invoke-virtual {p0, v12, p1}, Lcom/android/internal/telephony/SMSDispatcher;->obtainMessage(ILjava/lang/Object;)Landroid/os/Message;
  
-@@ -2207,9 +2633,9 @@
+@@ -2237,9 +2668,9 @@
  
      invoke-virtual {p0, v9}, Lcom/android/internal/telephony/SMSDispatcher;->sendMessage(Landroid/os/Message;)Z
  
@@ -671,7 +676,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      move-exception v1
  
      const-string v9, "SMSDispatcher"
-@@ -2218,18 +2644,18 @@
+@@ -2248,18 +2679,18 @@
  
      invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
  
@@ -696,7 +701,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      move-exception v2
  
      const-string v9, "SMSDispatcher"
-@@ -2238,9 +2664,9 @@
+@@ -2268,9 +2699,9 @@
  
      invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
  
@@ -708,7 +713,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/SMSDisp
      iget-object v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mPhone:Lcom/android/internal/telephony/PhoneBase;
  
      invoke-virtual {v9}, Lcom/android/internal/telephony/PhoneBase;->getServiceState()Landroid/telephony/ServiceState;
-@@ -2255,25 +2681,25 @@
+@@ -2285,25 +2716,25 @@
  
      move-result v9
  

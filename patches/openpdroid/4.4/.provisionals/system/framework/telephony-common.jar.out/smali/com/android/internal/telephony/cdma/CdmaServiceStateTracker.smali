@@ -104,6 +104,7 @@
 # direct methods
 .method public constructor <init>(Lcom/android/internal/telephony/cdma/CDMAPhone;)V
     .registers 3
+    .param p1    # Lcom/android/internal/telephony/cdma/CDMAPhone;
 
     new-instance v0, Landroid/telephony/CellInfoCdma;
 
@@ -116,6 +117,8 @@
 
 .method protected constructor <init>(Lcom/android/internal/telephony/cdma/CDMAPhone;Landroid/telephony/CellInfo;)V
     .registers 11
+    .param p1    # Lcom/android/internal/telephony/cdma/CDMAPhone;
+    .param p2    # Landroid/telephony/CellInfo;
 
     const/4 v3, 0x1
 
@@ -361,6 +364,7 @@
 
 .method static synthetic access$000(Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;)V
     .registers 1
+    .param p0    # Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;
 
     invoke-direct {p0}, Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;->revertToNitzTime()V
 
@@ -369,6 +373,7 @@
 
 .method static synthetic access$100(Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;)V
     .registers 1
+    .param p0    # Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;
 
     invoke-direct {p0}, Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;->revertToNitzTimeZone()V
 
@@ -377,6 +382,9 @@
 
 .method private findTimeZone(IZJ)Ljava/util/TimeZone;
     .registers 15
+    .param p1    # I
+    .param p2    # Z
+    .param p3    # J
 
     move v5, p1
 
@@ -501,6 +509,9 @@
 
 .method private getNitzTimeZone(IZJ)Ljava/util/TimeZone;
     .registers 8
+    .param p1    # I
+    .param p2    # Z
+    .param p3    # J
 
     invoke-direct {p0, p1, p2, p3, p4}, Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;->findTimeZone(IZJ)Ljava/util/TimeZone;
 
@@ -578,6 +589,7 @@
 
 .method private handleCdmaSubscriptionSource(I)V
     .registers 4
+    .param p1    # I
 
     new-instance v0, Ljava/lang/StringBuilder;
 
@@ -631,6 +643,7 @@
 
 .method private isHomeSid(I)Z
     .registers 4
+    .param p1    # I
 
     iget-object v1, p0, Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;->mHomeSystemId:[I
 
@@ -669,6 +682,7 @@
 
 .method private isRoamIndForHomeSystem(Ljava/lang/String;)Z
     .registers 9
+    .param p1    # Ljava/lang/String;
 
     const/4 v5, 0x0
 
@@ -718,6 +732,8 @@
 
 .method private isRoamingBetweenOperators(ZLandroid/telephony/ServiceState;)Z
     .registers 12
+    .param p1    # Z
+    .param p2    # Landroid/telephony/ServiceState;
 
     const/4 v5, 0x1
 
@@ -814,6 +830,7 @@
 
 .method private regCodeIsRoaming(I)Z
     .registers 3
+    .param p1    # I
 
     const/4 v0, 0x5
 
@@ -978,6 +995,7 @@
 
 .method private saveCdmaSubscriptionSource(I)V
     .registers 4
+    .param p1    # I
 
     new-instance v0, Ljava/lang/StringBuilder;
 
@@ -1018,6 +1036,7 @@
 
 .method private saveNitzTimeZone(Ljava/lang/String;)V
     .registers 2
+    .param p1    # Ljava/lang/String;
 
     iput-object p1, p0, Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;->mSavedTimeZone:Ljava/lang/String;
 
@@ -1026,6 +1045,7 @@
 
 .method private setAndBroadcastNetworkSetTime(J)V
     .registers 6
+    .param p1    # J
 
     new-instance v1, Ljava/lang/StringBuilder;
 
@@ -1061,7 +1081,7 @@
 
     invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    const/high16 v1, 0x2000
+    const/high16 v1, 0x20000000
 
     invoke-virtual {v0, v1}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 
@@ -1084,6 +1104,7 @@
 
 .method private setAndBroadcastNetworkSetTimeZone(Ljava/lang/String;)V
     .registers 6
+    .param p1    # Ljava/lang/String;
 
     new-instance v2, Ljava/lang/StringBuilder;
 
@@ -1127,7 +1148,7 @@
 
     invoke-direct {v1, v2}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    const/high16 v2, 0x2000
+    const/high16 v2, 0x20000000
 
     invoke-virtual {v1, v2}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 
@@ -1150,6 +1171,8 @@
 
 .method private setTimeFromNITZString(Ljava/lang/String;J)V
     .registers 41
+    .param p1    # Ljava/lang/String;
+    .param p2    # J
 
     invoke-static {}, Landroid/os/SystemClock;->elapsedRealtime()J
 
@@ -2582,6 +2605,9 @@
 
 .method public dump(Ljava/io/FileDescriptor;Ljava/io/PrintWriter;[Ljava/lang/String;)V
     .registers 7
+    .param p1    # Ljava/io/FileDescriptor;
+    .param p2    # Ljava/io/PrintWriter;
+    .param p3    # [Ljava/lang/String;
 
     const-string v0, "CdmaServiceStateTracker extends:"
 
@@ -3308,6 +3334,7 @@
 
 .method protected fixTimeZone(Ljava/lang/String;)V
     .registers 14
+    .param p1    # Ljava/lang/String;
 
     const/4 v6, 0x0
 
@@ -3859,6 +3886,7 @@
 
 .method public handleMessage(Landroid/os/Message;)V
     .registers 22
+    .param p1    # Landroid/os/Message;
 
     move-object/from16 v0, p0
 
@@ -4772,6 +4800,8 @@
 
 .method protected handlePollStateResult(ILandroid/os/AsyncResult;)V
     .registers 13
+    .param p1    # I
+    .param p2    # Landroid/os/AsyncResult;
 
     const/4 v9, 0x2
 
@@ -5234,6 +5264,8 @@
 
 .method protected handlePollStateResultMessage(ILandroid/os/AsyncResult;)V
     .registers 28
+    .param p1    # I
+    .param p2    # Landroid/os/AsyncResult;
 
     sparse-switch p1, :sswitch_data_340
 
@@ -6222,6 +6254,7 @@
 
 .method protected log(Ljava/lang/String;)V
     .registers 5
+    .param p1    # Ljava/lang/String;
 
     const-string v0, "CdmaSST"
 
@@ -6250,6 +6283,7 @@
 
 .method protected loge(Ljava/lang/String;)V
     .registers 5
+    .param p1    # Ljava/lang/String;
 
     const-string v0, "CdmaSST"
 
@@ -6369,6 +6403,8 @@
 
 .method protected parseSidNid(Ljava/lang/String;Ljava/lang/String;)V
     .registers 9
+    .param p1    # Ljava/lang/String;
+    .param p2    # Ljava/lang/String;
 
     if-eqz p1, :cond_36
 
@@ -7809,6 +7845,7 @@
 
 .method protected radioTechnologyToDataServiceState(I)I
     .registers 4
+    .param p1    # I
 
     const/4 v0, 0x1
 
@@ -7849,6 +7886,7 @@
 
 .method protected regCodeToServiceState(I)I
     .registers 5
+    .param p1    # I
 
     const/4 v1, 0x0
 
@@ -7903,6 +7941,9 @@
 
 .method public registerForSubscriptionInfoReady(Landroid/os/Handler;ILjava/lang/Object;)V
     .registers 6
+    .param p1    # Landroid/os/Handler;
+    .param p2    # I
+    .param p3    # Ljava/lang/Object;
 
     new-instance v0, Landroid/os/Registrant;
 
@@ -7995,6 +8036,7 @@
 
 .method public unregisterForSubscriptionInfoReady(Landroid/os/Handler;)V
     .registers 3
+    .param p1    # Landroid/os/Handler;
 
     iget-object v0, p0, Lcom/android/internal/telephony/cdma/CdmaServiceStateTracker;->mCdmaForSubscriptionInfoReadyRegistrants:Landroid/os/RegistrantList;
 
@@ -8125,7 +8167,7 @@
 
     invoke-direct {v0, v3}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    const/high16 v3, 0x2000
+    const/high16 v3, 0x20000000
 
     invoke-virtual {v0, v3}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 

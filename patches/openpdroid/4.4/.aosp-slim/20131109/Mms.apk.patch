@@ -1,6 +1,6 @@
 diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali pdroid-Mms.apk*/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali
 --- stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali	1969-12-31 18:00:00.000000000 -0600
-+++ pdroid-Mms.apk*/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali	2013-11-10 01:25:03.503420657 -0600
++++ pdroid-Mms.apk*/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali	2013-11-11 23:28:54.183073761 -0600
 @@ -0,0 +1,44 @@
 +.class Lcom/android/mms/transaction/HttpUtils$APNInfo;
 +.super Ljava/lang/Object;
@@ -47,8 +47,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils$APNInfo.s
 +    return-void
 +.end method
 diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdroid-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali
---- stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali	2013-11-10 01:24:49.739421018 -0600
-+++ pdroid-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali	2013-11-10 01:25:03.507420657 -0600
+--- stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali	2013-11-11 23:28:17.583074720 -0600
++++ pdroid-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali	2013-11-11 23:28:54.263073759 -0600
 @@ -3,9 +3,19 @@
  .source "HttpUtils.java"
  
@@ -69,12 +69,13 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
  
  # direct methods
  .method static constructor <clinit>()V
-@@ -191,6 +201,153 @@
+@@ -195,6 +205,154 @@
      return-object v0
  .end method
  
 +.method private static getAPN(Landroid/content/Context;)Ljava/util/List;
 +    .registers 14
++    .param p0    # Landroid/content/Context;
 +    .annotation system Ldalvik/annotation/Signature;
 +        value = {
 +            "(",
@@ -222,17 +223,17 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +
  .method public static getCurrentAcceptLanguage(Ljava/util/Locale;)Ljava/lang/String;
      .registers 3
- 
-@@ -289,7 +446,7 @@
+     .param p0    # Ljava/util/Locale;
+@@ -296,7 +454,7 @@
  .end method
  
  .method protected static httpConnection(Landroid/content/Context;JLjava/lang/String;[BIZLjava/lang/String;I)[B
 -    .registers 47
 +    .registers 56
-     .annotation system Ldalvik/annotation/Throws;
-         value = {
-             Ljava/io/IOException;
-@@ -298,1223 +455,1340 @@
+     .param p0    # Landroid/content/Context;
+     .param p1    # J
+     .param p3    # Ljava/lang/String;
+@@ -313,1223 +471,1340 @@
  
      if-nez p3, :cond_a
  
@@ -685,12 +686,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
  
 -    invoke-static/range {v34 .. v35}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 -    :try_end_137
--    .catchall {:try_start_d6 .. :try_end_137} :catchall_445
 -    .catch Ljava/net/URISyntaxException; {:try_start_d6 .. :try_end_137} :catch_29b
 -    .catch Ljava/lang/IllegalStateException; {:try_start_d6 .. :try_end_137} :catch_382
 -    .catch Ljava/lang/IllegalArgumentException; {:try_start_d6 .. :try_end_137} :catch_41e
 -    .catch Ljava/net/SocketException; {:try_start_d6 .. :try_end_137} :catch_42b
 -    .catch Ljava/lang/Exception; {:try_start_d6 .. :try_end_137} :catch_438
+-    .catchall {:try_start_d6 .. :try_end_137} :catchall_445
 +    const-string v9, "sendMms"
  
 -    const/4 v5, 0x0
@@ -784,31 +785,37 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
  
 -    invoke-direct {v0, v1}, Lorg/apache/http/client/methods/HttpPost;-><init>(Ljava/lang/String;)V
 +    invoke-direct {v0, v1}, Ljava/net/URI;-><init>(Ljava/lang/String;)V
-+
+ 
+-    move-object/from16 v0, v23
 +    new-instance v41, Lorg/apache/http/HttpHost;
-+
+ 
+-    invoke-virtual {v0, v11}, Lorg/apache/http/client/methods/HttpPost;->setEntity(Lorg/apache/http/HttpEntity;)V
 +    invoke-virtual/range {v22 .. v22}, Ljava/net/URI;->getHost()Ljava/lang/String;
-+
+ 
+-    move-object/from16 v25, v23
 +    move-result-object v5
-+
+ 
+-    :goto_170
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->getParams()Lorg/apache/http/params/HttpParams;
 +    invoke-virtual/range {v22 .. v22}, Ljava/net/URI;->getPort()I
-+
+ 
+-    move-result-object v22
 +    move-result v6
 +
 +    const-string v7, "http"
 +
 +    move-object/from16 v0, v41
- 
--    move-object/from16 v0, v23
++
 +    invoke-direct {v0, v5, v6, v7}, Lorg/apache/http/HttpHost;-><init>(Ljava/lang/String;ILjava/lang/String;)V
- 
--    invoke-virtual {v0, v11}, Lorg/apache/http/client/methods/HttpPost;->setEntity(Lorg/apache/http/HttpEntity;)V
++
 +    invoke-static/range {p0 .. p0}, Lcom/android/mms/transaction/HttpUtils;->createHttpClient(Landroid/content/Context;)Landroid/net/http/AndroidHttpClient;
 +
 +    move-result-object v17
-+
+ 
+-    if-eqz p6, :cond_188
 +    const/16 v36, 0x0
-+
+ 
+-    new-instance v34, Lorg/apache/http/HttpHost;
 +    packed-switch p5, :pswitch_data_4aa
 +
 +    const-string v5, "Mms:transaction"
@@ -865,12 +872,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +
 +    invoke-static {v5, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 +    :try_end_1b7
-+    .catchall {:try_start_15e .. :try_end_1b7} :catchall_4a3
 +    .catch Ljava/net/URISyntaxException; {:try_start_15e .. :try_end_1b7} :catch_2f5
 +    .catch Ljava/lang/IllegalStateException; {:try_start_15e .. :try_end_1b7} :catch_3d8
 +    .catch Ljava/lang/IllegalArgumentException; {:try_start_15e .. :try_end_1b7} :catch_476
 +    .catch Ljava/net/SocketException; {:try_start_15e .. :try_end_1b7} :catch_485
 +    .catch Ljava/lang/Exception; {:try_start_15e .. :try_end_1b7} :catch_494
++    .catchall {:try_start_15e .. :try_end_1b7} :catchall_4a3
 +
 +    const/4 v14, 0x0
 +
@@ -893,21 +900,15 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    move-wide/from16 v2, p1
 +
 +    move-object/from16 v4, p4
- 
--    move-object/from16 v25, v23
++
 +    invoke-direct {v0, v1, v2, v3, v4}, Lcom/android/mms/transaction/ProgressCallbackEntity;-><init>(Landroid/content/Context;J[B)V
- 
--    :goto_170
--    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->getParams()Lorg/apache/http/params/HttpParams;
++
 +    const-string v5, "application/vnd.wap.mms-message"
- 
--    move-result-object v22
++
 +    move-object/from16 v0, v20
- 
--    if-eqz p6, :cond_188
++
 +    invoke-virtual {v0, v5}, Lcom/android/mms/transaction/ProgressCallbackEntity;->setContentType(Ljava/lang/String;)V
- 
--    new-instance v34, Lorg/apache/http/HttpHost;
++
 +    new-instance v34, Lorg/apache/http/client/methods/HttpPost;
  
      move-object/from16 v0, v34
@@ -1343,12 +1344,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
 +    throw v5
 +    :try_end_2f5
-+    .catchall {:try_start_1be .. :try_end_2f5} :catchall_4a3
 +    .catch Ljava/net/URISyntaxException; {:try_start_1be .. :try_end_2f5} :catch_2f5
 +    .catch Ljava/lang/IllegalStateException; {:try_start_1be .. :try_end_2f5} :catch_3d8
 +    .catch Ljava/lang/IllegalArgumentException; {:try_start_1be .. :try_end_2f5} :catch_476
 +    .catch Ljava/net/SocketException; {:try_start_1be .. :try_end_2f5} :catch_485
 +    .catch Ljava/lang/Exception; {:try_start_1be .. :try_end_2f5} :catch_494
++    .catchall {:try_start_1be .. :try_end_2f5} :catchall_4a3
  
 -    move-result-object v35
 +    :catch_2f5
@@ -1360,12 +1361,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
  
 -    throw v34
 -    :try_end_29b
--    .catchall {:try_start_14e .. :try_end_29b} :catchall_445
 -    .catch Ljava/net/URISyntaxException; {:try_start_14e .. :try_end_29b} :catch_29b
 -    .catch Ljava/lang/IllegalStateException; {:try_start_14e .. :try_end_29b} :catch_382
 -    .catch Ljava/lang/IllegalArgumentException; {:try_start_14e .. :try_end_29b} :catch_41e
 -    .catch Ljava/net/SocketException; {:try_start_14e .. :try_end_29b} :catch_42b
 -    .catch Ljava/lang/Exception; {:try_start_14e .. :try_end_29b} :catch_438
+-    .catchall {:try_start_14e .. :try_end_29b} :catchall_445
 +    move-object/from16 v1, p3
  
 -    :catch_29b
@@ -1398,12 +1399,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    :try_start_305
 +    invoke-interface/range {v37 .. v37}, Lorg/apache/http/HttpResponse;->getEntity()Lorg/apache/http/HttpEntity;
 +    :try_end_308
-+    .catchall {:try_start_305 .. :try_end_308} :catchall_4a3
 +    .catch Ljava/net/URISyntaxException; {:try_start_305 .. :try_end_308} :catch_2f5
 +    .catch Ljava/lang/IllegalStateException; {:try_start_305 .. :try_end_308} :catch_3d8
 +    .catch Ljava/lang/IllegalArgumentException; {:try_start_305 .. :try_end_308} :catch_476
 +    .catch Ljava/net/SocketException; {:try_start_305 .. :try_end_308} :catch_485
 +    .catch Ljava/lang/Exception; {:try_start_305 .. :try_end_308} :catch_494
++    .catchall {:try_start_305 .. :try_end_308} :catchall_4a3
  
 -    goto/16 :goto_13d
 +    move-result-object v20
@@ -1412,12 +1413,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :try_start_2a9
 -    invoke-interface/range {v26 .. v26}, Lorg/apache/http/HttpResponse;->getEntity()Lorg/apache/http/HttpEntity;
 -    :try_end_2ac
--    .catchall {:try_start_2a9 .. :try_end_2ac} :catchall_445
 -    .catch Ljava/net/URISyntaxException; {:try_start_2a9 .. :try_end_2ac} :catch_29b
 -    .catch Ljava/lang/IllegalStateException; {:try_start_2a9 .. :try_end_2ac} :catch_382
 -    .catch Ljava/lang/IllegalArgumentException; {:try_start_2a9 .. :try_end_2ac} :catch_41e
 -    .catch Ljava/net/SocketException; {:try_start_2a9 .. :try_end_2ac} :catch_42b
 -    .catch Ljava/lang/Exception; {:try_start_2a9 .. :try_end_2ac} :catch_438
+-    .catchall {:try_start_2a9 .. :try_end_2ac} :catchall_445
 +    const/4 v14, 0x0
  
 -    move-result-object v11
@@ -1482,8 +1483,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    :try_start_32d
 +    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
 +    :try_end_330
-+    .catchall {:try_start_32d .. :try_end_330} :catchall_3d1
 +    .catch Ljava/io/IOException; {:try_start_32d .. :try_end_330} :catch_3b2
++    .catchall {:try_start_32d .. :try_end_330} :catchall_3d1
  
 -    move-object/from16 v0, v34
 +    :cond_330
@@ -1505,8 +1506,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :try_start_2d5
 -    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
 -    :try_end_2d8
--    .catchall {:try_start_2d5 .. :try_end_2d8} :catchall_37b
 -    .catch Ljava/io/IOException; {:try_start_2d5 .. :try_end_2d8} :catch_35c
+-    .catchall {:try_start_2d5 .. :try_end_2d8} :catchall_37b
 +    const-string v5, "Mms:transaction"
  
 -    :cond_2d8
@@ -1580,15 +1581,15 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -
 -    invoke-virtual {v9, v0, v1, v7}, Ljava/io/DataInputStream;->read([BII)I
 -    :try_end_304
--    .catchall {:try_start_2fd .. :try_end_304} :catchall_3d3
 -    .catch Ljava/io/IOException; {:try_start_2fd .. :try_end_304} :catch_3b2
+-    .catchall {:try_start_2fd .. :try_end_304} :catchall_3d3
 +    move/from16 v3, v16
  
 -    move-result v6
 +    invoke-virtual {v0, v1, v2, v3}, Ljava/io/DataInputStream;->read([BII)I
 +    :try_end_362
-+    .catchall {:try_start_357 .. :try_end_362} :catchall_42b
 +    .catch Ljava/io/IOException; {:try_start_357 .. :try_end_362} :catch_40a
++    .catchall {:try_start_357 .. :try_end_362} :catchall_42b
  
 -    if-lez v6, :cond_30a
 +    move-result v15
@@ -1704,8 +1705,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    :try_start_3a3
 +    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
 +    :try_end_3a6
-+    .catchall {:try_start_3a3 .. :try_end_3a6} :catchall_3d1
 +    .catch Ljava/io/IOException; {:try_start_3a3 .. :try_end_3a6} :catch_439
++    .catchall {:try_start_3a3 .. :try_end_3a6} :catchall_3d1
  
 -    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
 -    :try_end_34d
@@ -1718,17 +1719,17 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :try_start_34d
 -    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
 -    :try_end_350
--    .catchall {:try_start_34d .. :try_end_350} :catchall_37b
 -    .catch Ljava/io/IOException; {:try_start_34d .. :try_end_350} :catch_3e1
+-    .catchall {:try_start_34d .. :try_end_350} :catchall_37b
 +    :try_start_3a8
 +    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->consumeContent()V
 +    :try_end_3ab
-+    .catchall {:try_start_3a8 .. :try_end_3ab} :catchall_4a3
 +    .catch Ljava/net/URISyntaxException; {:try_start_3a8 .. :try_end_3ab} :catch_2f5
 +    .catch Ljava/lang/IllegalStateException; {:try_start_3a8 .. :try_end_3ab} :catch_3d8
 +    .catch Ljava/lang/IllegalArgumentException; {:try_start_3a8 .. :try_end_3ab} :catch_476
 +    .catch Ljava/net/SocketException; {:try_start_3a8 .. :try_end_3ab} :catch_485
 +    .catch Ljava/lang/Exception; {:try_start_3a8 .. :try_end_3ab} :catch_494
++    .catchall {:try_start_3a8 .. :try_end_3ab} :catchall_4a3
  
 -    :cond_350
 -    :goto_350
@@ -1739,12 +1740,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :try_start_352
 -    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->consumeContent()V
 -    :try_end_355
--    .catchall {:try_start_352 .. :try_end_355} :catchall_445
 -    .catch Ljava/net/URISyntaxException; {:try_start_352 .. :try_end_355} :catch_29b
 -    .catch Ljava/lang/IllegalStateException; {:try_start_352 .. :try_end_355} :catch_382
 -    .catch Ljava/lang/IllegalArgumentException; {:try_start_352 .. :try_end_355} :catch_41e
 -    .catch Ljava/net/SocketException; {:try_start_352 .. :try_end_355} :catch_42b
 -    .catch Ljava/lang/Exception; {:try_start_352 .. :try_end_355} :catch_438
+-    .catchall {:try_start_352 .. :try_end_355} :catchall_445
 +    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
  
 -    :cond_355
@@ -1819,12 +1820,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    :cond_3d7
 +    throw v5
 +    :try_end_3d8
-+    .catchall {:try_start_3d4 .. :try_end_3d8} :catchall_4a3
 +    .catch Ljava/net/URISyntaxException; {:try_start_3d4 .. :try_end_3d8} :catch_2f5
 +    .catch Ljava/lang/IllegalStateException; {:try_start_3d4 .. :try_end_3d8} :catch_3d8
 +    .catch Ljava/lang/IllegalArgumentException; {:try_start_3d4 .. :try_end_3d8} :catch_476
 +    .catch Ljava/net/SocketException; {:try_start_3d4 .. :try_end_3d8} :catch_485
 +    .catch Ljava/lang/Exception; {:try_start_3d4 .. :try_end_3d8} :catch_494
++    .catchall {:try_start_3d4 .. :try_end_3d8} :catchall_4a3
  
 -    if-eqz v11, :cond_381
 +    :catch_3d8
@@ -1838,12 +1839,12 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :cond_381
 -    throw v34
 -    :try_end_382
--    .catchall {:try_start_37e .. :try_end_382} :catchall_445
 -    .catch Ljava/net/URISyntaxException; {:try_start_37e .. :try_end_382} :catch_29b
 -    .catch Ljava/lang/IllegalStateException; {:try_start_37e .. :try_end_382} :catch_382
 -    .catch Ljava/lang/IllegalArgumentException; {:try_start_37e .. :try_end_382} :catch_41e
 -    .catch Ljava/net/SocketException; {:try_start_37e .. :try_end_382} :catch_42b
 -    .catch Ljava/lang/Exception; {:try_start_37e .. :try_end_382} :catch_438
+-    .catchall {:try_start_37e .. :try_end_382} :catchall_445
 +    move-object/from16 v1, p3
  
 -    :catch_382
@@ -1872,8 +1873,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    :try_start_3e8
 +    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
 +    :try_end_3eb
-+    .catchall {:try_start_3e8 .. :try_end_3eb} :catchall_3d1
 +    .catch Ljava/io/IOException; {:try_start_3e8 .. :try_end_3eb} :catch_3ec
++    .catchall {:try_start_3e8 .. :try_end_3eb} :catchall_3d1
  
 -    :catchall_38f
 -    move-exception v34
@@ -1884,8 +1885,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :try_start_390
 -    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
 -    :try_end_393
--    .catchall {:try_start_390 .. :try_end_393} :catchall_37b
 -    .catch Ljava/io/IOException; {:try_start_390 .. :try_end_393} :catch_394
+-    .catchall {:try_start_390 .. :try_end_393} :catchall_37b
 +    :catch_3ec
 +    move-exception v19
  
@@ -2002,8 +2003,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 +    :try_start_42c
 +    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
 +    :try_end_42f
-+    .catchall {:try_start_42c .. :try_end_42f} :catchall_3d1
 +    .catch Ljava/io/IOException; {:try_start_42c .. :try_end_42f} :catch_458
++    .catchall {:try_start_42c .. :try_end_42f} :catchall_3d1
  
 -    :catchall_3d3
 -    move-exception v34
@@ -2016,8 +2017,8 @@ diff -Npruw stock-Mms.apk*/smali/com/android/mms/transaction/HttpUtils.smali pdr
 -    :try_start_3d4
 -    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
 -    :try_end_3d7
--    .catchall {:try_start_3d4 .. :try_end_3d7} :catchall_37b
 -    .catch Ljava/io/IOException; {:try_start_3d4 .. :try_end_3d7} :catch_400
+-    .catchall {:try_start_3d4 .. :try_end_3d7} :catchall_37b
 -
 -    :goto_3d7
 -    :try_start_3d7

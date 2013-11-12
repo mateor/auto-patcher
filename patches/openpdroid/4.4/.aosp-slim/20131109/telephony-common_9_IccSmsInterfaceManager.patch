@@ -1,6 +1,6 @@
 diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsInterfaceManager.smali pdroid-telephony-common*/smali/com/android/internal/telephony/IccSmsInterfaceManager.smali
---- stock-telephony-common*/smali/com/android/internal/telephony/IccSmsInterfaceManager.smali	2013-11-10 01:24:48.355421054 -0600
-+++ pdroid-telephony-common*/smali/com/android/internal/telephony/IccSmsInterfaceManager.smali	2013-11-10 01:25:02.251420690 -0600
+--- stock-telephony-common*/smali/com/android/internal/telephony/IccSmsInterfaceManager.smali	2013-11-11 23:28:14.075074812 -0600
++++ pdroid-telephony-common*/smali/com/android/internal/telephony/IccSmsInterfaceManager.smali	2013-11-11 23:28:50.775073850 -0600
 @@ -13,6 +13,10 @@
  
  
@@ -30,18 +30,23 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  
  # direct methods
  .method protected constructor <init>(Lcom/android/internal/telephony/PhoneBase;)V
-@@ -615,7 +623,9 @@
+@@ -627,12 +635,14 @@
  .end method
  
  .method public copyMessageToIccEf(Ljava/lang/String;I[B[B)Z
 -    .registers 11
 +    .registers 12
-+
-+    const/4 v6, 0x1
+     .param p1    # Ljava/lang/String;
+     .param p2    # I
+     .param p3    # [B
+     .param p4    # [B
  
++    const/4 v6, 0x1
++
      const/4 v2, 0x0
  
-@@ -679,6 +689,21 @@
+     new-instance v3, Ljava/lang/StringBuilder;
+@@ -695,6 +705,21 @@
  
      invoke-virtual {p0, v3}, Lcom/android/internal/telephony/IccSmsInterfaceManager;->log(Ljava/lang/String;)V
  
@@ -63,7 +68,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
      const-string v3, "Copying message to Icc"
  
      invoke-virtual {p0, v3}, Lcom/android/internal/telephony/IccSmsInterfaceManager;->enforceReceiveAndSend(Ljava/lang/String;)V
-@@ -695,19 +720,15 @@
+@@ -711,19 +736,15 @@
  
      move-result v3
  
@@ -85,7 +90,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
      iput-boolean v2, p0, Lcom/android/internal/telephony/IccSmsInterfaceManager;->mSuccess:Z
  
      iget-object v2, p0, Lcom/android/internal/telephony/IccSmsInterfaceManager;->mHandler:Landroid/os/Handler;
-@@ -718,15 +739,13 @@
+@@ -734,15 +755,13 @@
  
      move-result-object v1
  
@@ -105,7 +110,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  
      iget-object v2, p0, Lcom/android/internal/telephony/IccSmsInterfaceManager;->mPhone:Lcom/android/internal/telephony/PhoneBase;
  
-@@ -741,30 +760,30 @@
+@@ -757,30 +776,30 @@
      move-result-object v5
  
      invoke-interface {v2, p2, v4, v5, v1}, Lcom/android/internal/telephony/CommandsInterface;->writeSmsToSim(ILjava/lang/String;Ljava/lang/String;Landroid/os/Message;)V
@@ -122,11 +127,11 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  
      invoke-virtual {v2}, Ljava/lang/Object;->wait()V
 -    :try_end_7d
--    .catchall {:try_start_78 .. :try_end_7d} :catchall_8d
 -    .catch Ljava/lang/InterruptedException; {:try_start_78 .. :try_end_7d} :catch_90
+-    .catchall {:try_start_78 .. :try_end_7d} :catchall_8d
 +    :try_end_87
-+    .catchall {:try_start_82 .. :try_end_87} :catchall_97
 +    .catch Ljava/lang/InterruptedException; {:try_start_82 .. :try_end_87} :catch_9a
++    .catchall {:try_start_82 .. :try_end_87} :catchall_97
  
 -    :goto_7d
 -    :try_start_7d
@@ -150,7 +155,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
      iget-object v2, p0, Lcom/android/internal/telephony/IccSmsInterfaceManager;->mPhone:Lcom/android/internal/telephony/PhoneBase;
  
      iget-object v2, v2, Lcom/android/internal/telephony/PhoneBase;->mCi:Lcom/android/internal/telephony/CommandsInterface;
-@@ -775,28 +794,28 @@
+@@ -791,28 +810,28 @@
  
      invoke-interface {v2, p2, v4, v1}, Lcom/android/internal/telephony/CommandsInterface;->writeSmsToRuim(ILjava/lang/String;Landroid/os/Message;)V
  
@@ -188,7 +193,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  .end method
  
  .method public declared-synchronized disableCdmaBroadcastRange(II)Z
-@@ -1700,6 +1719,26 @@
+@@ -1732,6 +1751,26 @@
      return-object v0
  .end method
  
@@ -214,13 +219,15 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
 +
  .method public getPremiumSmsPermission(Ljava/lang/String;)I
      .registers 3
- 
-@@ -1712,6 +1751,299 @@
+     .param p1    # Ljava/lang/String;
+@@ -1745,6 +1784,301 @@
      return v0
  .end method
  
 +.method protected isAllowed([Ljava/lang/String;I)Z
 +    .registers 12
++    .param p1    # [Ljava/lang/String;
++    .param p2    # I
 +
 +    const/4 v8, -0x1
 +
@@ -515,12 +522,15 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  .method public isImsSmsSupported()Z
      .registers 2
  
-@@ -1923,6 +2255,55 @@
+@@ -1959,6 +2293,58 @@
      goto :goto_22
  .end method
  
 +.method protected notify(ILjava/lang/String;B)V
 +    .registers 11
++    .param p1    # I
++    .param p2    # Ljava/lang/String;
++    .param p3    # B
 +
 +    const/4 v2, 0x0
 +
@@ -570,19 +580,24 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
 +
  .method public sendData(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I[BLandroid/app/PendingIntent;Landroid/app/PendingIntent;)V
      .registers 15
- 
-@@ -2354,7 +2735,9 @@
+     .param p1    # Ljava/lang/String;
+@@ -2408,12 +2794,14 @@
  .end method
  
  .method public updateMessageOnIccEf(Ljava/lang/String;II[B)Z
 -    .registers 13
 +    .registers 14
-+
-+    const/4 v8, 0x1
+     .param p1    # Ljava/lang/String;
+     .param p2    # I
+     .param p3    # I
+     .param p4    # [B
  
++    const/4 v8, 0x1
++
      const/4 v1, 0x0
  
-@@ -2414,6 +2797,21 @@
+     new-instance v2, Ljava/lang/StringBuilder;
+@@ -2472,6 +2860,21 @@
  
      invoke-virtual {p0, v2}, Lcom/android/internal/telephony/IccSmsInterfaceManager;->log(Ljava/lang/String;)V
  
@@ -604,7 +619,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
      const-string v2, "Updating message on Icc"
  
      invoke-virtual {p0, v2}, Lcom/android/internal/telephony/IccSmsInterfaceManager;->enforceReceiveAndSend(Ljava/lang/String;)V
-@@ -2430,19 +2828,15 @@
+@@ -2488,19 +2891,15 @@
  
      move-result v2
  
@@ -626,7 +641,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
      iput-boolean v1, p0, Lcom/android/internal/telephony/IccSmsInterfaceManager;->mSuccess:Z
  
      iget-object v1, p0, Lcom/android/internal/telephony/IccSmsInterfaceManager;->mHandler:Landroid/os/Handler;
-@@ -2453,73 +2847,71 @@
+@@ -2511,73 +2910,71 @@
  
      move-result-object v5
  
@@ -665,11 +680,11 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  
      invoke-virtual {v1}, Ljava/lang/Object;->wait()V
 -    :try_end_73
--    .catchall {:try_start_6e .. :try_end_73} :catchall_7f
 -    .catch Ljava/lang/InterruptedException; {:try_start_6e .. :try_end_73} :catch_9d
+-    .catchall {:try_start_6e .. :try_end_73} :catchall_7f
 +    :try_end_7d
-+    .catchall {:try_start_78 .. :try_end_7d} :catchall_89
 +    .catch Ljava/lang/InterruptedException; {:try_start_78 .. :try_end_7d} :catch_a7
++    .catchall {:try_start_78 .. :try_end_7d} :catchall_89
  
 -    :goto_73
 -    :try_start_73
@@ -726,7 +741,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
  
      invoke-virtual {v5}, Landroid/os/Message;->recycle()V
  
-@@ -2527,9 +2919,9 @@
+@@ -2585,9 +2982,9 @@
  
      monitor-exit v7
  
@@ -738,7 +753,7 @@ diff -Npruw stock-telephony-common*/smali/com/android/internal/telephony/IccSmsI
      invoke-virtual {p0, p3, p4}, Lcom/android/internal/telephony/IccSmsInterfaceManager;->makeSmsRecordData(I[B)[B
  
      move-result-object v3
-@@ -2542,18 +2934,18 @@
+@@ -2600,18 +2997,18 @@
  
      invoke-virtual/range {v0 .. v5}, Lcom/android/internal/telephony/uicc/IccFileHandler;->updateEFLinearFixed(II[BLjava/lang/String;Landroid/os/Message;)V
  

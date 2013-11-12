@@ -1,7 +1,7 @@
 diff -Npruw stock-core*/smali/java/lang/PrivacyInputStream.smali pdroid-core*/smali/java/lang/PrivacyInputStream.smali
 --- stock-core*/smali/java/lang/PrivacyInputStream.smali	1969-12-31 18:00:00.000000000 -0600
-+++ pdroid-core*/smali/java/lang/PrivacyInputStream.smali	2013-11-10 01:25:00.427420738 -0600
-@@ -0,0 +1,67 @@
++++ pdroid-core*/smali/java/lang/PrivacyInputStream.smali	2013-11-11 23:28:44.979074002 -0600
+@@ -0,0 +1,71 @@
 +.class public Ljava/lang/PrivacyInputStream;
 +.super Ljava/io/InputStream;
 +.source "PrivacyInputStream.java"
@@ -46,6 +46,7 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyInputStream.smali pdroid-core*/sm
 +
 +.method public read([B)I
 +    .registers 3
++    .param p1    # [B
 +    .annotation system Ldalvik/annotation/Throws;
 +        value = {
 +            Ljava/io/IOException;
@@ -59,6 +60,9 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyInputStream.smali pdroid-core*/sm
 +
 +.method public read([BII)I
 +    .registers 5
++    .param p1    # [B
++    .param p2    # I
++    .param p3    # I
 +    .annotation system Ldalvik/annotation/Throws;
 +        value = {
 +            Ljava/io/IOException;
@@ -71,8 +75,8 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyInputStream.smali pdroid-core*/sm
 +.end method
 diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.smali pdroid-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.smali
 --- stock-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.smali	1969-12-31 18:00:00.000000000 -0600
-+++ pdroid-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.smali	2013-11-10 01:25:00.427420738 -0600
-@@ -0,0 +1,91 @@
++++ pdroid-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.smali	2013-11-11 23:28:45.007074002 -0600
+@@ -0,0 +1,92 @@
 +.class public Ljava/lang/PrivacyProcessManager$PrivacyFileReader;
 +.super Ljava/lang/Object;
 +.source "PrivacyProcessManager.java"
@@ -98,6 +102,7 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.
 +# direct methods
 +.method public constructor <init>(Ljava/lang/String;)V
 +    .registers 5
++    .param p1    # Ljava/lang/String;
 +    .annotation system Ldalvik/annotation/Throws;
 +        value = {
 +            Ljava/io/FileNotFoundException;
@@ -166,8 +171,8 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager$PrivacyFileReader.
 +.end method
 diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager.smali pdroid-core*/smali/java/lang/PrivacyProcessManager.smali
 --- stock-core*/smali/java/lang/PrivacyProcessManager.smali	1969-12-31 18:00:00.000000000 -0600
-+++ pdroid-core*/smali/java/lang/PrivacyProcessManager.smali	2013-11-10 01:25:00.431420737 -0600
-@@ -0,0 +1,479 @@
++++ pdroid-core*/smali/java/lang/PrivacyProcessManager.smali	2013-11-11 23:28:44.991074002 -0600
+@@ -0,0 +1,482 @@
 +.class public Ljava/lang/PrivacyProcessManager;
 +.super Ljava/lang/Object;
 +.source "PrivacyProcessManager.java"
@@ -226,6 +231,7 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager.smali pdroid-core*
 +
 +.method public static hasPrivacyPermission(Ljava/lang/String;)Z
 +    .registers 12
++    .param p0    # Ljava/lang/String;
 +
 +    const/4 v6, 0x0
 +
@@ -400,6 +406,8 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager.smali pdroid-core*
 +
 +.method public static hasPrivacyPermission(Ljava/lang/String;I)Z
 +    .registers 16
++    .param p0    # Ljava/lang/String;
++    .param p1    # I
 +
 +    const/4 v7, 0x0
 +
@@ -648,8 +656,8 @@ diff -Npruw stock-core*/smali/java/lang/PrivacyProcessManager.smali pdroid-core*
 +    goto :goto_94
 +.end method
 diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-core*/smali/java/lang/ProcessManager$ProcessImpl.smali
---- stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali	2013-11-10 01:24:46.603421100 -0600
-+++ pdroid-core*/smali/java/lang/ProcessManager$ProcessImpl.smali	2013-11-10 01:25:00.435420737 -0600
+--- stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali	2013-11-11 23:28:09.259074939 -0600
++++ pdroid-core*/smali/java/lang/ProcessManager$ProcessImpl.smali	2013-11-11 23:28:45.055074000 -0600
 @@ -21,6 +21,8 @@
  
  .field private final exitValueMutex:Ljava/lang/Object;
@@ -659,7 +667,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
  .field private final inputStream:Ljava/io/InputStream;
  
  .field private final outputStream:Ljava/io/OutputStream;
-@@ -36,6 +38,70 @@
+@@ -40,6 +42,75 @@
  
      invoke-direct {p0}, Ljava/lang/Process;-><init>()V
  
@@ -718,6 +726,11 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
 +
 +.method constructor <init>(ILjava/io/FileDescriptor;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Z)V
 +    .registers 8
++    .param p1    # I
++    .param p2    # Ljava/io/FileDescriptor;
++    .param p3    # Ljava/io/FileDescriptor;
++    .param p4    # Ljava/io/FileDescriptor;
++    .param p5    # Z
 +
 +    const/4 v1, 0x0
 +
@@ -730,7 +743,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
      iput-object v1, p0, Ljava/lang/ProcessManager$ProcessImpl;->exitValue:Ljava/lang/Integer;
  
      new-instance v0, Ljava/lang/Object;
-@@ -52,12 +118,15 @@
+@@ -56,12 +127,15 @@
  
      iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->errorStream:Ljava/io/InputStream;
  
@@ -746,7 +759,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
      new-instance v0, Ljava/lang/ProcessManager$ProcessOutputStream;
  
      invoke-direct {v0, p3, v1}, Ljava/lang/ProcessManager$ProcessOutputStream;-><init>(Ljava/io/FileDescriptor;Ljava/lang/ProcessManager$1;)V
-@@ -65,6 +134,19 @@
+@@ -69,6 +143,19 @@
      iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->outputStream:Ljava/io/OutputStream;
  
      return-void
@@ -766,7 +779,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
  .end method
  
  .method static synthetic access$300(Ljava/lang/ProcessManager$ProcessImpl;)I
-@@ -86,12 +168,17 @@
+@@ -91,12 +178,17 @@
  
      :try_start_3
      iget-object v1, p0, Ljava/lang/ProcessManager$ProcessImpl;->exitValue:Ljava/lang/Integer;
@@ -775,12 +788,12 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
  
 -    if-nez v1, :cond_10
 +    if-eqz v1, :cond_b
-+
+ 
+-    :try_start_7
 +    iget-boolean v1, p0, Ljava/lang/ProcessManager$ProcessImpl;->fakeProcess:Z
 +    :try_end_9
 +    .catchall {:try_start_3 .. :try_end_9} :catchall_3f
- 
--    :try_start_7
++
 +    if-eqz v1, :cond_14
 +
 +    :cond_b
@@ -788,20 +801,20 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
      sget-object v1, Llibcore/io/Libcore;->os:Llibcore/io/Os;
  
      iget v3, p0, Ljava/lang/ProcessManager$ProcessImpl;->pid:I
-@@ -99,16 +186,16 @@
+@@ -104,16 +196,16 @@
      sget v4, Llibcore/io/OsConstants;->SIGKILL:I
  
      invoke-interface {v1, v3, v4}, Llibcore/io/Os;->kill(II)V
 -    :try_end_10
--    .catchall {:try_start_7 .. :try_end_10} :catchall_3b
 -    .catch Llibcore/io/ErrnoException; {:try_start_7 .. :try_end_10} :catch_21
+-    .catchall {:try_start_7 .. :try_end_10} :catchall_3b
 -
 -    :cond_10
 -    :goto_10
 -    :try_start_10
 +    :try_end_14
-+    .catchall {:try_start_b .. :try_end_14} :catchall_3f
 +    .catch Llibcore/io/ErrnoException; {:try_start_b .. :try_end_14} :catch_25
++    .catchall {:try_start_b .. :try_end_14} :catchall_3f
 +
 +    :cond_14
 +    :goto_14
@@ -814,7 +827,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
  
      iget-object v1, p0, Ljava/lang/ProcessManager$ProcessImpl;->inputStream:Ljava/io/InputStream;
  
-@@ -124,10 +211,10 @@
+@@ -129,10 +221,10 @@
  
      return-void
  
@@ -827,7 +840,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
      new-instance v1, Ljava/lang/StringBuilder;
  
      invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
-@@ -150,14 +237,14 @@
+@@ -155,14 +247,14 @@
  
      invoke-static {v1, v0}, Ljava/lang/System;->logI(Ljava/lang/String;Ljava/lang/Throwable;)V
  
@@ -846,7 +859,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
  
      throw v1
  .end method
-@@ -165,14 +252,23 @@
+@@ -170,14 +262,23 @@
  .method public exitValue()I
      .registers 5
  
@@ -872,7 +885,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
  
      new-instance v0, Ljava/lang/IllegalThreadStateException;
  
-@@ -200,17 +296,17 @@
+@@ -205,17 +306,17 @@
  
      throw v0
  
@@ -895,7 +908,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
      iget-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->exitValue:Ljava/lang/Integer;
  
      invoke-virtual {v0}, Ljava/lang/Integer;->intValue()I
-@@ -218,8 +314,8 @@
+@@ -223,8 +324,8 @@
      move-result v0
  
      monitor-exit v1
@@ -907,14 +920,15 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-
      return v0
  .end method
 diff -Npruw stock-core*/smali/java/lang/ProcessManager.smali pdroid-core*/smali/java/lang/ProcessManager.smali
---- stock-core*/smali/java/lang/ProcessManager.smali	2013-11-10 01:24:46.611421100 -0600
-+++ pdroid-core*/smali/java/lang/ProcessManager.smali	2013-11-10 01:25:00.443420737 -0600
-@@ -136,6 +136,155 @@
+--- stock-core*/smali/java/lang/ProcessManager.smali	2013-11-11 23:28:09.299074938 -0600
++++ pdroid-core*/smali/java/lang/ProcessManager.smali	2013-11-11 23:28:45.091073999 -0600
+@@ -137,6 +137,156 @@
      return-void
  .end method
  
 +.method private containsIpTableCommand(Ljava/lang/String;)Z
 +    .registers 10
++    .param p1    # Ljava/lang/String;
 +
 +    const/4 v5, 0x0
 +
@@ -974,8 +988,8 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager.smali pdroid-core*/smali/
 +
 +    invoke-virtual {v3}, Ljava/io/FileInputStream;->close()V
 +    :try_end_3b
-+    .catchall {:try_start_32 .. :try_end_3b} :catchall_62
 +    .catch Ljava/io/IOException; {:try_start_32 .. :try_end_3b} :catch_4a
++    .catchall {:try_start_32 .. :try_end_3b} :catchall_62
 +
 +    const/4 v3, 0x0
 +
@@ -1065,15 +1079,16 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager.smali pdroid-core*/smali/
  .method private static native exec([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Z)I
      .annotation system Ldalvik/annotation/Throws;
          value = {
-@@ -393,157 +542,418 @@
+@@ -396,7 +546,7 @@
  
  # virtual methods
  .method public exec([Ljava/lang/String;[Ljava/lang/String;Ljava/io/File;Z)Ljava/lang/Process;
 -    .registers 21
 +    .registers 24
-     .annotation system Ldalvik/annotation/Throws;
-         value = {
-             Ljava/io/IOException;
+     .param p1    # [Ljava/lang/String;
+     .param p2    # [Ljava/lang/String;
+     .param p3    # Ljava/io/File;
+@@ -407,150 +557,411 @@
          }
      .end annotation
  
@@ -1556,7 +1571,7 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager.smali pdroid-core*/smali/
      new-instance v4, Ljava/io/FileDescriptor;
  
      invoke-direct {v4}, Ljava/io/FileDescriptor;-><init>()V
-@@ -556,135 +966,166 @@
+@@ -563,135 +974,166 @@
  
      invoke-direct {v6}, Ljava/io/FileDescriptor;-><init>()V
  
@@ -1583,11 +1598,11 @@ diff -Npruw stock-core*/smali/java/lang/ProcessManager.smali pdroid-core*/smali/
 +    :try_start_182
      invoke-static/range {v1 .. v7}, Ljava/lang/ProcessManager;->exec([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Z)I
 -    :try_end_9a
--    .catchall {:try_start_97 .. :try_end_9a} :catchall_fd
 -    .catch Ljava/io/IOException; {:try_start_97 .. :try_end_9a} :catch_c2
+-    .catchall {:try_start_97 .. :try_end_9a} :catchall_fd
 +    :try_end_185
-+    .catchall {:try_start_182 .. :try_end_185} :catchall_1f2
 +    .catch Ljava/io/IOException; {:try_start_182 .. :try_end_185} :catch_1b3
++    .catchall {:try_start_182 .. :try_end_185} :catchall_1f2
 +
 +    move-result v8
  

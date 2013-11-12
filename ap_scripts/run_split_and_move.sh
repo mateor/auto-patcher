@@ -38,6 +38,7 @@ fi
 
 dirs=$(find patches/openpdroid/4.2 -name 201*)
 dirs+=$(find patches/openpdroid/4.3 -name 201*)
+dirs+=$(find patches/openpdroid/4.4 -name 201*)
 
 for d in $dirs; do 
      cd ~/android/auto-patcher/$d

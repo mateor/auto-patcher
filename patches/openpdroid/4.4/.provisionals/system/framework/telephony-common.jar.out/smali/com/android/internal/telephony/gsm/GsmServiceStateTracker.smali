@@ -104,6 +104,7 @@
 # direct methods
 .method public constructor <init>(Lcom/android/internal/telephony/gsm/GSMPhone;)V
     .registers 11
+    .param p1    # Lcom/android/internal/telephony/gsm/GSMPhone;
 
     const/4 v8, -0x1
 
@@ -323,6 +324,7 @@
 
 .method static synthetic access$000(Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;)V
     .registers 1
+    .param p0    # Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;
 
     invoke-direct {p0}, Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;->revertToNitzTime()V
 
@@ -331,6 +333,7 @@
 
 .method static synthetic access$100(Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;)V
     .registers 1
+    .param p0    # Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;
 
     invoke-direct {p0}, Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;->revertToNitzTimeZone()V
 
@@ -339,6 +342,7 @@
 
 .method private currentMccEqualsSimMcc(Landroid/telephony/ServiceState;)Z
     .registers 8
+    .param p1    # Landroid/telephony/ServiceState;
 
     const-string v3, "gsm.sim.operator.numeric"
 
@@ -388,6 +392,9 @@
 
 .method private findTimeZone(IZJ)Ljava/util/TimeZone;
     .registers 15
+    .param p1    # I
+    .param p2    # Z
+    .param p3    # J
 
     move v5, p1
 
@@ -528,6 +535,9 @@
 
 .method private getNitzTimeZone(IZJ)Ljava/util/TimeZone;
     .registers 8
+    .param p1    # I
+    .param p2    # Z
+    .param p3    # J
 
     invoke-direct {p0, p1, p2, p3, p4}, Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;->findTimeZone(IZJ)Ljava/util/TimeZone;
 
@@ -587,6 +597,8 @@
 
 .method private isGprsConsistent(II)Z
     .registers 4
+    .param p1    # I
+    .param p2    # I
 
     if-nez p2, :cond_4
 
@@ -606,6 +618,7 @@
 
 .method private isOperatorConsideredNonRoaming(Landroid/telephony/ServiceState;)Z
     .registers 11
+    .param p1    # Landroid/telephony/ServiceState;
 
     const/4 v6, 0x0
 
@@ -663,6 +676,7 @@
 
 .method private isSameNamedOperatorConsideredRoaming(Landroid/telephony/ServiceState;)Z
     .registers 11
+    .param p1    # Landroid/telephony/ServiceState;
 
     const/4 v6, 0x0
 
@@ -720,6 +734,7 @@
 
 .method private isSameNamedOperators(Landroid/telephony/ServiceState;)Z
     .registers 11
+    .param p1    # Landroid/telephony/ServiceState;
 
     const/4 v5, 0x1
 
@@ -795,6 +810,7 @@
 
 .method private onRestrictedStateChanged(Landroid/os/AsyncResult;)V
     .registers 12
+    .param p1    # Landroid/os/AsyncResult;
 
     const/16 v9, 0x3ed
 
@@ -3465,6 +3481,7 @@
 
 .method private regCodeIsRoaming(I)Z
     .registers 3
+    .param p1    # I
 
     const/4 v0, 0x5
 
@@ -3483,6 +3500,7 @@
 
 .method private regCodeToServiceState(I)I
     .registers 5
+    .param p1    # I
 
     const/4 v0, 0x1
 
@@ -3701,6 +3719,7 @@
 
 .method private saveNitzTime(J)V
     .registers 5
+    .param p1    # J
 
     iput-wide p1, p0, Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;->mSavedTime:J
 
@@ -3715,6 +3734,7 @@
 
 .method private saveNitzTimeZone(Ljava/lang/String;)V
     .registers 2
+    .param p1    # Ljava/lang/String;
 
     iput-object p1, p0, Lcom/android/internal/telephony/gsm/GsmServiceStateTracker;->mSavedTimeZone:Ljava/lang/String;
 
@@ -3723,6 +3743,7 @@
 
 .method private setAndBroadcastNetworkSetTime(J)V
     .registers 6
+    .param p1    # J
 
     new-instance v1, Ljava/lang/StringBuilder;
 
@@ -3758,7 +3779,7 @@
 
     invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    const/high16 v1, 0x2000
+    const/high16 v1, 0x20000000
 
     invoke-virtual {v0, v1}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 
@@ -3781,6 +3802,7 @@
 
 .method private setAndBroadcastNetworkSetTimeZone(Ljava/lang/String;)V
     .registers 6
+    .param p1    # Ljava/lang/String;
 
     new-instance v2, Ljava/lang/StringBuilder;
 
@@ -3824,7 +3846,7 @@
 
     invoke-direct {v1, v2}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    const/high16 v2, 0x2000
+    const/high16 v2, 0x20000000
 
     invoke-virtual {v1, v2}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 
@@ -3867,6 +3889,7 @@
 
 .method private setNotification(I)V
     .registers 11
+    .param p1    # I
 
     new-instance v6, Ljava/lang/StringBuilder;
 
@@ -3928,7 +3951,7 @@
 
     const/4 v7, 0x0
 
-    const/high16 v8, 0x1000
+    const/high16 v8, 0x10000000
 
     invoke-static {v0, v7, v2, v8}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
 
@@ -4091,6 +4114,8 @@
 
 .method private setTimeFromNITZString(Ljava/lang/String;J)V
     .registers 34
+    .param p1    # Ljava/lang/String;
+    .param p2    # J
 
     invoke-static {}, Landroid/os/SystemClock;->elapsedRealtime()J
 
@@ -5043,6 +5068,9 @@
 
 .method public dump(Ljava/io/FileDescriptor;Ljava/io/PrintWriter;[Ljava/lang/String;)V
     .registers 7
+    .param p1    # Ljava/io/FileDescriptor;
+    .param p2    # Ljava/io/PrintWriter;
+    .param p3    # [Ljava/lang/String;
 
     const-string v0, "GsmServiceStateTracker extends:"
 
@@ -6048,6 +6076,7 @@
 
 .method public handleMessage(Landroid/os/Message;)V
     .registers 19
+    .param p1    # Landroid/os/Message;
 
     move-object/from16 v0, p0
 
@@ -6754,6 +6783,8 @@
 
 .method protected handlePollStateResult(ILandroid/os/AsyncResult;)V
     .registers 22
+    .param p1    # I
+    .param p2    # Landroid/os/AsyncResult;
 
     move-object/from16 v0, p2
 
@@ -7687,6 +7718,7 @@
 
 .method protected log(Ljava/lang/String;)V
     .registers 5
+    .param p1    # Ljava/lang/String;
 
     const-string v0, "GsmSST"
 
@@ -7715,6 +7747,7 @@
 
 .method protected loge(Ljava/lang/String;)V
     .registers 5
+    .param p1    # Ljava/lang/String;
 
     const-string v0, "GsmSST"
 
@@ -8079,7 +8112,7 @@
 
     invoke-direct {v1, v7}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    const/high16 v7, 0x2000
+    const/high16 v7, 0x20000000
 
     invoke-virtual {v1, v7}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 

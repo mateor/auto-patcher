@@ -1,6 +1,6 @@
 diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framework*/smali/android/hardware/Camera.smali
---- stock-framework*/smali/android/hardware/Camera.smali	2013-11-10 01:24:43.763421174 -0600
-+++ pdroid-framework*/smali/android/hardware/Camera.smali	2013-11-10 01:24:57.727420808 -0600
+--- stock-framework*/smali/android/hardware/Camera.smali	2013-11-11 23:28:02.295075121 -0600
++++ pdroid-framework*/smali/android/hardware/Camera.smali	2013-11-11 23:28:38.471074173 -0600
 @@ -62,10 +62,20 @@
  
  .field private static final CAMERA_MSG_ZOOM:I = 0x8
@@ -65,7 +65,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
      return-void
  .end method
  
-@@ -137,6 +155,8 @@
+@@ -138,6 +156,8 @@
  
      iput-object v2, p0, Landroid/hardware/Camera;->mAutoFocusCallbackLock:Ljava/lang/Object;
  
@@ -74,7 +74,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
      iput-object v3, p0, Landroid/hardware/Camera;->mShutterCallback:Landroid/hardware/Camera$ShutterCallback;
  
      iput-object v3, p0, Landroid/hardware/Camera;->mRawImageCallback:Landroid/hardware/Camera$PictureCallback;
-@@ -151,11 +171,13 @@
+@@ -152,11 +172,13 @@
  
      iput-object v3, p0, Landroid/hardware/Camera;->mZoomListener:Landroid/hardware/Camera$OnZoomChangeListener;
  
@@ -89,7 +89,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  
      new-instance v2, Landroid/hardware/Camera$EventHandler;
  
-@@ -163,7 +185,7 @@
+@@ -164,7 +186,7 @@
  
      iput-object v2, p0, Landroid/hardware/Camera;->mEventHandler:Landroid/hardware/Camera$EventHandler;
  
@@ -98,7 +98,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
      invoke-static {}, Landroid/app/ActivityThread;->currentPackageName()Ljava/lang/String;
  
      move-result-object v1
-@@ -176,12 +198,12 @@
+@@ -177,12 +199,12 @@
  
      return-void
  
@@ -113,7 +113,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  
      new-instance v2, Landroid/hardware/Camera$EventHandler;
  
-@@ -189,12 +211,12 @@
+@@ -190,12 +212,12 @@
  
      iput-object v2, p0, Landroid/hardware/Camera;->mEventHandler:Landroid/hardware/Camera$EventHandler;
  
@@ -129,13 +129,14 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  .end method
  
  .method private final native _addCallbackBuffer([BI)V
-@@ -215,122 +237,184 @@
+@@ -216,140 +238,210 @@
  .method private final native _stopPreview()V
  .end method
  
 -.method static synthetic access$000(Landroid/hardware/Camera;)Landroid/hardware/Camera$ShutterCallback;
 +.method static synthetic access$000(Landroid/hardware/Camera;)Z
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mShutterCallback:Landroid/hardware/Camera$ShutterCallback;
 +    iget-boolean v0, p0, Landroid/hardware/Camera;->privacyMode:Z
@@ -146,6 +147,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method static synthetic access$100(Landroid/hardware/Camera;)V
 +    .registers 1
++    .param p0    # Landroid/hardware/Camera;
 +
 +    invoke-direct {p0}, Landroid/hardware/Camera;->initiate()V
 +
@@ -155,6 +157,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$100(Landroid/hardware/Camera;)Landroid/hardware/Camera$PictureCallback;
 +.method static synthetic access$1000(Landroid/hardware/Camera;)Landroid/hardware/Camera$PreviewCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mRawImageCallback:Landroid/hardware/Camera$PictureCallback;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mPreviewCallback:Landroid/hardware/Camera$PreviewCallback;
@@ -165,6 +168,8 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$1000(Landroid/hardware/Camera;)Landroid/hardware/Camera$OnZoomChangeListener;
 +.method static synthetic access$1002(Landroid/hardware/Camera;Landroid/hardware/Camera$PreviewCallback;)Landroid/hardware/Camera$PreviewCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
++    .param p1    # Landroid/hardware/Camera$PreviewCallback;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mZoomListener:Landroid/hardware/Camera$OnZoomChangeListener;
 +    iput-object p1, p0, Landroid/hardware/Camera;->mPreviewCallback:Landroid/hardware/Camera$PreviewCallback;
@@ -174,6 +179,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method static synthetic access$1100(Landroid/hardware/Camera;)Z
 +    .registers 2
++    .param p0    # Landroid/hardware/Camera;
 +
 +    iget-boolean v0, p0, Landroid/hardware/Camera;->mOneShot:Z
 +
@@ -182,6 +188,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method static synthetic access$1200(Landroid/hardware/Camera;)Z
 +    .registers 2
++    .param p0    # Landroid/hardware/Camera;
 +
 +    iget-boolean v0, p0, Landroid/hardware/Camera;->mWithBuffer:Z
 +
@@ -190,6 +197,9 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method static synthetic access$1300(Landroid/hardware/Camera;ZZ)V
 +    .registers 3
++    .param p0    # Landroid/hardware/Camera;
++    .param p1    # Z
++    .param p2    # Z
 +
 +    invoke-direct {p0, p1, p2}, Landroid/hardware/Camera;->setHasPreviewCallback(ZZ)V
 +
@@ -198,6 +208,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method static synthetic access$1400(Landroid/hardware/Camera;)Landroid/hardware/Camera$PictureCallback;
 +    .registers 2
++    .param p0    # Landroid/hardware/Camera;
 +
 +    iget-object v0, p0, Landroid/hardware/Camera;->mPostviewCallback:Landroid/hardware/Camera$PictureCallback;
  
@@ -207,6 +218,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$1100(Landroid/hardware/Camera;)Landroid/hardware/Camera$FaceDetectionListener;
 +.method static synthetic access$1500(Landroid/hardware/Camera;)Ljava/lang/Object;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mFaceListener:Landroid/hardware/Camera$FaceDetectionListener;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mAutoFocusCallbackLock:Ljava/lang/Object;
@@ -217,6 +229,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$1200(Landroid/hardware/Camera;)Landroid/hardware/Camera$ErrorCallback;
 +.method static synthetic access$1600(Landroid/hardware/Camera;)Landroid/hardware/Camera$AutoFocusCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mErrorCallback:Landroid/hardware/Camera$ErrorCallback;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mAutoFocusCallback:Landroid/hardware/Camera$AutoFocusCallback;
@@ -227,6 +240,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$1300(Landroid/hardware/Camera;)Landroid/hardware/Camera$AutoFocusMoveCallback;
 +.method static synthetic access$1700(Landroid/hardware/Camera;)Landroid/hardware/Camera$OnZoomChangeListener;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mAutoFocusMoveCallback:Landroid/hardware/Camera$AutoFocusMoveCallback;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mZoomListener:Landroid/hardware/Camera$OnZoomChangeListener;
@@ -237,6 +251,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$200(Landroid/hardware/Camera;)Landroid/hardware/Camera$PictureCallback;
 +.method static synthetic access$1800(Landroid/hardware/Camera;)Landroid/hardware/Camera$FaceDetectionListener;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mJpegCallback:Landroid/hardware/Camera$PictureCallback;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mFaceListener:Landroid/hardware/Camera$FaceDetectionListener;
@@ -247,6 +262,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$300(Landroid/hardware/Camera;)Landroid/hardware/Camera$PreviewCallback;
 +.method static synthetic access$1900(Landroid/hardware/Camera;)Landroid/hardware/Camera$ErrorCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mPreviewCallback:Landroid/hardware/Camera$PreviewCallback;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mErrorCallback:Landroid/hardware/Camera$ErrorCallback;
@@ -257,6 +273,8 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$302(Landroid/hardware/Camera;Landroid/hardware/Camera$PreviewCallback;)Landroid/hardware/Camera$PreviewCallback;
 +.method static synthetic access$200(Landroid/hardware/Camera;)[Ljava/lang/String;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
+-    .param p1    # Landroid/hardware/Camera$PreviewCallback;
  
 -    iput-object p1, p0, Landroid/hardware/Camera;->mPreviewCallback:Landroid/hardware/Camera$PreviewCallback;
 +    invoke-direct {p0}, Landroid/hardware/Camera;->getPackageName()[Ljava/lang/String;
@@ -270,6 +288,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$400(Landroid/hardware/Camera;)Z
 +.method static synthetic access$2000(Landroid/hardware/Camera;)Landroid/hardware/Camera$AutoFocusMoveCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-boolean v0, p0, Landroid/hardware/Camera;->mOneShot:Z
 +    iget-object v0, p0, Landroid/hardware/Camera;->mAutoFocusMoveCallback:Landroid/hardware/Camera$AutoFocusMoveCallback;
@@ -281,6 +300,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$500(Landroid/hardware/Camera;)Z
 +.method static synthetic access$300(Landroid/hardware/Camera;)I
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-boolean v0, p0, Landroid/hardware/Camera;->mWithBuffer:Z
 +    invoke-direct {p0}, Landroid/hardware/Camera;->checkIfPackagesAllowed()I
@@ -294,6 +314,9 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -    .registers 3
 +.method static synthetic access$400(Landroid/hardware/Camera;Z)V
 +    .registers 2
+     .param p0    # Landroid/hardware/Camera;
+     .param p1    # Z
+-    .param p2    # Z
  
 -    invoke-direct {p0, p1, p2}, Landroid/hardware/Camera;->setHasPreviewCallback(ZZ)V
 +    invoke-direct {p0, p1}, Landroid/hardware/Camera;->dataAccess(Z)V
@@ -303,6 +326,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  
 +.method static synthetic access$500(Landroid/hardware/Camera;)Landroid/privacy/PrivacySettingsManager;
 +    .registers 2
++    .param p0    # Landroid/hardware/Camera;
 +
 +    iget-object v0, p0, Landroid/hardware/Camera;->pSetMan:Landroid/privacy/PrivacySettingsManager;
 +
@@ -311,6 +335,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method static synthetic access$600(Landroid/hardware/Camera;)Landroid/hardware/Camera$ShutterCallback;
 +    .registers 2
++    .param p0    # Landroid/hardware/Camera;
 +
 +    iget-object v0, p0, Landroid/hardware/Camera;->mShutterCallback:Landroid/hardware/Camera$ShutterCallback;
 +
@@ -319,6 +344,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
  .method static synthetic access$700(Landroid/hardware/Camera;)Landroid/hardware/Camera$PictureCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mPostviewCallback:Landroid/hardware/Camera$PictureCallback;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mRawImageCallback:Landroid/hardware/Camera$PictureCallback;
@@ -329,6 +355,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$800(Landroid/hardware/Camera;)Ljava/lang/Object;
 +.method static synthetic access$800(Landroid/hardware/Camera;)Landroid/hardware/Camera$PictureCallback;
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mAutoFocusCallbackLock:Ljava/lang/Object;
 +    iget-object v0, p0, Landroid/hardware/Camera;->mJpegCallback:Landroid/hardware/Camera$PictureCallback;
@@ -339,6 +366,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 -.method static synthetic access$900(Landroid/hardware/Camera;)Landroid/hardware/Camera$AutoFocusCallback;
 +.method static synthetic access$900(Landroid/hardware/Camera;)[B
      .registers 2
+     .param p0    # Landroid/hardware/Camera;
  
 -    iget-object v0, p0, Landroid/hardware/Camera;->mAutoFocusCallback:Landroid/hardware/Camera$AutoFocusCallback;
 +    invoke-direct {p0}, Landroid/hardware/Camera;->getFakeImage()[B
@@ -347,7 +375,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  
      return-object v0
  .end method
-@@ -376,6 +460,205 @@
+@@ -397,6 +489,206 @@
      return-void
  .end method
  
@@ -452,6 +480,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
 +
 +.method private dataAccess(Z)V
 +    .registers 7
++    .param p1    # Z
 +
 +    invoke-direct {p0}, Landroid/hardware/Camera;->getPackageName()[Ljava/lang/String;
 +
@@ -553,7 +582,7 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  .method private native enableFocusMoveCallback(I)V
  .end method
  
-@@ -441,9 +724,193 @@
+@@ -464,9 +756,193 @@
      return-object v1
  .end method
  
@@ -747,16 +776,16 @@ diff -Npruw stock-framework*/smali/android/hardware/Camera.smali pdroid-framewor
  .method private final native native_autoFocus()V
  .end method
  
-@@ -1318,7 +1785,7 @@
+@@ -1366,7 +1842,7 @@
  .end method
  
  .method public final takePicture(Landroid/hardware/Camera$ShutterCallback;Landroid/hardware/Camera$PictureCallback;Landroid/hardware/Camera$PictureCallback;Landroid/hardware/Camera$PictureCallback;)V
 -    .registers 7
 +    .registers 8
- 
-     iput-object p1, p0, Landroid/hardware/Camera;->mShutterCallback:Landroid/hardware/Camera$ShutterCallback;
- 
-@@ -1328,36 +1795,62 @@
+     .param p1    # Landroid/hardware/Camera$ShutterCallback;
+     .param p2    # Landroid/hardware/Camera$PictureCallback;
+     .param p3    # Landroid/hardware/Camera$PictureCallback;
+@@ -1380,36 +1856,62 @@
  
      iput-object p4, p0, Landroid/hardware/Camera;->mJpegCallback:Landroid/hardware/Camera$PictureCallback;
  
