@@ -1915,15 +1915,12 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           else
           # check for abscense of any apks decompiled by baksmali ('@'* in files.txt).
                if [ ! -d "tmp/${FILE}.out" ] ; then
-                    echo "No $JAR in your ROM. Not able to patch this file."
                     echo "## No $JAR in ROM ###" >> "$LOG"
                     declare -a JID=( ${JID[@]/$FILE/} )
-                    break;
                fi
-               # TODO-- did I mean to have this line after an 'else'?
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
-          
+          if [ -d "tmp/${FILE}.out" ] ; then
           printtask "... apply $NAME.patch ..."
 
           declare -a PATCH_QUEUE=("patches/$P/$A/$R/$B/$NAME"_*patch)
@@ -1991,6 +1988,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                printtask "... apply $JAR.sh ..."
                . patches/$P/$A/$R/$B/${JAR}.sh 2>&1 > ${JAR}.log
                cat ${JAR}.log | tee -a "$LOG"
+          fi
           fi
      done
 
