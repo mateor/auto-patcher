@@ -1,0 +1,378 @@
+diff -Npru stock-framework/smali/android/database/sqlite/SQLiteDatabase.smali opd-framework/smali/android/database/sqlite/SQLiteDatabase.smali
+--- stock-framework/smali/android/database/sqlite/SQLiteDatabase.smali	2013-02-13 14:24:48.886293874 -0600
++++ opd-framework/smali/android/database/sqlite/SQLiteDatabase.smali	2013-02-13 14:24:39.210415517 -0600
+@@ -459,19 +459,19 @@
+ 
+     if-nez v2, :cond_32
+ 
++    :goto_2f
+     invoke-direct {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlockForced()V
+ 
+     :cond_32
+-    :goto_32
+     return-void
+ 
+     :cond_33
+-    if-eqz p2, :cond_58
++    if-eqz p2, :cond_55
+ 
+     :try_start_35
+     iget-object v3, p0, Landroid/database/sqlite/SQLiteDatabase;->mConnectionPool:Landroid/database/sqlite/DatabaseConnectionPool;
+ 
+-    if-nez v3, :cond_58
++    if-nez v3, :cond_55
+ 
+     const-string v3, "BEGIN EXCLUSIVE;"
+ 
+@@ -502,26 +502,24 @@
+     invoke-interface {p1}, Landroid/database/sqlite/SQLiteTransactionListener;->onBegin()V
+     :try_end_51
+     .catchall {:try_start_4e .. :try_end_51} :catchall_25
+-    .catch Ljava/lang/RuntimeException; {:try_start_4e .. :try_end_51} :catch_5e
++    .catch Ljava/lang/RuntimeException; {:try_start_4e .. :try_end_51} :catch_5b
+ 
+     :cond_51
+     const/4 v2, 0x1
+ 
+     if-nez v2, :cond_32
+ 
+-    invoke-direct {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlockForced()V
+-
+-    goto :goto_32
++    goto :goto_2f
+ 
+-    :cond_58
+-    :try_start_58
++    :cond_55
++    :try_start_55
+     const-string v3, "BEGIN IMMEDIATE;"
+ 
+     invoke-virtual {p0, v3}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
+ 
+     goto :goto_3e
+ 
+-    :catch_5e
++    :catch_5b
+     move-exception v0
+ 
+     const-string v3, "ROLLBACK;"
+@@ -529,8 +527,8 @@
+     invoke-virtual {p0, v3}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
+ 
+     throw v0
+-    :try_end_65
+-    .catchall {:try_start_58 .. :try_end_65} :catchall_25
++    :try_end_62
++    .catchall {:try_start_55 .. :try_end_62} :catchall_25
+ .end method
+ 
+ .method private checkLockHoldTime()V
+@@ -2993,6 +2991,8 @@
+ 
+     if-nez v0, :cond_43
+ 
++    :cond_3f
++    :goto_3f
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+ 
+     goto :goto_7
+@@ -3009,7 +3009,7 @@
+ 
+     iget-object v0, p0, Landroid/database/sqlite/SQLiteDatabase;->mConnectionPool:Landroid/database/sqlite/DatabaseConnectionPool;
+ 
+-    if-eqz v0, :cond_7f
++    if-eqz v0, :cond_3f
+ 
+     const-string v0, "SQLiteDatabase"
+ 
+@@ -3063,10 +3063,7 @@
+     :try_end_7f
+     .catchall {:try_start_6f .. :try_end_7f} :catchall_6a
+ 
+-    :cond_7f
+-    invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+-
+-    goto :goto_7
++    goto :goto_3f
+ .end method
+ 
+ .method closeDatabase()V
+@@ -3507,13 +3504,13 @@
+     :try_start_3
+     iget-object v0, p0, Landroid/database/sqlite/SQLiteDatabase;->mConnectionPool:Landroid/database/sqlite/DatabaseConnectionPool;
+     :try_end_5
+-    .catchall {:try_start_3 .. :try_end_5} :catchall_1e
++    .catchall {:try_start_3 .. :try_end_5} :catchall_1b
+ 
+     if-nez v0, :cond_b
+ 
++    :goto_7
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+ 
+-    :goto_a
+     return-void
+ 
+     :cond_b
+@@ -3532,13 +3529,11 @@
+ 
+     iput-object v0, p0, Landroid/database/sqlite/SQLiteDatabase;->mConnectionPool:Landroid/database/sqlite/DatabaseConnectionPool;
+     :try_end_1a
+-    .catchall {:try_start_b .. :try_end_1a} :catchall_1e
+-
+-    invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
++    .catchall {:try_start_b .. :try_end_1a} :catchall_1b
+ 
+-    goto :goto_a
++    goto :goto_7
+ 
+-    :catchall_1e
++    :catchall_1b
+     move-exception v0
+ 
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+@@ -3568,7 +3563,7 @@
+     :try_start_c
+     iget-object v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mConnectionPool:Landroid/database/sqlite/DatabaseConnectionPool;
+     :try_end_e
+-    .catchall {:try_start_c .. :try_end_e} :catchall_6f
++    .catchall {:try_start_c .. :try_end_e} :catchall_59
+ 
+     if-eqz v2, :cond_15
+ 
+@@ -3596,8 +3591,10 @@
+ 
+     invoke-static {v1, v2}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+     :try_end_26
+-    .catchall {:try_start_15 .. :try_end_26} :catchall_6f
++    .catchall {:try_start_15 .. :try_end_26} :catchall_59
+ 
++    :cond_26
++    :goto_26
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+ 
+     goto :goto_8
+@@ -3606,7 +3603,7 @@
+     :try_start_2a
+     iget-boolean v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mHasAttachedDbs:Z
+ 
+-    if-eqz v2, :cond_5c
++    if-eqz v2, :cond_5e
+ 
+     const-string v1, "SQLiteDatabase"
+ 
+@@ -3616,7 +3613,7 @@
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_58
++    if-eqz v1, :cond_26
+ 
+     const-string v1, "SQLiteDatabase"
+ 
+@@ -3648,15 +3645,19 @@
+ 
+     invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+     :try_end_58
+-    .catchall {:try_start_2a .. :try_end_58} :catchall_6f
++    .catchall {:try_start_2a .. :try_end_58} :catchall_59
++
++    goto :goto_26
++
++    :catchall_59
++    move-exception v0
+ 
+-    :cond_58
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+ 
+-    goto :goto_8
++    throw v0
+ 
+-    :cond_5c
+-    :try_start_5c
++    :cond_5e
++    :try_start_5e
+     new-instance v0, Landroid/database/sqlite/DatabaseConnectionPool;
+ 
+     invoke-direct {v0, p0}, Landroid/database/sqlite/DatabaseConnectionPool;-><init>(Landroid/database/sqlite/SQLiteDatabase;)V
+@@ -3668,21 +3669,14 @@
+     const-string v2, "WAL"
+ 
+     invoke-direct {p0, v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->setJournalMode(Ljava/lang/String;Ljava/lang/String;)V
+-    :try_end_6a
+-    .catchall {:try_start_5c .. :try_end_6a} :catchall_6f
++    :try_end_6c
++    .catchall {:try_start_5e .. :try_end_6c} :catchall_59
+ 
+     invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+ 
+     move v0, v1
+ 
+     goto :goto_8
+-
+-    :catchall_6f
+-    move-exception v0
+-
+-    invoke-virtual {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlock()V
+-
+-    throw v0
+ .end method
+ 
+ .method public endTransaction()V
+@@ -3716,9 +3710,9 @@
+ 
+     iput-object v4, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionListener:Landroid/database/sqlite/SQLiteTransactionListener;
+ 
++    :goto_16
+     invoke-direct {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlockForced()V
+ 
+-    :goto_19
+     return-void
+ 
+     :cond_1a
+@@ -3753,21 +3747,21 @@
+     :try_start_2a
+     iget-boolean v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionIsSuccessful:Z
+ 
+-    if-eqz v2, :cond_56
++    if-eqz v2, :cond_53
+ 
+     iget-object v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionListener:Landroid/database/sqlite/SQLiteTransactionListener;
+ 
+     invoke-interface {v2}, Landroid/database/sqlite/SQLiteTransactionListener;->onCommit()V
+     :try_end_33
+     .catchall {:try_start_2a .. :try_end_33} :catchall_1e
+-    .catch Ljava/lang/RuntimeException; {:try_start_2a .. :try_end_33} :catch_5c
++    .catch Ljava/lang/RuntimeException; {:try_start_2a .. :try_end_33} :catch_59
+ 
+     :cond_33
+     :goto_33
+     :try_start_33
+     iget-boolean v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionIsSuccessful:Z
+ 
+-    if-eqz v2, :cond_62
++    if-eqz v2, :cond_5f
+ 
+     const-string v2, "COMMIT;"
+ 
+@@ -3797,37 +3791,35 @@
+     :goto_50
+     iput-object v4, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionListener:Landroid/database/sqlite/SQLiteTransactionListener;
+ 
+-    invoke-direct {p0}, Landroid/database/sqlite/SQLiteDatabase;->unlockForced()V
+-
+-    goto :goto_19
++    goto :goto_16
+ 
+-    :cond_56
+-    :try_start_56
++    :cond_53
++    :try_start_53
+     iget-object v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionListener:Landroid/database/sqlite/SQLiteTransactionListener;
+ 
+     invoke-interface {v2}, Landroid/database/sqlite/SQLiteTransactionListener;->onRollback()V
+-    :try_end_5b
+-    .catchall {:try_start_56 .. :try_end_5b} :catchall_1e
+-    .catch Ljava/lang/RuntimeException; {:try_start_56 .. :try_end_5b} :catch_5c
++    :try_end_58
++    .catchall {:try_start_53 .. :try_end_58} :catchall_1e
++    .catch Ljava/lang/RuntimeException; {:try_start_53 .. :try_end_58} :catch_59
+ 
+     goto :goto_33
+ 
+-    :catch_5c
++    :catch_59
+     move-exception v0
+ 
+     move-object v1, v0
+ 
+     const/4 v2, 0x0
+ 
+-    :try_start_5f
++    :try_start_5c
+     iput-boolean v2, p0, Landroid/database/sqlite/SQLiteDatabase;->mTransactionIsSuccessful:Z
+-    :try_end_61
+-    .catchall {:try_start_5f .. :try_end_61} :catchall_1e
++    :try_end_5e
++    .catchall {:try_start_5c .. :try_end_5e} :catchall_1e
+ 
+     goto :goto_33
+ 
+-    :cond_62
+-    :try_start_62
++    :cond_5f
++    :try_start_5f
+     const-string v2, "ROLLBACK;"
+ 
+     invoke-virtual {p0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
+@@ -3835,11 +3827,11 @@
+     if-eqz v1, :cond_50
+ 
+     throw v1
+-    :try_end_6a
+-    .catchall {:try_start_62 .. :try_end_6a} :catchall_1e
+-    .catch Landroid/database/SQLException; {:try_start_62 .. :try_end_6a} :catch_6a
++    :try_end_67
++    .catchall {:try_start_5f .. :try_end_67} :catchall_1e
++    .catch Landroid/database/SQLException; {:try_start_5f .. :try_end_67} :catch_67
+ 
+-    :catch_6a
++    :catch_67
+     move-exception v2
+ 
+     goto :goto_50
+@@ -4806,7 +4798,7 @@
+ 
+     move-result v6
+ 
+-    if-nez v6, :cond_af
++    if-nez v6, :cond_b6
+ 
+     const-string v7, "SQLiteDatabase"
+ 
+@@ -4844,7 +4836,7 @@
+ 
+     invoke-static {v7, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+     :try_end_a8
+-    .catchall {:try_start_54 .. :try_end_a8} :catchall_b7
++    .catchall {:try_start_54 .. :try_end_a8} :catchall_af
+ 
+     const/4 v6, 0x0
+ 
+@@ -4856,25 +4848,25 @@
+     :goto_ae
+     return v6
+ 
+-    :cond_af
+-    if-eqz v4, :cond_b4
++    :catchall_af
++    move-exception v6
+ 
+-    invoke-virtual {v4}, Landroid/database/sqlite/SQLiteStatement;->close()V
++    if-eqz v4, :cond_b5
+ 
+-    :cond_b4
+-    add-int/lit8 v2, v2, 0x1
+-
+-    goto :goto_47
++    invoke-virtual {v4}, Landroid/database/sqlite/SQLiteStatement;->close()V
+ 
+-    :catchall_b7
+-    move-exception v6
++    :cond_b5
++    throw v6
+ 
+-    if-eqz v4, :cond_bd
++    :cond_b6
++    if-eqz v4, :cond_bb
+ 
+     invoke-virtual {v4}, Landroid/database/sqlite/SQLiteStatement;->close()V
+ 
+-    :cond_bd
+-    throw v6
++    :cond_bb
++    add-int/lit8 v2, v2, 0x1
++
++    goto :goto_47
+ 
+     :cond_be
+     const/4 v6, 0x1

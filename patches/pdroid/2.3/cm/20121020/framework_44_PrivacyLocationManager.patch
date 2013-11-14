@@ -1,0 +1,2154 @@
+diff -Npru stock-framework/smali/android/privacy/surrogate/PrivacyLocationManager.smali pdroid-framework/smali/android/privacy/surrogate/PrivacyLocationManager.smali
+--- stock-framework/smali/android/privacy/surrogate/PrivacyLocationManager.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-framework/smali/android/privacy/surrogate/PrivacyLocationManager.smali	2012-10-22 10:39:42.524543816 -0500
+@@ -0,0 +1,2150 @@
++.class public final Landroid/privacy/surrogate/PrivacyLocationManager;
++.super Landroid/location/LocationManager;
++.source "PrivacyLocationManager.java"
++
++
++# annotations
++.annotation system Ldalvik/annotation/MemberClasses;
++    value = {
++        Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;
++    }
++.end annotation
++
++
++# static fields
++.field private static final CUSTOM_LOCATION_UPDATE_COUNT:I = 0x5
++
++.field private static final TAG:Ljava/lang/String; = "PrivacyLocationManager"
++
++
++# instance fields
++.field private context:Landroid/content/Context;
++
++.field private lock:Ljava/lang/Object;
++
++.field private pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++
++# direct methods
++.method public constructor <init>(Landroid/location/ILocationManager;Landroid/content/Context;)V
++    .registers 5
++
++    invoke-direct {p0, p1}, Landroid/location/LocationManager;-><init>(Landroid/location/ILocationManager;)V
++
++    new-instance v0, Ljava/lang/Object;
++
++    invoke-direct {v0}, Ljava/lang/Object;-><init>()V
++
++    iput-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->lock:Ljava/lang/Object;
++
++    iput-object p2, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->context:Landroid/content/Context;
++
++    new-instance v0, Landroid/privacy/PrivacySettingsManager;
++
++    const-string v1, "privacy"
++
++    invoke-static {v1}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v1
++
++    invoke-static {v1}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v1
++
++    invoke-direct {v0, p2, v1}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    iput-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    return-void
++.end method
++
++.method private requestLocationUpdates(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++    .registers 7
++
++    const/4 v2, 0x3
++
++    if-nez p1, :cond_5
++
++    const/4 v0, 0x0
++
++    :goto_4
++    return v0
++
++    :cond_5
++    invoke-virtual {p1}, Landroid/location/Criteria;->getAccuracy()I
++
++    move-result v0
++
++    const/4 v1, 0x1
++
++    if-eq v0, v1, :cond_24
++
++    invoke-virtual {p1}, Landroid/location/Criteria;->getBearingAccuracy()I
++
++    move-result v0
++
++    if-eq v0, v2, :cond_24
++
++    invoke-virtual {p1}, Landroid/location/Criteria;->getHorizontalAccuracy()I
++
++    move-result v0
++
++    if-eq v0, v2, :cond_24
++
++    invoke-virtual {p1}, Landroid/location/Criteria;->getVerticalAccuracy()I
++
++    move-result v0
++
++    if-eq v0, v2, :cond_24
++
++    invoke-virtual {p1}, Landroid/location/Criteria;->getSpeedAccuracy()I
++
++    move-result v0
++
++    if-ne v0, v2, :cond_2b
++
++    :cond_24
++    const-string v0, "gps"
++
++    invoke-direct {p0, v0, p2, p3}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    goto :goto_4
++
++    :cond_2b
++    const-string v0, "network"
++
++    invoke-direct {p0, v0, p2, p3}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    goto :goto_4
++.end method
++
++.method private requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++    .registers 25
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->lock:Ljava/lang/Object;
++
++    move-object/from16 v20, v0
++
++    monitor-enter v20
++
++    :try_start_7
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->context:Landroid/content/Context;
++
++    move-object v2, v0
++
++    invoke-virtual {v2}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v3
++
++    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
++
++    move-result v4
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    invoke-virtual {v2, v3, v4}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v8
++
++    const/16 v19, 0x0
++
++    if-eqz v8, :cond_24a
++
++    const-string v2, "gps"
++
++    move-object/from16 v0, p1
++
++    move-object v1, v2
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_11a
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v2
++
++    packed-switch v2, :pswitch_data_272
++
++    :cond_33
++    :goto_33
++    monitor-exit v20
++
++    return v19
++
++    :pswitch_35
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x0
++
++    const-string v6, "locationGPS"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto :goto_33
++
++    :catchall_42
++    move-exception v2
++
++    monitor-exit v20
++    :try_end_44
++    .catchall {:try_start_7 .. :try_end_44} :catchall_42
++
++    throw v2
++
++    :pswitch_45
++    if-eqz p3, :cond_4a
++
++    :try_start_47
++    invoke-virtual/range {p3 .. p3}, Landroid/app/PendingIntent;->cancel()V
++
++    :cond_4a
++    const/16 v19, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x1
++
++    const-string v6, "locationGPS"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_58
++    .catchall {:try_start_47 .. :try_end_58} :catchall_42
++
++    goto :goto_33
++
++    :pswitch_59
++    :try_start_59
++    new-instance v9, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v14
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v16
++
++    move-object/from16 v10, p0
++
++    move-object/from16 v11, p1
++
++    move-object/from16 v12, p2
++
++    move-object/from16 v13, p3
++
++    invoke-direct/range {v9 .. v17}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;-><init>(Landroid/privacy/surrogate/PrivacyLocationManager;Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;DD)V
++
++    invoke-virtual {v9}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;->start()V
++    :try_end_79
++    .catchall {:try_start_59 .. :try_end_79} :catchall_42
++    .catch Ljava/lang/NumberFormatException; {:try_start_59 .. :try_end_79} :catch_ac
++
++    const/16 v19, 0x1
++
++    :goto_7b
++    :try_start_7b
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x2
++
++    const-string v6, "locationGPS"
++
++    new-instance v7, Ljava/lang/StringBuilder;
++
++    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v9, "Lat: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    const-string v9, " Lon: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v7
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto :goto_33
++
++    :catch_ac
++    move-exception v2
++
++    move-object/from16 v18, v2
++
++    const-string v2, "PrivacyLocationManager"
++
++    const-string v5, "requestLocationUpdates: invalid coordinates"
++
++    invoke-static {v2, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_b6
++    .catchall {:try_start_7b .. :try_end_b6} :catchall_42
++
++    const/16 v19, 0x1
++
++    goto :goto_7b
++
++    :pswitch_b9
++    :try_start_b9
++    new-instance v9, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v14
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v16
++
++    move-object/from16 v10, p0
++
++    move-object/from16 v11, p1
++
++    move-object/from16 v12, p2
++
++    move-object/from16 v13, p3
++
++    invoke-direct/range {v9 .. v17}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;-><init>(Landroid/privacy/surrogate/PrivacyLocationManager;Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;DD)V
++
++    invoke-virtual {v9}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;->start()V
++    :try_end_d9
++    .catchall {:try_start_b9 .. :try_end_d9} :catchall_42
++    .catch Ljava/lang/NumberFormatException; {:try_start_b9 .. :try_end_d9} :catch_10d
++
++    const/16 v19, 0x1
++
++    :goto_db
++    :try_start_db
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x3
++
++    const-string v6, "locationGPS"
++
++    new-instance v7, Ljava/lang/StringBuilder;
++
++    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v9, "Lat: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    const-string v9, " Lon: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v7
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :catch_10d
++    move-exception v2
++
++    move-object/from16 v18, v2
++
++    const-string v2, "PrivacyLocationManager"
++
++    const-string v5, "requestLocationUpdates: invalid coordinates"
++
++    invoke-static {v2, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v19, 0x1
++
++    goto :goto_db
++
++    :cond_11a
++    const-string v2, "network"
++
++    move-object/from16 v0, p1
++
++    move-object v1, v2
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_213
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v2
++
++    packed-switch v2, :pswitch_data_27e
++
++    goto/16 :goto_33
++
++    :pswitch_12e
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x0
++
++    const-string v6, "locationNetwork"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :pswitch_13c
++    if-eqz p3, :cond_141
++
++    invoke-virtual/range {p3 .. p3}, Landroid/app/PendingIntent;->cancel()V
++
++    :cond_141
++    const/16 v19, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x1
++
++    const-string v6, "locationNetwork"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_14f
++    .catchall {:try_start_db .. :try_end_14f} :catchall_42
++
++    goto/16 :goto_33
++
++    :pswitch_151
++    :try_start_151
++    new-instance v9, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v14
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v16
++
++    move-object/from16 v10, p0
++
++    move-object/from16 v11, p1
++
++    move-object/from16 v12, p2
++
++    move-object/from16 v13, p3
++
++    invoke-direct/range {v9 .. v17}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;-><init>(Landroid/privacy/surrogate/PrivacyLocationManager;Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;DD)V
++
++    invoke-virtual {v9}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;->start()V
++    :try_end_171
++    .catchall {:try_start_151 .. :try_end_171} :catchall_42
++    .catch Ljava/lang/NumberFormatException; {:try_start_151 .. :try_end_171} :catch_1a5
++
++    const/16 v19, 0x1
++
++    :goto_173
++    :try_start_173
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x2
++
++    const-string v6, "locationNetwork"
++
++    new-instance v7, Ljava/lang/StringBuilder;
++
++    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v9, "Lat: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    const-string v9, " Lon: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v7
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :catch_1a5
++    move-exception v2
++
++    move-object/from16 v18, v2
++
++    const-string v2, "PrivacyLocationManager"
++
++    const-string v5, "requestLocationUpdates: invalid coordinates"
++
++    invoke-static {v2, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_1af
++    .catchall {:try_start_173 .. :try_end_1af} :catchall_42
++
++    const/16 v19, 0x1
++
++    goto :goto_173
++
++    :pswitch_1b2
++    :try_start_1b2
++    new-instance v9, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v14
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v2}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v16
++
++    move-object/from16 v10, p0
++
++    move-object/from16 v11, p1
++
++    move-object/from16 v12, p2
++
++    move-object/from16 v13, p3
++
++    invoke-direct/range {v9 .. v17}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;-><init>(Landroid/privacy/surrogate/PrivacyLocationManager;Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;DD)V
++
++    invoke-virtual {v9}, Landroid/privacy/surrogate/PrivacyLocationManager$PrivacyLocationUpdater;->start()V
++    :try_end_1d2
++    .catchall {:try_start_1b2 .. :try_end_1d2} :catchall_42
++    .catch Ljava/lang/NumberFormatException; {:try_start_1b2 .. :try_end_1d2} :catch_206
++
++    const/16 v19, 0x1
++
++    :goto_1d4
++    :try_start_1d4
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x3
++
++    const-string v6, "locationNetwork"
++
++    new-instance v7, Ljava/lang/StringBuilder;
++
++    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v9, "Lat: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    const-string v9, " Lon: "
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v7, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v7
++
++    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v7
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :catch_206
++    move-exception v2
++
++    move-object/from16 v18, v2
++
++    const-string v2, "PrivacyLocationManager"
++
++    const-string v5, "requestLocationUpdates: invalid coordinates"
++
++    invoke-static {v2, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v19, 0x1
++
++    goto :goto_1d4
++
++    :cond_213
++    const-string v2, "passive"
++
++    move-object/from16 v0, p1
++
++    move-object v1, v2
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_33
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v2
++
++    if-nez v2, :cond_23a
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v2
++
++    if-nez v2, :cond_23a
++
++    const/16 v19, 0x0
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x0
++
++    const-string v6, "locationGPS"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :cond_23a
++    const/16 v19, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x1
++
++    const-string v6, "locationGPS"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :cond_24a
++    const-string v2, "network"
++
++    move-object/from16 v0, p1
++
++    move-object v1, v2
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_263
++
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x0
++
++    const-string v6, "locationNetwork"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_33
++
++    :cond_263
++    move-object/from16 v0, p0
++
++    iget-object v0, v0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object v2, v0
++
++    const/4 v5, 0x0
++
++    const-string v6, "locationGPS"
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_26f
++    .catchall {:try_start_1d4 .. :try_end_26f} :catchall_42
++
++    goto/16 :goto_33
++
++    nop
++
++    :pswitch_data_272
++    .packed-switch 0x0
++        :pswitch_35
++        :pswitch_45
++        :pswitch_59
++        :pswitch_b9
++    .end packed-switch
++
++    :pswitch_data_27e
++    .packed-switch 0x0
++        :pswitch_12e
++        :pswitch_13c
++        :pswitch_151
++        :pswitch_1b2
++    .end packed-switch
++.end method
++
++
++# virtual methods
++.method public addNmeaListener(Landroid/location/GpsStatus$NmeaListener;)Z
++    .registers 11
++
++    const/4 v5, 0x0
++
++    const/4 v8, 0x0
++
++    const-string v4, "locationGPS"
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->context:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
++
++    move-result v2
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v0, v1, v2}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v6
++
++    if-eqz v6, :cond_26
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v0
++
++    if-eqz v0, :cond_26
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x1
++
++    const-string v7, "locationGPS"
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    move v0, v8
++
++    :goto_25
++    return v0
++
++    :cond_26
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v3, "locationGPS"
++
++    move v3, v8
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->addNmeaListener(Landroid/location/GpsStatus$NmeaListener;)Z
++
++    move-result v0
++
++    goto :goto_25
++.end method
++
++.method public getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
++    .registers 14
++
++    const/4 v3, 0x0
++
++    const/4 v5, 0x0
++
++    const-string v4, "locationGPS"
++
++    const-string v11, "Lat: "
++
++    const-string v10, " Lon: "
++
++    if-nez p1, :cond_f
++
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
++
++    move-result-object v0
++
++    :goto_e
++    return-object v0
++
++    :cond_f
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->context:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
++
++    move-result v2
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v0, v1, v2}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v6
++
++    const/4 v7, 0x0
++
++    if-eqz v6, :cond_22e
++
++    const-string v0, "gps"
++
++    invoke-virtual {p1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_103
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v0
++
++    packed-switch v0, :pswitch_data_29a
++
++    :cond_31
++    :goto_31
++    move-object v0, v7
++
++    goto :goto_e
++
++    :pswitch_33
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
++
++    move-result-object v7
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v8, "locationGPS"
++
++    if-eqz v7, :cond_62
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    :cond_62
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto :goto_31
++
++    :pswitch_66
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x1
++
++    const-string v8, "locationGPS"
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto :goto_31
++
++    :pswitch_6f
++    new-instance v7, Landroid/location/Location;
++
++    invoke-direct {v7, p1}, Landroid/location/Location;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v8
++
++    invoke-virtual {v7, v8, v9}, Landroid/location/Location;->setLatitude(D)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v8
++
++    invoke-virtual {v7, v8, v9}, Landroid/location/Location;->setLongitude(D)V
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x2
++
++    const-string v5, "locationGPS"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :pswitch_b9
++    new-instance v7, Landroid/location/Location;
++
++    invoke-direct {v7, p1}, Landroid/location/Location;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v8
++
++    invoke-virtual {v7, v8, v9}, Landroid/location/Location;->setLatitude(D)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v8
++
++    invoke-virtual {v7, v8, v9}, Landroid/location/Location;->setLongitude(D)V
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x3
++
++    const-string v5, "locationGPS"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :cond_103
++    const-string v0, "network"
++
++    invoke-virtual {p1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_1e6
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v0
++
++    packed-switch v0, :pswitch_data_2a6
++
++    goto/16 :goto_31
++
++    :pswitch_114
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
++
++    move-result-object v7
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v4, "locationNetwork"
++
++    if-eqz v7, :cond_143
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    :cond_143
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :pswitch_148
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x1
++
++    const-string v4, "locationNetwork"
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :pswitch_152
++    new-instance v7, Landroid/location/Location;
++
++    invoke-direct {v7, p1}, Landroid/location/Location;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v3
++
++    invoke-virtual {v7, v3, v4}, Landroid/location/Location;->setLatitude(D)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v3
++
++    invoke-virtual {v7, v3, v4}, Landroid/location/Location;->setLongitude(D)V
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x2
++
++    const-string v4, "locationNetwork"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :pswitch_19c
++    new-instance v7, Landroid/location/Location;
++
++    invoke-direct {v7, p1}, Landroid/location/Location;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v3
++
++    invoke-virtual {v7, v3, v4}, Landroid/location/Location;->setLatitude(D)V
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {v0}, Ljava/lang/Double;->parseDouble(Ljava/lang/String;)D
++
++    move-result-wide v3
++
++    invoke-virtual {v7, v3, v4}, Landroid/location/Location;->setLongitude(D)V
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v3, 0x3
++
++    const-string v4, "locationNetwork"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :cond_1e6
++    const-string v0, "passive"
++
++    invoke-virtual {p1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_31
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v0
++
++    if-nez v0, :cond_31
++
++    invoke-virtual {v6}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v0
++
++    if-nez v0, :cond_31
++
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
++
++    move-result-object v7
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v8, "locationGPS"
++
++    if-eqz v7, :cond_229
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    :cond_229
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :cond_22e
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
++
++    move-result-object v7
++
++    const-string v0, "network"
++
++    invoke-virtual {p1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_26a
++
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v4, "locationNetwork"
++
++    if-eqz v7, :cond_265
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    :cond_265
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :cond_26a
++    iget-object v0, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v8, "locationGPS"
++
++    if-eqz v7, :cond_295
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v8, "Lat: "
++
++    invoke-virtual {v5, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLatitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v8, " Lon: "
++
++    invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v7}, Landroid/location/Location;->getLongitude()D
++
++    move-result-wide v8
++
++    invoke-virtual {v5, v8, v9}, Ljava/lang/StringBuilder;->append(D)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    :cond_295
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto/16 :goto_31
++
++    :pswitch_data_29a
++    .packed-switch 0x0
++        :pswitch_33
++        :pswitch_66
++        :pswitch_6f
++        :pswitch_b9
++    .end packed-switch
++
++    :pswitch_data_2a6
++    .packed-switch 0x0
++        :pswitch_114
++        :pswitch_148
++        :pswitch_152
++        :pswitch_19c
++    .end packed-switch
++.end method
++
++.method public getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;
++    .registers 7
++
++    if-nez p1, :cond_7
++
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;
++
++    move-result-object v2
++
++    :goto_6
++    return-object v2
++
++    :cond_7
++    iget-object v2, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    iget-object v3, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->context:Landroid/content/Context;
++
++    invoke-virtual {v3}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v3
++
++    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
++
++    move-result v4
++
++    invoke-virtual {v2, v3, v4}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v1
++
++    const/4 v0, 0x0
++
++    if-eqz v1, :cond_5e
++
++    const-string v2, "gps"
++
++    invoke-virtual {p1, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_30
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v2
++
++    packed-switch v2, :pswitch_data_64
++
++    :cond_29
++    :goto_29
++    :pswitch_29
++    move-object v2, v0
++
++    goto :goto_6
++
++    :pswitch_2b
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;
++
++    move-result-object v0
++
++    goto :goto_29
++
++    :cond_30
++    const-string v2, "network"
++
++    invoke-virtual {p1, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_45
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v2
++
++    packed-switch v2, :pswitch_data_70
++
++    :pswitch_3f
++    goto :goto_29
++
++    :pswitch_40
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;
++
++    move-result-object v0
++
++    goto :goto_29
++
++    :cond_45
++    const-string v2, "passive"
++
++    invoke-virtual {p1, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_29
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_59
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v2
++
++    if-nez v2, :cond_29
++
++    :cond_59
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;
++
++    move-result-object v0
++
++    goto :goto_29
++
++    :cond_5e
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;
++
++    move-result-object v0
++
++    goto :goto_29
++
++    nop
++
++    :pswitch_data_64
++    .packed-switch 0x0
++        :pswitch_2b
++        :pswitch_29
++        :pswitch_2b
++        :pswitch_2b
++    .end packed-switch
++
++    :pswitch_data_70
++    .packed-switch 0x0
++        :pswitch_40
++        :pswitch_3f
++        :pswitch_40
++        :pswitch_40
++    .end packed-switch
++.end method
++
++.method public isProviderEnabled(Ljava/lang/String;)Z
++    .registers 7
++
++    if-nez p1, :cond_7
++
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z
++
++    move-result v2
++
++    :goto_6
++    return v2
++
++    :cond_7
++    iget-object v2, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    iget-object v3, p0, Landroid/privacy/surrogate/PrivacyLocationManager;->context:Landroid/content/Context;
++
++    invoke-virtual {v3}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v3
++
++    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
++
++    move-result v4
++
++    invoke-virtual {v2, v3, v4}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v1
++
++    const/4 v0, 0x0
++
++    if-eqz v1, :cond_64
++
++    const-string v2, "gps"
++
++    invoke-virtual {p1, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_32
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v2
++
++    packed-switch v2, :pswitch_data_6a
++
++    :cond_29
++    :goto_29
++    :pswitch_29
++    move v2, v0
++
++    goto :goto_6
++
++    :pswitch_2b
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z
++
++    move-result v0
++
++    goto :goto_29
++
++    :pswitch_30
++    const/4 v0, 0x1
++
++    goto :goto_29
++
++    :cond_32
++    const-string v2, "network"
++
++    invoke-virtual {p1, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_49
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v2
++
++    packed-switch v2, :pswitch_data_76
++
++    goto :goto_29
++
++    :pswitch_42
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z
++
++    move-result v0
++
++    goto :goto_29
++
++    :pswitch_47
++    const/4 v0, 0x1
++
++    goto :goto_29
++
++    :cond_49
++    const-string v2, "passive"
++
++    invoke-virtual {p1, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_29
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_5d
++
++    invoke-virtual {v1}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v2
++
++    if-nez v2, :cond_62
++
++    :cond_5d
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z
++
++    move-result v0
++
++    goto :goto_29
++
++    :cond_62
++    const/4 v0, 0x0
++
++    goto :goto_29
++
++    :cond_64
++    invoke-super {p0, p1}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z
++
++    move-result v0
++
++    goto :goto_29
++
++    nop
++
++    :pswitch_data_6a
++    .packed-switch 0x0
++        :pswitch_2b
++        :pswitch_29
++        :pswitch_30
++        :pswitch_30
++    .end packed-switch
++
++    :pswitch_data_76
++    .packed-switch 0x0
++        :pswitch_42
++        :pswitch_29
++        :pswitch_47
++        :pswitch_47
++    .end packed-switch
++.end method
++
++.method public requestLocationUpdates(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V
++    .registers 7
++
++    if-eqz p4, :cond_4
++
++    if-nez p5, :cond_8
++
++    :cond_4
++    invoke-super/range {p0 .. p5}, Landroid/location/LocationManager;->requestLocationUpdates(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p4, v0, p5}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super/range {p0 .. p5}, Landroid/location/LocationManager;->requestLocationUpdates(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V
++
++    goto :goto_7
++.end method
++
++.method public requestLocationUpdates(JFLandroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V
++    .registers 8
++
++    if-eqz p4, :cond_4
++
++    if-nez p5, :cond_8
++
++    :cond_4
++    invoke-super/range {p0 .. p6}, Landroid/location/LocationManager;->requestLocationUpdates(JFLandroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p4, p5, v0}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super/range {p0 .. p6}, Landroid/location/LocationManager;->requestLocationUpdates(JFLandroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V
++
++    goto :goto_7
++.end method
++
++.method public requestLocationUpdates(Ljava/lang/String;JFLandroid/app/PendingIntent;)V
++    .registers 7
++
++    if-eqz p1, :cond_4
++
++    if-nez p5, :cond_8
++
++    :cond_4
++    invoke-super/range {p0 .. p5}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/app/PendingIntent;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, v0, p5}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super/range {p0 .. p5}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/app/PendingIntent;)V
++
++    goto :goto_7
++.end method
++
++.method public requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V
++    .registers 7
++
++    if-eqz p1, :cond_4
++
++    if-nez p5, :cond_8
++
++    :cond_4
++    invoke-super/range {p0 .. p5}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, p5, v0}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super/range {p0 .. p5}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V
++
++    goto :goto_7
++.end method
++
++.method public requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;Landroid/os/Looper;)V
++    .registers 8
++
++    if-eqz p1, :cond_4
++
++    if-nez p5, :cond_8
++
++    :cond_4
++    invoke-super/range {p0 .. p6}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;Landroid/os/Looper;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, p5, v0}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super/range {p0 .. p6}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;Landroid/os/Looper;)V
++
++    goto :goto_7
++.end method
++
++.method public requestSingleUpdate(Landroid/location/Criteria;Landroid/app/PendingIntent;)V
++    .registers 4
++
++    if-eqz p1, :cond_4
++
++    if-nez p2, :cond_8
++
++    :cond_4
++    invoke-super {p0, p1, p2}, Landroid/location/LocationManager;->requestSingleUpdate(Landroid/location/Criteria;Landroid/app/PendingIntent;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, v0, p2}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super {p0, p1, p2}, Landroid/location/LocationManager;->requestSingleUpdate(Landroid/location/Criteria;Landroid/app/PendingIntent;)V
++
++    goto :goto_7
++.end method
++
++.method public requestSingleUpdate(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V
++    .registers 5
++
++    if-eqz p1, :cond_4
++
++    if-nez p2, :cond_8
++
++    :cond_4
++    invoke-super {p0, p1, p2, p3}, Landroid/location/LocationManager;->requestSingleUpdate(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, p2, v0}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super {p0, p1, p2, p3}, Landroid/location/LocationManager;->requestSingleUpdate(Landroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V
++
++    goto :goto_7
++.end method
++
++.method public requestSingleUpdate(Ljava/lang/String;Landroid/app/PendingIntent;)V
++    .registers 4
++
++    if-eqz p1, :cond_4
++
++    if-nez p2, :cond_8
++
++    :cond_4
++    invoke-super {p0, p1, p2}, Landroid/location/LocationManager;->requestSingleUpdate(Ljava/lang/String;Landroid/app/PendingIntent;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, v0, p2}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super {p0, p1, p2}, Landroid/location/LocationManager;->requestSingleUpdate(Ljava/lang/String;Landroid/app/PendingIntent;)V
++
++    goto :goto_7
++.end method
++
++.method public requestSingleUpdate(Ljava/lang/String;Landroid/location/LocationListener;Landroid/os/Looper;)V
++    .registers 5
++
++    if-eqz p1, :cond_4
++
++    if-nez p2, :cond_8
++
++    :cond_4
++    invoke-super {p0, p1, p2, p3}, Landroid/location/LocationManager;->requestSingleUpdate(Ljava/lang/String;Landroid/location/LocationListener;Landroid/os/Looper;)V
++
++    :cond_7
++    :goto_7
++    return-void
++
++    :cond_8
++    const/4 v0, 0x0
++
++    invoke-direct {p0, p1, p2, v0}, Landroid/privacy/surrogate/PrivacyLocationManager;->requestLocationUpdates(Ljava/lang/String;Landroid/location/LocationListener;Landroid/app/PendingIntent;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_7
++
++    invoke-super {p0, p1, p2, p3}, Landroid/location/LocationManager;->requestSingleUpdate(Ljava/lang/String;Landroid/location/LocationListener;Landroid/os/Looper;)V
++
++    goto :goto_7
++.end method

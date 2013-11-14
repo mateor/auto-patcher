@@ -1,0 +1,267 @@
+diff -Npru stock-framework/smali/android/gesture/InstanceLearner.smali ext-framework/smali/android/gesture/InstanceLearner.smali
+--- stock-framework/smali/android/gesture/InstanceLearner.smali	2012-11-06 14:59:52.501241583 -0600
++++ ext-framework/smali/android/gesture/InstanceLearner.smali	1969-12-31 18:00:00.000000000 -0600
+@@ -1,263 +0,0 @@
+-.class Landroid/gesture/InstanceLearner;
+-.super Landroid/gesture/Learner;
+-.source "InstanceLearner.java"
+-
+-
+-# static fields
+-.field private static final sComparator:Ljava/util/Comparator;
+-    .annotation system Ldalvik/annotation/Signature;
+-        value = {
+-            "Ljava/util/Comparator",
+-            "<",
+-            "Landroid/gesture/Prediction;",
+-            ">;"
+-        }
+-    .end annotation
+-.end field
+-
+-
+-# direct methods
+-.method static constructor <clinit>()V
+-    .registers 1
+-
+-    new-instance v0, Landroid/gesture/InstanceLearner$1;
+-
+-    invoke-direct {v0}, Landroid/gesture/InstanceLearner$1;-><init>()V
+-
+-    sput-object v0, Landroid/gesture/InstanceLearner;->sComparator:Ljava/util/Comparator;
+-
+-    return-void
+-.end method
+-
+-.method constructor <init>()V
+-    .registers 1
+-
+-    invoke-direct {p0}, Landroid/gesture/Learner;-><init>()V
+-
+-    return-void
+-.end method
+-
+-
+-# virtual methods
+-.method classify(II[F)Ljava/util/ArrayList;
+-    .registers 23
+-    .annotation system Ldalvik/annotation/Signature;
+-        value = {
+-            "(II[F)",
+-            "Ljava/util/ArrayList",
+-            "<",
+-            "Landroid/gesture/Prediction;",
+-            ">;"
+-        }
+-    .end annotation
+-
+-    new-instance v11, Ljava/util/ArrayList;
+-
+-    invoke-direct {v11}, Ljava/util/ArrayList;-><init>()V
+-
+-    invoke-virtual/range {p0 .. p0}, Landroid/gesture/InstanceLearner;->getInstances()Ljava/util/ArrayList;
+-
+-    move-result-object v8
+-
+-    invoke-virtual {v8}, Ljava/util/ArrayList;->size()I
+-
+-    move-result v3
+-
+-    new-instance v9, Ljava/util/TreeMap;
+-
+-    invoke-direct {v9}, Ljava/util/TreeMap;-><init>()V
+-
+-    const/4 v6, 0x0
+-
+-    :goto_13
+-    if-ge v6, v3, :cond_91
+-
+-    invoke-virtual {v8, v6}, Ljava/util/ArrayList;->get(I)Ljava/lang/Object;
+-
+-    move-result-object v12
+-
+-    check-cast v12, Landroid/gesture/Instance;
+-
+-    iget-object v0, v12, Landroid/gesture/Instance;->vector:[F
+-
+-    move-object/from16 v17, v0
+-
+-    move-object/from16 v0, v17
+-
+-    array-length v0, v0
+-
+-    move/from16 v17, v0
+-
+-    move-object/from16 v0, p3
+-
+-    array-length v0, v0
+-
+-    move/from16 v18, v0
+-
+-    move/from16 v0, v17
+-
+-    move/from16 v1, v18
+-
+-    if-eq v0, v1, :cond_32
+-
+-    :cond_2f
+-    :goto_2f
+-    add-int/lit8 v6, v6, 0x1
+-
+-    goto :goto_13
+-
+-    :cond_32
+-    const/16 v17, 0x2
+-
+-    move/from16 v0, p1
+-
+-    move/from16 v1, v17
+-
+-    if-ne v0, v1, :cond_7c
+-
+-    iget-object v0, v12, Landroid/gesture/Instance;->vector:[F
+-
+-    move-object/from16 v17, v0
+-
+-    move-object/from16 v0, v17
+-
+-    move-object/from16 v1, p3
+-
+-    move/from16 v2, p2
+-
+-    invoke-static {v0, v1, v2}, Landroid/gesture/GestureUtils;->minimumCosineDistance([F[FI)F
+-
+-    move-result v17
+-
+-    move/from16 v0, v17
+-
+-    float-to-double v4, v0
+-
+-    :goto_4b
+-    const-wide/16 v17, 0x0
+-
+-    cmpl-double v17, v4, v17
+-
+-    if-nez v17, :cond_8c
+-
+-    const-wide v15, 0x7fefffffffffffffL
+-
+-    :goto_56
+-    iget-object v0, v12, Landroid/gesture/Instance;->label:Ljava/lang/String;
+-
+-    move-object/from16 v17, v0
+-
+-    move-object/from16 v0, v17
+-
+-    invoke-virtual {v9, v0}, Ljava/util/TreeMap;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v13
+-
+-    check-cast v13, Ljava/lang/Double;
+-
+-    if-eqz v13, :cond_6c
+-
+-    invoke-virtual {v13}, Ljava/lang/Double;->doubleValue()D
+-
+-    move-result-wide v17
+-
+-    cmpl-double v17, v15, v17
+-
+-    if-lez v17, :cond_2f
+-
+-    :cond_6c
+-    iget-object v0, v12, Landroid/gesture/Instance;->label:Ljava/lang/String;
+-
+-    move-object/from16 v17, v0
+-
+-    invoke-static/range {v15 .. v16}, Ljava/lang/Double;->valueOf(D)Ljava/lang/Double;
+-
+-    move-result-object v18
+-
+-    move-object/from16 v0, v17
+-
+-    move-object/from16 v1, v18
+-
+-    invoke-virtual {v9, v0, v1}, Ljava/util/TreeMap;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    goto :goto_2f
+-
+-    :cond_7c
+-    iget-object v0, v12, Landroid/gesture/Instance;->vector:[F
+-
+-    move-object/from16 v17, v0
+-
+-    move-object/from16 v0, v17
+-
+-    move-object/from16 v1, p3
+-
+-    invoke-static {v0, v1}, Landroid/gesture/GestureUtils;->squaredEuclideanDistance([F[F)F
+-
+-    move-result v17
+-
+-    move/from16 v0, v17
+-
+-    float-to-double v4, v0
+-
+-    goto :goto_4b
+-
+-    :cond_8c
+-    const-wide/high16 v17, 0x3ff0
+-
+-    div-double v15, v17, v4
+-
+-    goto :goto_56
+-
+-    :cond_91
+-    invoke-virtual {v9}, Ljava/util/TreeMap;->keySet()Ljava/util/Set;
+-
+-    move-result-object v17
+-
+-    invoke-interface/range {v17 .. v17}, Ljava/util/Set;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v7
+-
+-    :goto_99
+-    invoke-interface {v7}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v17
+-
+-    if-eqz v17, :cond_bc
+-
+-    invoke-interface {v7}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v10
+-
+-    check-cast v10, Ljava/lang/String;
+-
+-    invoke-virtual {v9, v10}, Ljava/util/TreeMap;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v17
+-
+-    check-cast v17, Ljava/lang/Double;
+-
+-    invoke-virtual/range {v17 .. v17}, Ljava/lang/Double;->doubleValue()D
+-
+-    move-result-wide v13
+-
+-    new-instance v17, Landroid/gesture/Prediction;
+-
+-    move-object/from16 v0, v17
+-
+-    invoke-direct {v0, v10, v13, v14}, Landroid/gesture/Prediction;-><init>(Ljava/lang/String;D)V
+-
+-    move-object/from16 v0, v17
+-
+-    invoke-virtual {v11, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+-
+-    goto :goto_99
+-
+-    :cond_bc
+-    sget-object v17, Landroid/gesture/InstanceLearner;->sComparator:Ljava/util/Comparator;
+-
+-    move-object/from16 v0, v17
+-
+-    invoke-static {v11, v0}, Ljava/util/Collections;->sort(Ljava/util/List;Ljava/util/Comparator;)V
+-
+-    return-object v11
+-.end method

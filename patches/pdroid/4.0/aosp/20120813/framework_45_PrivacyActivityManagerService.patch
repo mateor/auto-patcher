@@ -1,0 +1,1091 @@
+diff -NpruEbB stock_framework/smali/android/privacy/surrogate/PrivacyActivityManagerService.smali moded_framework/smali/android/privacy/surrogate/PrivacyActivityManagerService.smali
+--- stock_framework/smali/android/privacy/surrogate/PrivacyActivityManagerService.smali	1969-12-31 16:00:00.000000000 -0800
++++ moded_framework/smali/android/privacy/surrogate/PrivacyActivityManagerService.smali	2012-08-14 09:22:47.819540280 -0700
+@@ -0,0 +1,1087 @@
++.class public final Landroid/privacy/surrogate/PrivacyActivityManagerService;
++.super Ljava/lang/Object;
++.source "PrivacyActivityManagerService.java"
++
++
++# static fields
++.field private static final TAG:Ljava/lang/String; = "PrivacyActivityManagerService"
++
++.field private static pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++.field private static tmpIn:Landroid/content/Intent;
++
++.field private static tmpInHash:J
++
++.field private static tmpInReceivers:I
++
++.field private static tmpMms:Landroid/content/Intent;
++
++.field private static tmpMmsHash:J
++
++.field private static tmpMmsReceivers:I
++
++.field private static tmpOut:Landroid/content/Intent;
++
++.field private static tmpOutHash:J
++
++.field private static tmpOutReceivers:I
++
++.field private static tmpPackageAddedHash:J
++
++.field private static tmpSms:Landroid/content/Intent;
++
++.field private static tmpSmsHash:J
++
++.field private static tmpSmsReceivers:I
++
++
++# direct methods
++.method static constructor <clinit>()V
++    .registers 3
++
++    const/4 v2, 0x0
++
++    const-wide/16 v0, 0x0
++
++    sput-wide v0, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInHash:J
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInReceivers:I
++
++    sput-wide v0, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutHash:J
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutReceivers:I
++
++    sput-wide v0, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsHash:J
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsReceivers:I
++
++    sput-wide v0, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsHash:J
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsReceivers:I
++
++    sput-wide v0, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpPackageAddedHash:J
++
++    return-void
++.end method
++
++.method public constructor <init>()V
++    .registers 1
++
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++
++    return-void
++.end method
++
++.method public static enforcePrivacyPermission(Ljava/lang/String;ILandroid/content/Intent;Landroid/content/Context;I)V
++    .registers 22
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-nez v2, :cond_11
++
++    const-string/jumbo v2, "privacy"
++
++    move-object/from16 v0, p3
++
++    invoke-virtual {v0, v2}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
++
++    move-result-object v2
++
++    check-cast v2, Landroid/privacy/PrivacySettingsManager;
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    :cond_11
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v9
++
++    const-string v2, "android.intent.action.NEW_OUTGOING_CALL"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_ad
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    move/from16 v1, p1
++
++    invoke-virtual {v2, v0, v1}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v8
++
++    const-string v2, "android.intent.extra.PHONE_NUMBER"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v16
++
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-eqz v2, :cond_49
++
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->clone()Ljava/lang/Object;
++
++    move-result-object v2
++
++    check-cast v2, Landroid/content/Intent;
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOut:Landroid/content/Intent;
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v2
++
++    sput-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutHash:J
++
++    sput p4, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutReceivers:I
++
++    :cond_49
++    if-eqz v8, :cond_76
++
++    :try_start_4b
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getOutgoingCallsSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_76
++
++    const-string v16, ""
++
++    const-string v2, "android.intent.extra.PHONE_NUMBER"
++
++    move-object/from16 v0, p2
++
++    move-object/from16 v1, v16
++
++    invoke-virtual {v0, v2, v1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x1
++
++    const-string/jumbo v6, "outgoingCall"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_6a
++    .catch Ljava/lang/Exception; {:try_start_4b .. :try_end_6a} :catch_a0
++
++    :cond_6a
++    :goto_6a
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutReceivers:I
++
++    const/4 v3, 0x1
++
++    if-le v2, v3, :cond_a9
++
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutReceivers:I
++
++    add-int/lit8 v2, v2, -0x1
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutReceivers:I
++
++    :cond_75
++    :goto_75
++    return-void
++
++    :cond_76
++    :try_start_76
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOutHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-nez v2, :cond_6a
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOut:Landroid/content/Intent;
++
++    const-string v3, "android.intent.extra.PHONE_NUMBER"
++
++    invoke-virtual {v2, v3}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v16
++
++    const-string v2, "android.intent.extra.PHONE_NUMBER"
++
++    move-object/from16 v0, p2
++
++    move-object/from16 v1, v16
++
++    invoke-virtual {v0, v2, v1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x0
++
++    const-string/jumbo v6, "outgoingCall"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_9f
++    .catch Ljava/lang/Exception; {:try_start_76 .. :try_end_9f} :catch_a0
++
++    goto :goto_6a
++
++    :catch_a0
++    move-exception v13
++
++    const-string v2, "PrivacyActivityManagerService"
++
++    const-string v3, "failed to enforce intent broadcast permission"
++
++    invoke-static {v2, v3, v13}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_6a
++
++    :cond_a9
++    const/4 v2, 0x0
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpOut:Landroid/content/Intent;
++
++    goto :goto_75
++
++    :cond_ad
++    const-string v2, "android.intent.action.PHONE_STATE"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_14d
++
++    const-string v2, "incoming_number"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v16
++
++    if-eqz v16, :cond_75
++
++    invoke-virtual/range {v16 .. v16}, Ljava/lang/String;->isEmpty()Z
++
++    move-result v2
++
++    if-nez v2, :cond_75
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    move/from16 v1, p1
++
++    invoke-virtual {v2, v0, v1}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v8
++
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-eqz v2, :cond_e9
++
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->clone()Ljava/lang/Object;
++
++    move-result-object v2
++
++    check-cast v2, Landroid/content/Intent;
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpIn:Landroid/content/Intent;
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v2
++
++    sput-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInHash:J
++
++    sput p4, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInReceivers:I
++
++    :cond_e9
++    if-eqz v8, :cond_116
++
++    :try_start_eb
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getIncomingCallsSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_116
++
++    const-string v16, ""
++
++    const-string v2, "incoming_number"
++
++    move-object/from16 v0, p2
++
++    move-object/from16 v1, v16
++
++    invoke-virtual {v0, v2, v1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x1
++
++    const-string v6, "incomingCall"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_109
++    .catch Ljava/lang/Exception; {:try_start_eb .. :try_end_109} :catch_13f
++
++    :cond_109
++    :goto_109
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInReceivers:I
++
++    const/4 v3, 0x1
++
++    if-le v2, v3, :cond_148
++
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInReceivers:I
++
++    add-int/lit8 v2, v2, -0x1
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInReceivers:I
++
++    goto/16 :goto_75
++
++    :cond_116
++    :try_start_116
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpInHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-nez v2, :cond_109
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpIn:Landroid/content/Intent;
++
++    const-string v3, "incoming_number"
++
++    invoke-virtual {v2, v3}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v16
++
++    const-string v2, "incoming_number"
++
++    move-object/from16 v0, p2
++
++    move-object/from16 v1, v16
++
++    invoke-virtual {v0, v2, v1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x0
++
++    const-string v6, "incomingCall"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_13e
++    .catch Ljava/lang/Exception; {:try_start_116 .. :try_end_13e} :catch_13f
++
++    goto :goto_109
++
++    :catch_13f
++    move-exception v13
++
++    const-string v2, "PrivacyActivityManagerService"
++
++    const-string v3, "failed to enforce intent broadcast permission"
++
++    invoke-static {v2, v3, v13}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_109
++
++    :cond_148
++    const/4 v2, 0x0
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpIn:Landroid/content/Intent;
++
++    goto/16 :goto_75
++
++    :cond_14d
++    const-string v2, "android.provider.Telephony.SMS_RECEIVED"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_222
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    move/from16 v1, p1
++
++    invoke-virtual {v2, v0, v1}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v8
++
++    const-string v16, "[real]"
++
++    const-string/jumbo v2, "pdus"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->getSerializableExtra(Ljava/lang/String;)Ljava/io/Serializable;
++
++    move-result-object v2
++
++    check-cast v2, [Ljava/lang/Object;
++
++    move-object v15, v2
++
++    check-cast v15, [Ljava/lang/Object;
++
++    if-eqz v15, :cond_1cd
++
++    const/4 v2, 0x0
++
++    aget-object v2, v15, v2
++
++    check-cast v2, [B
++
++    check-cast v2, [B
++
++    move-object v12, v2
++
++    :goto_179
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-eqz v2, :cond_193
++
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->clone()Ljava/lang/Object;
++
++    move-result-object v2
++
++    check-cast v2, Landroid/content/Intent;
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSms:Landroid/content/Intent;
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v2
++
++    sput-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsHash:J
++
++    sput p4, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsReceivers:I
++
++    :cond_193
++    if-eqz v8, :cond_1cf
++
++    :try_start_195
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getSmsSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_1cf
++
++    const-string v16, "[empty]"
++
++    const/4 v2, 0x1
++
++    new-array v14, v2, [Ljava/lang/Object;
++
++    const/4 v2, 0x0
++
++    const/16 v3, 0x10
++
++    new-array v3, v3, [B
++
++    fill-array-data v3, :array_350
++
++    aput-object v3, v14, v2
++
++    const-string/jumbo v2, "pdus"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2, v14}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/io/Serializable;)Landroid/content/Intent;
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x1
++
++    const-string/jumbo v6, "sms"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_1c0
++    .catch Ljava/lang/Exception; {:try_start_195 .. :try_end_1c0} :catch_212
++
++    :cond_1c0
++    :goto_1c0
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsReceivers:I
++
++    const/4 v3, 0x1
++
++    if-le v2, v3, :cond_21d
++
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsReceivers:I
++
++    add-int/lit8 v2, v2, -0x1
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsReceivers:I
++
++    goto/16 :goto_75
++
++    :cond_1cd
++    const/4 v12, 0x0
++
++    goto :goto_179
++
++    :cond_1cf
++    :try_start_1cf
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSmsHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-nez v2, :cond_1c0
++
++    const-string/jumbo v2, "pdus"
++
++    sget-object v3, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSms:Landroid/content/Intent;
++
++    const-string/jumbo v4, "pdus"
++
++    invoke-virtual {v3, v4}, Landroid/content/Intent;->getSerializableExtra(Ljava/lang/String;)Ljava/io/Serializable;
++
++    move-result-object v3
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2, v3}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/io/Serializable;)Landroid/content/Intent;
++
++    const-string/jumbo v2, "pdus"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->getSerializableExtra(Ljava/lang/String;)Ljava/io/Serializable;
++
++    move-result-object v2
++
++    check-cast v2, [Ljava/lang/Object;
++
++    move-object v0, v2
++
++    check-cast v0, [Ljava/lang/Object;
++
++    move-object v15, v0
++
++    if-eqz v15, :cond_21b
++
++    const/4 v2, 0x0
++
++    aget-object v2, v15, v2
++
++    check-cast v2, [B
++
++    check-cast v2, [B
++
++    move-object v12, v2
++
++    :goto_203
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x0
++
++    const-string/jumbo v6, "sms"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_211
++    .catch Ljava/lang/Exception; {:try_start_1cf .. :try_end_211} :catch_212
++
++    goto :goto_1c0
++
++    :catch_212
++    move-exception v13
++
++    const-string v2, "PrivacyActivityManagerService"
++
++    const-string v3, "failed to enforce intent broadcast permission"
++
++    invoke-static {v2, v3, v13}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_1c0
++
++    :cond_21b
++    const/4 v12, 0x0
++
++    goto :goto_203
++
++    :cond_21d
++    const/4 v2, 0x0
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpSms:Landroid/content/Intent;
++
++    goto/16 :goto_75
++
++    :cond_222
++    const-string v2, "android.provider.Telephony.WAP_PUSH_RECEIVED"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-nez v2, :cond_232
++
++    const-string v2, "android.intent.action.DATA_SMS_RECEIVED"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_2ff
++
++    :cond_232
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    move/from16 v1, p1
++
++    invoke-virtual {v2, v0, v1}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v8
++
++    const-string v16, "[real]"
++
++    const-string/jumbo v2, "pdus"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->getSerializableExtra(Ljava/lang/String;)Ljava/io/Serializable;
++
++    move-result-object v2
++
++    check-cast v2, [Ljava/lang/Object;
++
++    move-object v15, v2
++
++    check-cast v15, [Ljava/lang/Object;
++
++    if-eqz v15, :cond_2aa
++
++    const/4 v2, 0x0
++
++    aget-object v2, v15, v2
++
++    check-cast v2, [B
++
++    check-cast v2, [B
++
++    move-object v12, v2
++
++    :goto_256
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-eqz v2, :cond_270
++
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->clone()Ljava/lang/Object;
++
++    move-result-object v2
++
++    check-cast v2, Landroid/content/Intent;
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMms:Landroid/content/Intent;
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v2
++
++    sput-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsHash:J
++
++    sput p4, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsReceivers:I
++
++    :cond_270
++    if-eqz v8, :cond_2ac
++
++    :try_start_272
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getMmsSetting()B
++
++    move-result v2
++
++    if-eqz v2, :cond_2ac
++
++    const-string v16, "[empty]"
++
++    const/4 v2, 0x1
++
++    new-array v14, v2, [Ljava/lang/Object;
++
++    const/4 v2, 0x0
++
++    const/16 v3, 0x10
++
++    new-array v3, v3, [B
++
++    fill-array-data v3, :array_35c
++
++    aput-object v3, v14, v2
++
++    const-string/jumbo v2, "pdus"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2, v14}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/io/Serializable;)Landroid/content/Intent;
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x1
++
++    const-string/jumbo v6, "mms"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_29d
++    .catch Ljava/lang/Exception; {:try_start_272 .. :try_end_29d} :catch_2ef
++
++    :cond_29d
++    :goto_29d
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsReceivers:I
++
++    const/4 v3, 0x1
++
++    if-le v2, v3, :cond_2fa
++
++    sget v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsReceivers:I
++
++    add-int/lit8 v2, v2, -0x1
++
++    sput v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsReceivers:I
++
++    goto/16 :goto_75
++
++    :cond_2aa
++    const/4 v12, 0x0
++
++    goto :goto_256
++
++    :cond_2ac
++    :try_start_2ac
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMmsHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-nez v2, :cond_29d
++
++    const-string/jumbo v2, "pdus"
++
++    sget-object v3, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMms:Landroid/content/Intent;
++
++    const-string/jumbo v4, "pdus"
++
++    invoke-virtual {v3, v4}, Landroid/content/Intent;->getSerializableExtra(Ljava/lang/String;)Ljava/io/Serializable;
++
++    move-result-object v3
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2, v3}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/io/Serializable;)Landroid/content/Intent;
++
++    const-string/jumbo v2, "pdus"
++
++    move-object/from16 v0, p2
++
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->getSerializableExtra(Ljava/lang/String;)Ljava/io/Serializable;
++
++    move-result-object v2
++
++    check-cast v2, [Ljava/lang/Object;
++
++    move-object v0, v2
++
++    check-cast v0, [Ljava/lang/Object;
++
++    move-object v15, v0
++
++    if-eqz v15, :cond_2f8
++
++    const/4 v2, 0x0
++
++    aget-object v2, v15, v2
++
++    check-cast v2, [B
++
++    check-cast v2, [B
++
++    move-object v12, v2
++
++    :goto_2e0
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v5, 0x0
++
++    const-string/jumbo v6, "mms"
++
++    const/4 v7, 0x0
++
++    move-object/from16 v3, p0
++
++    move/from16 v4, p1
++
++    invoke-virtual/range {v2 .. v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    :try_end_2ee
++    .catch Ljava/lang/Exception; {:try_start_2ac .. :try_end_2ee} :catch_2ef
++
++    goto :goto_29d
++
++    :catch_2ef
++    move-exception v13
++
++    const-string v2, "PrivacyActivityManagerService"
++
++    const-string v3, "failed to enforce intent broadcast permission"
++
++    invoke-static {v2, v3, v13}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_29d
++
++    :cond_2f8
++    const/4 v12, 0x0
++
++    goto :goto_2e0
++
++    :cond_2fa
++    const/4 v2, 0x0
++
++    sput-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpMms:Landroid/content/Intent;
++
++    goto/16 :goto_75
++
++    :cond_2ff
++    const-string v2, "android.intent.action.BOOT_COMPLETED"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_30e
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v2}, Landroid/privacy/PrivacySettingsManager;->setBootCompleted()V
++
++    goto/16 :goto_75
++
++    :cond_30e
++    const-string v2, "android.intent.action.PACKAGE_ADDED"
++
++    invoke-virtual {v9, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-eqz v2, :cond_75
++
++    sget-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpPackageAddedHash:J
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v4
++
++    cmp-long v2, v2, v4
++
++    if-eqz v2, :cond_75
++
++    invoke-static/range {p2 .. p2}, Landroid/privacy/surrogate/PrivacyActivityManagerService;->hashCode(Landroid/content/Intent;)J
++
++    move-result-wide v2
++
++    sput-wide v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->tmpPackageAddedHash:J
++
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->getData()Landroid/net/Uri;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Landroid/net/Uri;->getSchemeSpecificPart()Ljava/lang/String;
++
++    move-result-object v10
++
++    invoke-virtual/range {p2 .. p2}, Landroid/content/Intent;->getExtras()Landroid/os/Bundle;
++
++    move-result-object v2
++
++    const-string v3, "android.intent.extra.UID"
++
++    invoke-virtual {v2, v3}, Landroid/os/Bundle;->getInt(Ljava/lang/String;)I
++
++    move-result v11
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v2, v10, v11}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v8
++
++    if-eqz v8, :cond_75
++
++    invoke-virtual {v8}, Landroid/privacy/PrivacySettings;->getUid()I
++
++    move-result v2
++
++    if-eq v2, v11, :cond_75
++
++    invoke-virtual {v8, v11}, Landroid/privacy/PrivacySettings;->setUid(I)V
++
++    sget-object v2, Landroid/privacy/surrogate/PrivacyActivityManagerService;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v2, v8}, Landroid/privacy/PrivacySettingsManager;->saveSettings(Landroid/privacy/PrivacySettings;)Z
++
++    goto/16 :goto_75
++
++    :array_350
++    .array-data 0x1
++        0x0t
++        0x20t
++        0x1t
++        0x81t
++        0xf0t
++        0x0t
++        0x0t
++        0x11t
++        0x90t
++        0x1t
++        0x30t
++        0x22t
++        0x22t
++        0x80t
++        0x1t
++        0x20t
++    .end array-data
++
++    :array_35c
++    .array-data 0x1
++        0x0t
++        0x20t
++        0x1t
++        0x81t
++        0xf0t
++        0x0t
++        0x0t
++        0x11t
++        0x90t
++        0x1t
++        0x30t
++        0x22t
++        0x22t
++        0x80t
++        0x1t
++        0x20t
++    .end array-data
++.end method
++
++.method private static hashCode(Landroid/content/Intent;)J
++    .registers 7
++
++    const-wide/16 v3, 0x0
++
++    const-string/jumbo v2, "privacy_hash"
++
++    invoke-virtual {p0, v2, v3, v4}, Landroid/content/Intent;->getLongExtra(Ljava/lang/String;J)J
++
++    move-result-wide v0
++
++    cmp-long v2, v0, v3
++
++    if-nez v2, :cond_1e
++
++    invoke-virtual {p0}, Landroid/content/Intent;->filterHashCode()I
++
++    move-result v2
++
++    int-to-long v2, v2
++
++    invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
++
++    move-result-wide v4
++
++    add-long v0, v2, v4
++
++    const-string/jumbo v2, "privacy_hash"
++
++    invoke-virtual {p0, v2, v0, v1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;J)Landroid/content/Intent;
++
++    :cond_1e
++    return-wide v0
++.end method

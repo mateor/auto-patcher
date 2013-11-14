@@ -1,0 +1,2093 @@
+diff -Npru stock-framework/smali/com/android/server/sip/SipService.smali ext-framework/smali/com/android/server/sip/SipService.smali
+--- stock-framework/smali/com/android/server/sip/SipService.smali	2012-11-06 14:59:55.713257512 -0600
++++ ext-framework/smali/com/android/server/sip/SipService.smali	1969-12-31 18:00:00.000000000 -0600
+@@ -1,2089 +0,0 @@
+-.class public final Lcom/android/server/sip/SipService;
+-.super Landroid/net/sip/ISipService$Stub;
+-.source "SipService.java"
+-
+-
+-# annotations
+-.annotation system Ldalvik/annotation/MemberClasses;
+-    value = {
+-        Lcom/android/server/sip/SipService$1;,
+-        Lcom/android/server/sip/SipService$MyExecutor;,
+-        Lcom/android/server/sip/SipService$ConnectivityReceiver;,
+-        Lcom/android/server/sip/SipService$AutoRegistrationProcess;,
+-        Lcom/android/server/sip/SipService$IntervalMeasurementProcess;,
+-        Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    }
+-.end annotation
+-
+-
+-# static fields
+-.field static final DEBUG:Z = false
+-
+-.field private static final DEFAULT_KEEPALIVE_INTERVAL:I = 0xa
+-
+-.field private static final DEFAULT_MAX_KEEPALIVE_INTERVAL:I = 0x78
+-
+-.field private static final EXPIRY_TIME:I = 0xe10
+-
+-.field private static final MIN_EXPIRY_TIME:I = 0x3c
+-
+-.field private static final SHORT_EXPIRY_TIME:I = 0xa
+-
+-.field static final TAG:Ljava/lang/String; = "SipService"
+-
+-
+-# instance fields
+-.field private mConnectivityReceiver:Lcom/android/server/sip/SipService$ConnectivityReceiver;
+-
+-.field private mContext:Landroid/content/Context;
+-
+-.field private mExecutor:Lcom/android/server/sip/SipService$MyExecutor;
+-
+-.field private mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-.field private mKeepAliveInterval:I
+-
+-.field private mLastGoodKeepAliveInterval:I
+-
+-.field private mLocalIp:Ljava/lang/String;
+-
+-.field private mMyWakeLock:Lcom/android/server/sip/SipWakeLock;
+-
+-.field private mNetworkType:I
+-
+-.field private mPendingSessions:Ljava/util/Map;
+-    .annotation system Ldalvik/annotation/Signature;
+-        value = {
+-            "Ljava/util/Map",
+-            "<",
+-            "Ljava/lang/String;",
+-            "Landroid/net/sip/ISipSession;",
+-            ">;"
+-        }
+-    .end annotation
+-.end field
+-
+-.field private mSipGroups:Ljava/util/Map;
+-    .annotation system Ldalvik/annotation/Signature;
+-        value = {
+-            "Ljava/util/Map",
+-            "<",
+-            "Ljava/lang/String;",
+-            "Lcom/android/server/sip/SipService$SipSessionGroupExt;",
+-            ">;"
+-        }
+-    .end annotation
+-.end field
+-
+-.field private mSipOnWifiOnly:Z
+-
+-.field private mTimer:Lcom/android/server/sip/SipWakeupTimer;
+-
+-.field private mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-
+-# direct methods
+-.method private constructor <init>(Landroid/content/Context;)V
+-    .registers 5
+-
+-    invoke-direct {p0}, Landroid/net/sip/ISipService$Stub;-><init>()V
+-
+-    const/4 v0, -0x1
+-
+-    iput v0, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    new-instance v0, Lcom/android/server/sip/SipService$MyExecutor;
+-
+-    invoke-direct {v0, p0}, Lcom/android/server/sip/SipService$MyExecutor;-><init>(Lcom/android/server/sip/SipService;)V
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mExecutor:Lcom/android/server/sip/SipService$MyExecutor;
+-
+-    new-instance v0, Ljava/util/HashMap;
+-
+-    invoke-direct {v0}, Ljava/util/HashMap;-><init>()V
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    new-instance v0, Ljava/util/HashMap;
+-
+-    invoke-direct {v0}, Ljava/util/HashMap;-><init>()V
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mPendingSessions:Ljava/util/Map;
+-
+-    const/16 v0, 0xa
+-
+-    iput v0, p0, Lcom/android/server/sip/SipService;->mLastGoodKeepAliveInterval:I
+-
+-    iput-object p1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    new-instance v0, Lcom/android/server/sip/SipService$ConnectivityReceiver;
+-
+-    const/4 v1, 0x0
+-
+-    invoke-direct {v0, p0, v1}, Lcom/android/server/sip/SipService$ConnectivityReceiver;-><init>(Lcom/android/server/sip/SipService;Lcom/android/server/sip/SipService$1;)V
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mConnectivityReceiver:Lcom/android/server/sip/SipService$ConnectivityReceiver;
+-
+-    const-string/jumbo v0, "wifi"
+-
+-    invoke-virtual {p1, v0}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Landroid/net/wifi/WifiManager;
+-
+-    const/4 v1, 0x1
+-
+-    const-string v2, "SipService"
+-
+-    invoke-virtual {v0, v1, v2}, Landroid/net/wifi/WifiManager;->createWifiLock(ILjava/lang/String;)Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    move-result-object v0
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    const/4 v1, 0x0
+-
+-    invoke-virtual {v0, v1}, Landroid/net/wifi/WifiManager$WifiLock;->setReferenceCounted(Z)V
+-
+-    invoke-static {p1}, Landroid/net/sip/SipManager;->isSipWifiOnly(Landroid/content/Context;)Z
+-
+-    move-result v0
+-
+-    iput-boolean v0, p0, Lcom/android/server/sip/SipService;->mSipOnWifiOnly:Z
+-
+-    new-instance v1, Lcom/android/server/sip/SipWakeLock;
+-
+-    const-string/jumbo v0, "power"
+-
+-    invoke-virtual {p1, v0}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Landroid/os/PowerManager;
+-
+-    invoke-direct {v1, v0}, Lcom/android/server/sip/SipWakeLock;-><init>(Landroid/os/PowerManager;)V
+-
+-    iput-object v1, p0, Lcom/android/server/sip/SipService;->mMyWakeLock:Lcom/android/server/sip/SipWakeLock;
+-
+-    new-instance v0, Lcom/android/server/sip/SipWakeupTimer;
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mExecutor:Lcom/android/server/sip/SipService$MyExecutor;
+-
+-    invoke-direct {v0, p1, v1}, Lcom/android/server/sip/SipWakeupTimer;-><init>(Landroid/content/Context;Ljava/util/concurrent/Executor;)V
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mTimer:Lcom/android/server/sip/SipWakeupTimer;
+-
+-    return-void
+-.end method
+-
+-.method static synthetic access$1002(Lcom/android/server/sip/SipService;I)I
+-    .registers 2
+-
+-    iput p1, p0, Lcom/android/server/sip/SipService;->mLastGoodKeepAliveInterval:I
+-
+-    return p1
+-.end method
+-
+-.method static synthetic access$1100(Lcom/android/server/sip/SipService;)V
+-    .registers 1
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->onKeepAliveIntervalChanged()V
+-
+-    return-void
+-.end method
+-
+-.method static synthetic access$1200(Lcom/android/server/sip/SipService;)I
+-    .registers 2
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->getKeepAliveInterval()I
+-
+-    move-result v0
+-
+-    return v0
+-.end method
+-
+-.method static synthetic access$1300(Lcom/android/server/sip/SipService;Landroid/net/sip/SipProfile;I)V
+-    .registers 3
+-
+-    invoke-direct {p0, p1, p2}, Lcom/android/server/sip/SipService;->restartPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;I)V
+-
+-    return-void
+-.end method
+-
+-.method static synthetic access$1400(Lcom/android/server/sip/SipService;Landroid/net/sip/SipProfile;)V
+-    .registers 2
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->startPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;)V
+-
+-    return-void
+-.end method
+-
+-.method static synthetic access$1500(Lcom/android/server/sip/SipService;)Ljava/lang/String;
+-    .registers 2
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mLocalIp:Ljava/lang/String;
+-
+-    return-object v0
+-.end method
+-
+-.method static synthetic access$1600(Lcom/android/server/sip/SipService;Ljava/lang/String;)Z
+-    .registers 3
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->isBehindNAT(Ljava/lang/String;)Z
+-
+-    move-result v0
+-
+-    return v0
+-.end method
+-
+-.method static synthetic access$1700(Lcom/android/server/sip/SipService;Landroid/net/NetworkInfo;)V
+-    .registers 2
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->onConnectivityChanged(Landroid/net/NetworkInfo;)V
+-
+-    return-void
+-.end method
+-
+-.method static synthetic access$1800()Landroid/os/Looper;
+-    .registers 1
+-
+-    invoke-static {}, Lcom/android/server/sip/SipService;->createLooper()Landroid/os/Looper;
+-
+-    move-result-object v0
+-
+-    return-object v0
+-.end method
+-
+-.method static synthetic access$200(Lcom/android/server/sip/SipService;)Lcom/android/server/sip/SipWakeupTimer;
+-    .registers 2
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mTimer:Lcom/android/server/sip/SipWakeupTimer;
+-
+-    return-object v0
+-.end method
+-
+-.method static synthetic access$300(Lcom/android/server/sip/SipService;)Lcom/android/server/sip/SipWakeLock;
+-    .registers 2
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mMyWakeLock:Lcom/android/server/sip/SipWakeLock;
+-
+-    return-object v0
+-.end method
+-
+-.method static synthetic access$400(Lcom/android/server/sip/SipService;)I
+-    .registers 2
+-
+-    iget v0, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    return v0
+-.end method
+-
+-.method static synthetic access$500(Lcom/android/server/sip/SipService;Lcom/android/server/sip/SipService$SipSessionGroupExt;Lcom/android/server/sip/SipSessionGroup$SipSessionImpl;)Z
+-    .registers 4
+-
+-    invoke-direct {p0, p1, p2}, Lcom/android/server/sip/SipService;->callingSelf(Lcom/android/server/sip/SipService$SipSessionGroupExt;Lcom/android/server/sip/SipSessionGroup$SipSessionImpl;)Z
+-
+-    move-result v0
+-
+-    return v0
+-.end method
+-
+-.method static synthetic access$600(Lcom/android/server/sip/SipService;Landroid/net/sip/ISipSession;)V
+-    .registers 2
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->addPendingSession(Landroid/net/sip/ISipSession;)V
+-
+-    return-void
+-.end method
+-
+-.method static synthetic access$700(Lcom/android/server/sip/SipService;)Landroid/content/Context;
+-    .registers 2
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    return-object v0
+-.end method
+-
+-.method static synthetic access$800(Lcom/android/server/sip/SipService;)Lcom/android/server/sip/SipService$MyExecutor;
+-    .registers 2
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mExecutor:Lcom/android/server/sip/SipService$MyExecutor;
+-
+-    return-object v0
+-.end method
+-
+-.method static synthetic access$900(Lcom/android/server/sip/SipService;)I
+-    .registers 2
+-
+-    iget v0, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    return v0
+-.end method
+-
+-.method static synthetic access$902(Lcom/android/server/sip/SipService;I)I
+-    .registers 2
+-
+-    iput p1, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    return p1
+-.end method
+-
+-.method private declared-synchronized addPendingSession(Landroid/net/sip/ISipSession;)V
+-    .registers 5
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->cleanUpPendingSessions()V
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mPendingSessions:Ljava/util/Map;
+-
+-    invoke-interface {p1}, Landroid/net/sip/ISipSession;->getCallId()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-interface {v1, v2, p1}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+-    :try_end_d
+-    .catchall {:try_start_1 .. :try_end_d} :catchall_18
+-    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_d} :catch_f
+-
+-    :goto_d
+-    monitor-exit p0
+-
+-    return-void
+-
+-    :catch_f
+-    move-exception v0
+-
+-    :try_start_10
+-    const-string v1, "SipService"
+-
+-    const-string v2, "addPendingSession()"
+-
+-    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_17
+-    .catchall {:try_start_10 .. :try_end_17} :catchall_18
+-
+-    goto :goto_d
+-
+-    :catchall_18
+-    move-exception v1
+-
+-    monitor-exit p0
+-
+-    throw v1
+-.end method
+-
+-.method private declared-synchronized callingSelf(Lcom/android/server/sip/SipService$SipSessionGroupExt;Lcom/android/server/sip/SipSessionGroup$SipSessionImpl;)Z
+-    .registers 7
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    invoke-virtual {p2}, Lcom/android/server/sip/SipSessionGroup$SipSessionImpl;->getCallId()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    iget-object v3, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v3}, Ljava/util/Map;->values()Ljava/util/Collection;
+-
+-    move-result-object v3
+-
+-    invoke-interface {v3}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v2
+-
+-    :cond_f
+-    invoke-interface {v2}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v3
+-
+-    if-eqz v3, :cond_26
+-
+-    invoke-interface {v2}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v1
+-
+-    check-cast v1, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    if-eq v1, p1, :cond_f
+-
+-    invoke-virtual {v1, v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->containsSession(Ljava/lang/String;)Z
+-    :try_end_20
+-    .catchall {:try_start_1 .. :try_end_20} :catchall_28
+-
+-    move-result v3
+-
+-    if-eqz v3, :cond_f
+-
+-    const/4 v3, 0x1
+-
+-    :goto_24
+-    monitor-exit p0
+-
+-    return v3
+-
+-    :cond_26
+-    const/4 v3, 0x0
+-
+-    goto :goto_24
+-
+-    :catchall_28
+-    move-exception v3
+-
+-    monitor-exit p0
+-
+-    throw v3
+-.end method
+-
+-.method private cleanUpPendingSessions()V
+-    .registers 8
+-    .annotation system Ldalvik/annotation/Throws;
+-        value = {
+-            Landroid/os/RemoteException;
+-        }
+-    .end annotation
+-
+-    iget-object v5, p0, Lcom/android/server/sip/SipService;->mPendingSessions:Ljava/util/Map;
+-
+-    invoke-interface {v5}, Ljava/util/Map;->entrySet()Ljava/util/Set;
+-
+-    move-result-object v5
+-
+-    iget-object v6, p0, Lcom/android/server/sip/SipService;->mPendingSessions:Ljava/util/Map;
+-
+-    invoke-interface {v6}, Ljava/util/Map;->size()I
+-
+-    move-result v6
+-
+-    new-array v6, v6, [Ljava/util/Map$Entry;
+-
+-    invoke-interface {v5, v6}, Ljava/util/Set;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
+-
+-    move-result-object v1
+-
+-    check-cast v1, [Ljava/util/Map$Entry;
+-
+-    move-object v0, v1
+-
+-    array-length v4, v0
+-
+-    const/4 v3, 0x0
+-
+-    :goto_17
+-    if-ge v3, v4, :cond_34
+-
+-    aget-object v2, v0, v3
+-
+-    invoke-interface {v2}, Ljava/util/Map$Entry;->getValue()Ljava/lang/Object;
+-
+-    move-result-object v5
+-
+-    check-cast v5, Landroid/net/sip/ISipSession;
+-
+-    invoke-interface {v5}, Landroid/net/sip/ISipSession;->getState()I
+-
+-    move-result v5
+-
+-    const/4 v6, 0x3
+-
+-    if-eq v5, v6, :cond_31
+-
+-    iget-object v5, p0, Lcom/android/server/sip/SipService;->mPendingSessions:Ljava/util/Map;
+-
+-    invoke-interface {v2}, Ljava/util/Map$Entry;->getKey()Ljava/lang/Object;
+-
+-    move-result-object v6
+-
+-    invoke-interface {v5, v6}, Ljava/util/Map;->remove(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    :cond_31
+-    add-int/lit8 v3, v3, 0x1
+-
+-    goto :goto_17
+-
+-    :cond_34
+-    return-void
+-.end method
+-
+-.method private createGroup(Landroid/net/sip/SipProfile;)Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    .registers 6
+-    .annotation system Ldalvik/annotation/Throws;
+-        value = {
+-            Ljavax/sip/SipException;
+-        }
+-    .end annotation
+-
+-    const/4 v3, 0x0
+-
+-    invoke-virtual {p1}, Landroid/net/sip/SipProfile;->getUriString()Ljava/lang/String;
+-
+-    move-result-object v1
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2, v1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    if-nez v0, :cond_1d
+-
+-    new-instance v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    invoke-direct {v0, p0, p1, v3, v3}, Lcom/android/server/sip/SipService$SipSessionGroupExt;-><init>(Lcom/android/server/sip/SipService;Landroid/net/sip/SipProfile;Landroid/app/PendingIntent;Landroid/net/sip/ISipSessionListener;)V
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2, v1, v0}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->notifyProfileAdded(Landroid/net/sip/SipProfile;)V
+-
+-    :cond_1c
+-    return-object v0
+-
+-    :cond_1d
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreator(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v2
+-
+-    if-nez v2, :cond_1c
+-
+-    new-instance v2, Ljavax/sip/SipException;
+-
+-    const-string/jumbo v3, "only creator can access the profile"
+-
+-    invoke-direct {v2, v3}, Ljavax/sip/SipException;-><init>(Ljava/lang/String;)V
+-
+-    throw v2
+-.end method
+-
+-.method private createGroup(Landroid/net/sip/SipProfile;Landroid/app/PendingIntent;Landroid/net/sip/ISipSessionListener;)Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    .registers 8
+-    .annotation system Ldalvik/annotation/Throws;
+-        value = {
+-            Ljavax/sip/SipException;
+-        }
+-    .end annotation
+-
+-    invoke-virtual {p1}, Landroid/net/sip/SipProfile;->getUriString()Ljava/lang/String;
+-
+-    move-result-object v1
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2, v1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    if-eqz v0, :cond_24
+-
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreator(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v2
+-
+-    if-nez v2, :cond_1d
+-
+-    new-instance v2, Ljavax/sip/SipException;
+-
+-    const-string/jumbo v3, "only creator can access the profile"
+-
+-    invoke-direct {v2, v3}, Ljavax/sip/SipException;-><init>(Ljava/lang/String;)V
+-
+-    throw v2
+-
+-    :cond_1d
+-    invoke-virtual {v0, p2}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->setIncomingCallPendingIntent(Landroid/app/PendingIntent;)V
+-
+-    invoke-virtual {v0, p3}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->setListener(Landroid/net/sip/ISipSessionListener;)V
+-
+-    :goto_23
+-    return-object v0
+-
+-    :cond_24
+-    new-instance v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    invoke-direct {v0, p0, p1, p2, p3}, Lcom/android/server/sip/SipService$SipSessionGroupExt;-><init>(Lcom/android/server/sip/SipService;Landroid/net/sip/SipProfile;Landroid/app/PendingIntent;Landroid/net/sip/ISipSessionListener;)V
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2, v1, v0}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->notifyProfileAdded(Landroid/net/sip/SipProfile;)V
+-
+-    goto :goto_23
+-.end method
+-
+-.method private static createLooper()Landroid/os/Looper;
+-    .registers 2
+-
+-    new-instance v0, Landroid/os/HandlerThread;
+-
+-    const-string v1, "SipService.Executor"
+-
+-    invoke-direct {v0, v1}, Landroid/os/HandlerThread;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v0}, Landroid/os/HandlerThread;->start()V
+-
+-    invoke-virtual {v0}, Landroid/os/HandlerThread;->getLooper()Landroid/os/Looper;
+-
+-    move-result-object v1
+-
+-    return-object v1
+-.end method
+-
+-.method private determineLocalIp()Ljava/lang/String;
+-    .registers 5
+-
+-    :try_start_0
+-    new-instance v1, Ljava/net/DatagramSocket;
+-
+-    invoke-direct {v1}, Ljava/net/DatagramSocket;-><init>()V
+-
+-    const-string v2, "192.168.1.1"
+-
+-    invoke-static {v2}, Ljava/net/InetAddress;->getByName(Ljava/lang/String;)Ljava/net/InetAddress;
+-
+-    move-result-object v2
+-
+-    const/16 v3, 0x50
+-
+-    invoke-virtual {v1, v2, v3}, Ljava/net/DatagramSocket;->connect(Ljava/net/InetAddress;I)V
+-
+-    invoke-virtual {v1}, Ljava/net/DatagramSocket;->getLocalAddress()Ljava/net/InetAddress;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v2}, Ljava/net/InetAddress;->getHostAddress()Ljava/lang/String;
+-    :try_end_17
+-    .catch Ljava/io/IOException; {:try_start_0 .. :try_end_17} :catch_19
+-
+-    move-result-object v2
+-
+-    :goto_18
+-    return-object v2
+-
+-    :catch_19
+-    move-exception v0
+-
+-    const/4 v2, 0x0
+-
+-    goto :goto_18
+-.end method
+-
+-.method private getKeepAliveInterval()I
+-    .registers 2
+-
+-    iget v0, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    if-gez v0, :cond_7
+-
+-    iget v0, p0, Lcom/android/server/sip/SipService;->mLastGoodKeepAliveInterval:I
+-
+-    :goto_6
+-    return v0
+-
+-    :cond_7
+-    iget v0, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    goto :goto_6
+-.end method
+-
+-.method private isBehindNAT(Ljava/lang/String;)Z
+-    .registers 8
+-
+-    const/4 v2, 0x1
+-
+-    const/4 v3, 0x0
+-
+-    :try_start_2
+-    invoke-static {p1}, Ljava/net/InetAddress;->getByName(Ljava/lang/String;)Ljava/net/InetAddress;
+-
+-    move-result-object v4
+-
+-    invoke-virtual {v4}, Ljava/net/InetAddress;->getAddress()[B
+-
+-    move-result-object v0
+-
+-    const/4 v4, 0x0
+-
+-    aget-byte v4, v0, v4
+-
+-    const/16 v5, 0xa
+-
+-    if-eq v4, v5, :cond_35
+-
+-    const/4 v4, 0x0
+-
+-    aget-byte v4, v0, v4
+-
+-    and-int/lit16 v4, v4, 0xff
+-
+-    const/16 v5, 0xac
+-
+-    if-ne v4, v5, :cond_23
+-
+-    const/4 v4, 0x1
+-
+-    aget-byte v4, v0, v4
+-
+-    and-int/lit16 v4, v4, 0xf0
+-
+-    const/16 v5, 0x10
+-
+-    if-eq v4, v5, :cond_35
+-
+-    :cond_23
+-    const/4 v4, 0x0
+-
+-    aget-byte v4, v0, v4
+-
+-    and-int/lit16 v4, v4, 0xff
+-
+-    const/16 v5, 0xc0
+-
+-    if-ne v4, v5, :cond_4f
+-
+-    const/4 v4, 0x1
+-
+-    aget-byte v4, v0, v4
+-    :try_end_2f
+-    .catch Ljava/net/UnknownHostException; {:try_start_2 .. :try_end_2f} :catch_36
+-
+-    and-int/lit16 v4, v4, 0xff
+-
+-    const/16 v5, 0xa8
+-
+-    if-ne v4, v5, :cond_4f
+-
+-    :cond_35
+-    :goto_35
+-    return v2
+-
+-    :catch_36
+-    move-exception v1
+-
+-    const-string v2, "SipService"
+-
+-    new-instance v4, Ljava/lang/StringBuilder;
+-
+-    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+-
+-    const-string v5, "isBehindAT()"
+-
+-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    move-result-object v4
+-
+-    invoke-virtual {v4, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    move-result-object v4
+-
+-    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v4
+-
+-    invoke-static {v2, v4, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-
+-    :cond_4f
+-    move v2, v3
+-
+-    goto :goto_35
+-.end method
+-
+-.method private isCallerCreator(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-    .registers 5
+-
+-    invoke-virtual {p1}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->getLocalProfile()Landroid/net/sip/SipProfile;
+-
+-    move-result-object v0
+-
+-    invoke-virtual {v0}, Landroid/net/sip/SipProfile;->getCallingUid()I
+-
+-    move-result v1
+-
+-    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
+-
+-    move-result v2
+-
+-    if-ne v1, v2, :cond_10
+-
+-    const/4 v1, 0x1
+-
+-    :goto_f
+-    return v1
+-
+-    :cond_10
+-    const/4 v1, 0x0
+-
+-    goto :goto_f
+-.end method
+-
+-.method private isCallerCreatorOrRadio(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-    .registers 3
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->isCallerRadio()Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_c
+-
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->isCallerCreator(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_e
+-
+-    :cond_c
+-    const/4 v0, 0x1
+-
+-    :goto_d
+-    return v0
+-
+-    :cond_e
+-    const/4 v0, 0x0
+-
+-    goto :goto_d
+-.end method
+-
+-.method private isCallerRadio()Z
+-    .registers 3
+-
+-    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
+-
+-    move-result v0
+-
+-    const/16 v1, 0x3e9
+-
+-    if-ne v0, v1, :cond_a
+-
+-    const/4 v0, 0x1
+-
+-    :goto_9
+-    return v0
+-
+-    :cond_a
+-    const/4 v0, 0x0
+-
+-    goto :goto_9
+-.end method
+-
+-.method private notifyProfileAdded(Landroid/net/sip/SipProfile;)V
+-    .registers 5
+-
+-    new-instance v0, Landroid/content/Intent;
+-
+-    const-string v1, "com.android.phone.SIP_ADD_PHONE"
+-
+-    invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+-
+-    const-string v1, "android:localSipUri"
+-
+-    invoke-virtual {p1}, Landroid/net/sip/SipProfile;->getUriString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v0, v1, v2}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v1, v0}, Landroid/content/Context;->sendBroadcast(Landroid/content/Intent;)V
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v1}, Ljava/util/Map;->size()I
+-
+-    move-result v1
+-
+-    const/4 v2, 0x1
+-
+-    if-ne v1, v2, :cond_21
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->registerReceivers()V
+-
+-    :cond_21
+-    return-void
+-.end method
+-
+-.method private notifyProfileRemoved(Landroid/net/sip/SipProfile;)V
+-    .registers 5
+-
+-    new-instance v0, Landroid/content/Intent;
+-
+-    const-string v1, "com.android.phone.SIP_REMOVE_PHONE"
+-
+-    invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+-
+-    const-string v1, "android:localSipUri"
+-
+-    invoke-virtual {p1}, Landroid/net/sip/SipProfile;->getUriString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v0, v1, v2}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v1, v0}, Landroid/content/Context;->sendBroadcast(Landroid/content/Intent;)V
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v1}, Ljava/util/Map;->size()I
+-
+-    move-result v1
+-
+-    if-nez v1, :cond_20
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->unregisterReceivers()V
+-
+-    :cond_20
+-    return-void
+-.end method
+-
+-.method private declared-synchronized onConnectivityChanged(Landroid/net/NetworkInfo;)V
+-    .registers 11
+-
+-    const/4 v8, 0x1
+-
+-    const/4 v5, -0x1
+-
+-    monitor-enter p0
+-
+-    if-eqz p1, :cond_13
+-
+-    :try_start_5
+-    invoke-virtual {p1}, Landroid/net/NetworkInfo;->isConnected()Z
+-
+-    move-result v6
+-
+-    if-nez v6, :cond_13
+-
+-    invoke-virtual {p1}, Landroid/net/NetworkInfo;->getType()I
+-
+-    move-result v6
+-
+-    iget v7, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    if-eq v6, v7, :cond_21
+-
+-    :cond_13
+-    iget-object v6, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v7, "connectivity"
+-
+-    invoke-virtual {v6, v7}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Landroid/net/ConnectivityManager;
+-
+-    invoke-virtual {v0}, Landroid/net/ConnectivityManager;->getActiveNetworkInfo()Landroid/net/NetworkInfo;
+-
+-    move-result-object p1
+-
+-    :cond_21
+-    if-eqz p1, :cond_3a
+-
+-    invoke-virtual {p1}, Landroid/net/NetworkInfo;->isConnected()Z
+-
+-    move-result v6
+-
+-    if-eqz v6, :cond_3a
+-
+-    invoke-virtual {p1}, Landroid/net/NetworkInfo;->getType()I
+-
+-    move-result v4
+-
+-    :goto_2d
+-    iget-boolean v6, p0, Lcom/android/server/sip/SipService;->mSipOnWifiOnly:Z
+-
+-    if-eqz v6, :cond_34
+-
+-    if-eq v4, v8, :cond_34
+-
+-    const/4 v4, -0x1
+-
+-    :cond_34
+-    iget v6, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-    :try_end_36
+-    .catchall {:try_start_5 .. :try_end_36} :catchall_6b
+-
+-    if-ne v6, v4, :cond_3c
+-
+-    :goto_38
+-    monitor-exit p0
+-
+-    return-void
+-
+-    :cond_3a
+-    move v4, v5
+-
+-    goto :goto_2d
+-
+-    :cond_3c
+-    :try_start_3c
+-    iget v6, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    if-eq v6, v5, :cond_6e
+-
+-    const/4 v6, 0x0
+-
+-    iput-object v6, p0, Lcom/android/server/sip/SipService;->mLocalIp:Ljava/lang/String;
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->stopPortMappingMeasurement()V
+-
+-    iget-object v6, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v6}, Ljava/util/Map;->values()Ljava/util/Collection;
+-
+-    move-result-object v6
+-
+-    invoke-interface {v6}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v3
+-
+-    :goto_50
+-    invoke-interface {v3}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v6
+-
+-    if-eqz v6, :cond_6e
+-
+-    invoke-interface {v3}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v2
+-
+-    check-cast v2, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    const/4 v6, 0x0
+-
+-    invoke-virtual {v2, v6}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->onConnectivityChanged(Z)V
+-    :try_end_60
+-    .catchall {:try_start_3c .. :try_end_60} :catchall_6b
+-    .catch Ljavax/sip/SipException; {:try_start_3c .. :try_end_60} :catch_61
+-
+-    goto :goto_50
+-
+-    :catch_61
+-    move-exception v1
+-
+-    :try_start_62
+-    const-string v5, "SipService"
+-
+-    const-string/jumbo v6, "onConnectivityChanged()"
+-
+-    invoke-static {v5, v6, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_6a
+-    .catchall {:try_start_62 .. :try_end_6a} :catchall_6b
+-
+-    goto :goto_38
+-
+-    :catchall_6b
+-    move-exception v5
+-
+-    monitor-exit p0
+-
+-    throw v5
+-
+-    :cond_6e
+-    :try_start_6e
+-    iput v4, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    iget v6, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    if-eq v6, v5, :cond_9c
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->determineLocalIp()Ljava/lang/String;
+-
+-    move-result-object v5
+-
+-    iput-object v5, p0, Lcom/android/server/sip/SipService;->mLocalIp:Ljava/lang/String;
+-
+-    const/4 v5, -0x1
+-
+-    iput v5, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    const/16 v5, 0xa
+-
+-    iput v5, p0, Lcom/android/server/sip/SipService;->mLastGoodKeepAliveInterval:I
+-
+-    iget-object v5, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v5}, Ljava/util/Map;->values()Ljava/util/Collection;
+-
+-    move-result-object v5
+-
+-    invoke-interface {v5}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v3
+-
+-    :goto_8b
+-    invoke-interface {v3}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v5
+-
+-    if-eqz v5, :cond_9c
+-
+-    invoke-interface {v3}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v2
+-
+-    check-cast v2, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    const/4 v5, 0x1
+-
+-    invoke-virtual {v2, v5}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->onConnectivityChanged(Z)V
+-
+-    goto :goto_8b
+-
+-    :cond_9c
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->updateWakeLocks()V
+-    :try_end_9f
+-    .catchall {:try_start_6e .. :try_end_9f} :catchall_6b
+-    .catch Ljavax/sip/SipException; {:try_start_6e .. :try_end_9f} :catch_61
+-
+-    goto :goto_38
+-.end method
+-
+-.method private declared-synchronized onKeepAliveIntervalChanged()V
+-    .registers 4
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2}, Ljava/util/Map;->values()Ljava/util/Collection;
+-
+-    move-result-object v2
+-
+-    invoke-interface {v2}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v1
+-
+-    :goto_b
+-    invoke-interface {v1}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_1e
+-
+-    invoke-interface {v1}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->onKeepAliveIntervalChanged()V
+-    :try_end_1a
+-    .catchall {:try_start_1 .. :try_end_1a} :catchall_1b
+-
+-    goto :goto_b
+-
+-    :catchall_1b
+-    move-exception v2
+-
+-    monitor-exit p0
+-
+-    throw v2
+-
+-    :cond_1e
+-    monitor-exit p0
+-
+-    return-void
+-.end method
+-
+-.method private registerReceivers()V
+-    .registers 5
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mConnectivityReceiver:Lcom/android/server/sip/SipService$ConnectivityReceiver;
+-
+-    new-instance v2, Landroid/content/IntentFilter;
+-
+-    const-string v3, "android.net.conn.CONNECTIVITY_CHANGE"
+-
+-    invoke-direct {v2, v3}, Landroid/content/IntentFilter;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v0, v1, v2}, Landroid/content/Context;->registerReceiver(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;)Landroid/content/Intent;
+-
+-    return-void
+-.end method
+-
+-.method private restartPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;I)V
+-    .registers 4
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->stopPortMappingMeasurement()V
+-
+-    const/4 v0, -0x1
+-
+-    iput v0, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    invoke-direct {p0, p1, p2}, Lcom/android/server/sip/SipService;->startPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;I)V
+-
+-    return-void
+-.end method
+-
+-.method public static start(Landroid/content/Context;)V
+-    .registers 3
+-
+-    invoke-static {p0}, Landroid/net/sip/SipManager;->isApiSupported(Landroid/content/Context;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1b
+-
+-    const-string/jumbo v0, "sip"
+-
+-    new-instance v1, Lcom/android/server/sip/SipService;
+-
+-    invoke-direct {v1, p0}, Lcom/android/server/sip/SipService;-><init>(Landroid/content/Context;)V
+-
+-    invoke-static {v0, v1}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
+-
+-    new-instance v0, Landroid/content/Intent;
+-
+-    const-string v1, "android.net.sip.SIP_SERVICE_UP"
+-
+-    invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {p0, v0}, Landroid/content/Context;->sendBroadcast(Landroid/content/Intent;)V
+-
+-    :cond_1b
+-    return-void
+-.end method
+-
+-.method private startPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;)V
+-    .registers 3
+-
+-    const/16 v0, 0x78
+-
+-    invoke-direct {p0, p1, v0}, Lcom/android/server/sip/SipService;->startPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;I)V
+-
+-    return-void
+-.end method
+-
+-.method private startPortMappingLifetimeMeasurement(Landroid/net/sip/SipProfile;I)V
+-    .registers 7
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    if-nez v1, :cond_5a
+-
+-    iget v1, p0, Lcom/android/server/sip/SipService;->mKeepAliveInterval:I
+-
+-    const/4 v2, -0x1
+-
+-    if-ne v1, v2, :cond_5a
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mLocalIp:Ljava/lang/String;
+-
+-    invoke-direct {p0, v1}, Lcom/android/server/sip/SipService;->isBehindNAT(Ljava/lang/String;)Z
+-
+-    move-result v1
+-
+-    if-eqz v1, :cond_5a
+-
+-    const-string v1, "SipService"
+-
+-    new-instance v2, Ljava/lang/StringBuilder;
+-
+-    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+-
+-    const-string/jumbo v3, "start NAT port mapping timeout measurement on "
+-
+-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {p1}, Landroid/net/sip/SipProfile;->getUriString()Ljava/lang/String;
+-
+-    move-result-object v3
+-
+-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    iget v0, p0, Lcom/android/server/sip/SipService;->mLastGoodKeepAliveInterval:I
+-
+-    if-lt v0, p2, :cond_4e
+-
+-    const/16 v0, 0xa
+-
+-    iput v0, p0, Lcom/android/server/sip/SipService;->mLastGoodKeepAliveInterval:I
+-
+-    const-string v1, "SipService"
+-
+-    new-instance v2, Ljava/lang/StringBuilder;
+-
+-    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+-
+-    const-string v3, "  reset min interval to "
+-
+-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v2, v0}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    :cond_4e
+-    new-instance v1, Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    invoke-direct {v1, p0, p1, v0, p2}, Lcom/android/server/sip/SipService$IntervalMeasurementProcess;-><init>(Lcom/android/server/sip/SipService;Landroid/net/sip/SipProfile;II)V
+-
+-    iput-object v1, p0, Lcom/android/server/sip/SipService;->mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    invoke-virtual {v1}, Lcom/android/server/sip/SipService$IntervalMeasurementProcess;->start()V
+-
+-    :cond_5a
+-    return-void
+-.end method
+-
+-.method private stopPortMappingMeasurement()V
+-    .registers 2
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    if-eqz v0, :cond_c
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$IntervalMeasurementProcess;->stop()V
+-
+-    const/4 v0, 0x0
+-
+-    iput-object v0, p0, Lcom/android/server/sip/SipService;->mIntervalMeasurementProcess:Lcom/android/server/sip/SipService$IntervalMeasurementProcess;
+-
+-    :cond_c
+-    return-void
+-.end method
+-
+-.method private unregisterReceivers()V
+-    .registers 3
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mConnectivityReceiver:Lcom/android/server/sip/SipService$ConnectivityReceiver;
+-
+-    invoke-virtual {v0, v1}, Landroid/content/Context;->unregisterReceiver(Landroid/content/BroadcastReceiver;)V
+-
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    invoke-virtual {v0}, Landroid/net/wifi/WifiManager$WifiLock;->release()V
+-
+-    const/4 v0, -0x1
+-
+-    iput v0, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    return-void
+-.end method
+-
+-.method private updateWakeLocks()V
+-    .registers 5
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2}, Ljava/util/Map;->values()Ljava/util/Collection;
+-
+-    move-result-object v2
+-
+-    invoke-interface {v2}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v1
+-
+-    :cond_a
+-    invoke-interface {v1}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_32
+-
+-    invoke-interface {v1}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->isOpenedToReceiveCalls()Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_a
+-
+-    iget v2, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    const/4 v3, 0x1
+-
+-    if-eq v2, v3, :cond_26
+-
+-    iget v2, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-
+-    const/4 v3, -0x1
+-
+-    if-ne v2, v3, :cond_2c
+-
+-    :cond_26
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    invoke-virtual {v2}, Landroid/net/wifi/WifiManager$WifiLock;->acquire()V
+-
+-    :goto_2b
+-    return-void
+-
+-    :cond_2c
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    invoke-virtual {v2}, Landroid/net/wifi/WifiManager$WifiLock;->release()V
+-
+-    goto :goto_2b
+-
+-    :cond_32
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mWifiLock:Landroid/net/wifi/WifiManager$WifiLock;
+-
+-    invoke-virtual {v2}, Landroid/net/wifi/WifiManager$WifiLock;->release()V
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mMyWakeLock:Lcom/android/server/sip/SipWakeLock;
+-
+-    invoke-virtual {v2}, Lcom/android/server/sip/SipWakeLock;->reset()V
+-
+-    goto :goto_2b
+-.end method
+-
+-
+-# virtual methods
+-.method public declared-synchronized close(Ljava/lang/String;)V
+-    .registers 6
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v2, "android.permission.USE_SIP"
+-
+-    const/4 v3, 0x0
+-
+-    invoke-virtual {v1, v2, v3}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v1, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    :try_end_11
+-    .catchall {:try_start_1 .. :try_end_11} :catchall_24
+-
+-    if-nez v0, :cond_15
+-
+-    :goto_13
+-    monitor-exit p0
+-
+-    return-void
+-
+-    :cond_15
+-    :try_start_15
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreatorOrRadio(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v1
+-
+-    if-nez v1, :cond_27
+-
+-    const-string v1, "SipService"
+-
+-    const-string/jumbo v2, "only creator or radio can close this profile"
+-
+-    invoke-static {v1, v2}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_23
+-    .catchall {:try_start_15 .. :try_end_23} :catchall_24
+-
+-    goto :goto_13
+-
+-    :catchall_24
+-    move-exception v1
+-
+-    monitor-exit p0
+-
+-    throw v1
+-
+-    :cond_27
+-    :try_start_27
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v1, p1}, Ljava/util/Map;->remove(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->getLocalProfile()Landroid/net/sip/SipProfile;
+-
+-    move-result-object v1
+-
+-    invoke-direct {p0, v1}, Lcom/android/server/sip/SipService;->notifyProfileRemoved(Landroid/net/sip/SipProfile;)V
+-
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->close()V
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->updateWakeLocks()V
+-    :try_end_3c
+-    .catchall {:try_start_27 .. :try_end_3c} :catchall_24
+-
+-    goto :goto_13
+-.end method
+-
+-.method public declared-synchronized createSession(Landroid/net/sip/SipProfile;Landroid/net/sip/ISipSessionListener;)Landroid/net/sip/ISipSession;
+-    .registers 9
+-
+-    const/4 v2, 0x0
+-
+-    monitor-enter p0
+-
+-    :try_start_2
+-    iget-object v3, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v4, "android.permission.USE_SIP"
+-
+-    const/4 v5, 0x0
+-
+-    invoke-virtual {v3, v4, v5}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
+-
+-    move-result v3
+-
+-    invoke-virtual {p1, v3}, Landroid/net/sip/SipProfile;->setCallingUid(I)V
+-
+-    iget v3, p0, Lcom/android/server/sip/SipService;->mNetworkType:I
+-    :try_end_13
+-    .catchall {:try_start_2 .. :try_end_13} :catchall_23
+-
+-    const/4 v4, -0x1
+-
+-    if-ne v3, v4, :cond_18
+-
+-    :goto_16
+-    monitor-exit p0
+-
+-    return-object v2
+-
+-    :cond_18
+-    :try_start_18
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->createGroup(Landroid/net/sip/SipProfile;)Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    move-result-object v1
+-
+-    invoke-virtual {v1, p2}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->createSession(Landroid/net/sip/ISipSessionListener;)Landroid/net/sip/ISipSession;
+-    :try_end_1f
+-    .catchall {:try_start_18 .. :try_end_1f} :catchall_23
+-    .catch Ljavax/sip/SipException; {:try_start_18 .. :try_end_1f} :catch_21
+-
+-    move-result-object v2
+-
+-    goto :goto_16
+-
+-    :catch_21
+-    move-exception v0
+-
+-    goto :goto_16
+-
+-    :catchall_23
+-    move-exception v2
+-
+-    monitor-exit p0
+-
+-    throw v2
+-.end method
+-
+-.method public declared-synchronized getListOfProfiles()[Landroid/net/sip/SipProfile;
+-    .registers 8
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    iget-object v4, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v5, "android.permission.USE_SIP"
+-
+-    const/4 v6, 0x0
+-
+-    invoke-virtual {v4, v5, v6}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->isCallerRadio()Z
+-
+-    move-result v2
+-
+-    new-instance v3, Ljava/util/ArrayList;
+-
+-    invoke-direct {v3}, Ljava/util/ArrayList;-><init>()V
+-
+-    iget-object v4, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v4}, Ljava/util/Map;->values()Ljava/util/Collection;
+-
+-    move-result-object v4
+-
+-    invoke-interface {v4}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v1
+-
+-    :cond_1c
+-    :goto_1c
+-    invoke-interface {v1}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v4
+-
+-    if-eqz v4, :cond_3b
+-
+-    invoke-interface {v1}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    if-nez v2, :cond_30
+-
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreator(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v4
+-
+-    if-eqz v4, :cond_1c
+-
+-    :cond_30
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->getLocalProfile()Landroid/net/sip/SipProfile;
+-
+-    move-result-object v4
+-
+-    invoke-virtual {v3, v4}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+-    :try_end_37
+-    .catchall {:try_start_1 .. :try_end_37} :catchall_38
+-
+-    goto :goto_1c
+-
+-    :catchall_38
+-    move-exception v4
+-
+-    monitor-exit p0
+-
+-    throw v4
+-
+-    :cond_3b
+-    :try_start_3b
+-    invoke-virtual {v3}, Ljava/util/ArrayList;->size()I
+-
+-    move-result v4
+-
+-    new-array v4, v4, [Landroid/net/sip/SipProfile;
+-
+-    invoke-virtual {v3, v4}, Ljava/util/ArrayList;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
+-
+-    move-result-object v4
+-
+-    check-cast v4, [Landroid/net/sip/SipProfile;
+-    :try_end_47
+-    .catchall {:try_start_3b .. :try_end_47} :catchall_38
+-
+-    monitor-exit p0
+-
+-    return-object v4
+-.end method
+-
+-.method public declared-synchronized getPendingSession(Ljava/lang/String;)Landroid/net/sip/ISipSession;
+-    .registers 6
+-
+-    const/4 v0, 0x0
+-
+-    monitor-enter p0
+-
+-    :try_start_2
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v2, "android.permission.USE_SIP"
+-
+-    const/4 v3, 0x0
+-
+-    invoke-virtual {v1, v2, v3}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-    :try_end_a
+-    .catchall {:try_start_2 .. :try_end_a} :catchall_17
+-
+-    if-nez p1, :cond_e
+-
+-    :goto_c
+-    monitor-exit p0
+-
+-    return-object v0
+-
+-    :cond_e
+-    :try_start_e
+-    iget-object v0, p0, Lcom/android/server/sip/SipService;->mPendingSessions:Ljava/util/Map;
+-
+-    invoke-interface {v0, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Landroid/net/sip/ISipSession;
+-    :try_end_16
+-    .catchall {:try_start_e .. :try_end_16} :catchall_17
+-
+-    goto :goto_c
+-
+-    :catchall_17
+-    move-exception v0
+-
+-    monitor-exit p0
+-
+-    throw v0
+-.end method
+-
+-.method public declared-synchronized isOpened(Ljava/lang/String;)Z
+-    .registers 7
+-
+-    const/4 v1, 0x0
+-
+-    monitor-enter p0
+-
+-    :try_start_2
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v3, "android.permission.USE_SIP"
+-
+-    const/4 v4, 0x0
+-
+-    invoke-virtual {v2, v3, v4}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    :try_end_12
+-    .catchall {:try_start_2 .. :try_end_12} :catchall_27
+-
+-    if-nez v0, :cond_16
+-
+-    :goto_14
+-    monitor-exit p0
+-
+-    return v1
+-
+-    :cond_16
+-    :try_start_16
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreatorOrRadio(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_1e
+-
+-    const/4 v1, 0x1
+-
+-    goto :goto_14
+-
+-    :cond_1e
+-    const-string v2, "SipService"
+-
+-    const-string/jumbo v3, "only creator or radio can query on the profile"
+-
+-    invoke-static {v2, v3}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_26
+-    .catchall {:try_start_16 .. :try_end_26} :catchall_27
+-
+-    goto :goto_14
+-
+-    :catchall_27
+-    move-exception v1
+-
+-    monitor-exit p0
+-
+-    throw v1
+-.end method
+-
+-.method public declared-synchronized isRegistered(Ljava/lang/String;)Z
+-    .registers 7
+-
+-    const/4 v1, 0x0
+-
+-    monitor-enter p0
+-
+-    :try_start_2
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v3, "android.permission.USE_SIP"
+-
+-    const/4 v4, 0x0
+-
+-    invoke-virtual {v2, v3, v4}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v2, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    :try_end_12
+-    .catchall {:try_start_2 .. :try_end_12} :catchall_2a
+-
+-    if-nez v0, :cond_16
+-
+-    :goto_14
+-    monitor-exit p0
+-
+-    return v1
+-
+-    :cond_16
+-    :try_start_16
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreatorOrRadio(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_21
+-
+-    invoke-virtual {v0}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->isRegistered()Z
+-
+-    move-result v1
+-
+-    goto :goto_14
+-
+-    :cond_21
+-    const-string v2, "SipService"
+-
+-    const-string/jumbo v3, "only creator or radio can query on the profile"
+-
+-    invoke-static {v2, v3}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_29
+-    .catchall {:try_start_16 .. :try_end_29} :catchall_2a
+-
+-    goto :goto_14
+-
+-    :catchall_2a
+-    move-exception v1
+-
+-    monitor-exit p0
+-
+-    throw v1
+-.end method
+-
+-.method public declared-synchronized open(Landroid/net/sip/SipProfile;)V
+-    .registers 6
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v2, "android.permission.USE_SIP"
+-
+-    const/4 v3, 0x0
+-
+-    invoke-virtual {v1, v2, v3}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
+-
+-    move-result v1
+-
+-    invoke-virtual {p1, v1}, Landroid/net/sip/SipProfile;->setCallingUid(I)V
+-    :try_end_10
+-    .catchall {:try_start_1 .. :try_end_10} :catchall_1f
+-
+-    :try_start_10
+-    invoke-direct {p0, p1}, Lcom/android/server/sip/SipService;->createGroup(Landroid/net/sip/SipProfile;)Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    :try_end_13
+-    .catchall {:try_start_10 .. :try_end_13} :catchall_1f
+-    .catch Ljavax/sip/SipException; {:try_start_10 .. :try_end_13} :catch_15
+-
+-    :goto_13
+-    monitor-exit p0
+-
+-    return-void
+-
+-    :catch_15
+-    move-exception v0
+-
+-    :try_start_16
+-    const-string v1, "SipService"
+-
+-    const-string/jumbo v2, "openToMakeCalls()"
+-
+-    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_1e
+-    .catchall {:try_start_16 .. :try_end_1e} :catchall_1f
+-
+-    goto :goto_13
+-
+-    :catchall_1f
+-    move-exception v1
+-
+-    monitor-exit p0
+-
+-    throw v1
+-.end method
+-
+-.method public declared-synchronized open3(Landroid/net/sip/SipProfile;Landroid/app/PendingIntent;Landroid/net/sip/ISipSessionListener;)V
+-    .registers 9
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    iget-object v2, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v3, "android.permission.USE_SIP"
+-
+-    const/4 v4, 0x0
+-
+-    invoke-virtual {v2, v3, v4}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
+-
+-    move-result v2
+-
+-    invoke-virtual {p1, v2}, Landroid/net/sip/SipProfile;->setCallingUid(I)V
+-
+-    if-nez p2, :cond_1b
+-
+-    const-string v2, "SipService"
+-
+-    const-string v3, "incomingCallPendingIntent cannot be null; the profile is not opened"
+-
+-    invoke-static {v2, v3}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_19
+-    .catchall {:try_start_1 .. :try_end_19} :catchall_36
+-
+-    :cond_19
+-    :goto_19
+-    monitor-exit p0
+-
+-    return-void
+-
+-    :cond_1b
+-    :try_start_1b
+-    invoke-direct {p0, p1, p2, p3}, Lcom/android/server/sip/SipService;->createGroup(Landroid/net/sip/SipProfile;Landroid/app/PendingIntent;Landroid/net/sip/ISipSessionListener;)Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-
+-    move-result-object v1
+-
+-    invoke-virtual {p1}, Landroid/net/sip/SipProfile;->getAutoRegistration()Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_19
+-
+-    invoke-virtual {v1}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->openToReceiveCalls()V
+-
+-    invoke-direct {p0}, Lcom/android/server/sip/SipService;->updateWakeLocks()V
+-    :try_end_2b
+-    .catchall {:try_start_1b .. :try_end_2b} :catchall_36
+-    .catch Ljavax/sip/SipException; {:try_start_1b .. :try_end_2b} :catch_2c
+-
+-    goto :goto_19
+-
+-    :catch_2c
+-    move-exception v0
+-
+-    :try_start_2d
+-    const-string v2, "SipService"
+-
+-    const-string/jumbo v3, "openToReceiveCalls()"
+-
+-    invoke-static {v2, v3, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_35
+-    .catchall {:try_start_2d .. :try_end_35} :catchall_36
+-
+-    goto :goto_19
+-
+-    :catchall_36
+-    move-exception v2
+-
+-    monitor-exit p0
+-
+-    throw v2
+-.end method
+-
+-.method public declared-synchronized setRegistrationListener(Ljava/lang/String;Landroid/net/sip/ISipSessionListener;)V
+-    .registers 7
+-
+-    monitor-enter p0
+-
+-    :try_start_1
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mContext:Landroid/content/Context;
+-
+-    const-string v2, "android.permission.USE_SIP"
+-
+-    const/4 v3, 0x0
+-
+-    invoke-virtual {v1, v2, v3}, Landroid/content/Context;->enforceCallingOrSelfPermission(Ljava/lang/String;Ljava/lang/String;)V
+-
+-    iget-object v1, p0, Lcom/android/server/sip/SipService;->mSipGroups:Ljava/util/Map;
+-
+-    invoke-interface {v1, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Lcom/android/server/sip/SipService$SipSessionGroupExt;
+-    :try_end_11
+-    .catchall {:try_start_1 .. :try_end_11} :catchall_1f
+-
+-    if-nez v0, :cond_15
+-
+-    :goto_13
+-    monitor-exit p0
+-
+-    return-void
+-
+-    :cond_15
+-    :try_start_15
+-    invoke-direct {p0, v0}, Lcom/android/server/sip/SipService;->isCallerCreator(Lcom/android/server/sip/SipService$SipSessionGroupExt;)Z
+-
+-    move-result v1
+-
+-    if-eqz v1, :cond_22
+-
+-    invoke-virtual {v0, p2}, Lcom/android/server/sip/SipService$SipSessionGroupExt;->setListener(Landroid/net/sip/ISipSessionListener;)V
+-    :try_end_1e
+-    .catchall {:try_start_15 .. :try_end_1e} :catchall_1f
+-
+-    goto :goto_13
+-
+-    :catchall_1f
+-    move-exception v1
+-
+-    monitor-exit p0
+-
+-    throw v1
+-
+-    :cond_22
+-    :try_start_22
+-    const-string v1, "SipService"
+-
+-    const-string/jumbo v2, "only creator can set listener on the profile"
+-
+-    invoke-static {v1, v2}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_2a
+-    .catchall {:try_start_22 .. :try_end_2a} :catchall_1f
+-
+-    goto :goto_13
+-.end method

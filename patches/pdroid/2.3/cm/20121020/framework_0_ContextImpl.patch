@@ -1,0 +1,472 @@
+diff -Npru stock-framework/smali/android/app/ContextImpl.smali pdroid-framework/smali/android/app/ContextImpl.smali
+--- stock-framework/smali/android/app/ContextImpl.smali	2012-10-22 10:39:59.096625988 -0500
++++ pdroid-framework/smali/android/app/ContextImpl.smali	2012-10-22 10:39:40.024531421 -0500
+@@ -33,6 +33,8 @@
+ 
+ .field private static sPowerManager:Landroid/os/PowerManager;
+ 
++.field private static sPrivacySettingsManager:Landroid/privacy/PrivacySettingsManager;
++
+ .field private static final sSharedPrefs:Ljava/util/HashMap;
+     .annotation system Ldalvik/annotation/Signature;
+         value = {
+@@ -148,6 +150,10 @@
+ 
+     sput-object v0, Landroid/app/ContextImpl;->sSharedPrefs:Ljava/util/HashMap;
+ 
++    const/4 v0, 0x0
++
++    sput-object v0, Landroid/app/ContextImpl;->sPrivacySettingsManager:Landroid/privacy/PrivacySettingsManager;
++
+     const-wide/16 v0, 0x0
+ 
+     sput-wide v0, Landroid/app/ContextImpl;->sInstanceCount:J
+@@ -645,9 +651,9 @@
+ 
+     move-result-object v1
+ 
+-    new-instance v3, Landroid/accounts/AccountManager;
++    new-instance v3, Landroid/privacy/surrogate/PrivacyAccountManager;
+ 
+-    invoke-direct {v3, p0, v1}, Landroid/accounts/AccountManager;-><init>(Landroid/content/Context;Landroid/accounts/IAccountManager;)V
++    invoke-direct {v3, p0, v1}, Landroid/privacy/surrogate/PrivacyAccountManager;-><init>(Landroid/content/Context;Landroid/accounts/IAccountManager;)V
+ 
+     iput-object v3, p0, Landroid/app/ContextImpl;->mAccountManager:Landroid/accounts/AccountManager;
+ 
+@@ -1107,7 +1113,7 @@
+ .end method
+ 
+ .method private getLocationManager()Landroid/location/LocationManager;
+-    .registers 5
++    .registers 6
+ 
+     sget-object v2, Landroid/app/ContextImpl;->sSync:Ljava/lang/Object;
+ 
+@@ -1116,7 +1122,7 @@
+     :try_start_3
+     sget-object v3, Landroid/app/ContextImpl;->sLocationManager:Landroid/location/LocationManager;
+ 
+-    if-nez v3, :cond_18
++    if-nez v3, :cond_1c
+ 
+     const-string v3, "location"
+ 
+@@ -1128,28 +1134,32 @@
+ 
+     move-result-object v1
+ 
+-    new-instance v3, Landroid/location/LocationManager;
++    new-instance v3, Landroid/privacy/surrogate/PrivacyLocationManager;
+ 
+-    invoke-direct {v3, v1}, Landroid/location/LocationManager;-><init>(Landroid/location/ILocationManager;)V
++    invoke-virtual {p0}, Landroid/app/ContextImpl;->getOuterContext()Landroid/content/Context;
++
++    move-result-object v4
++
++    invoke-direct {v3, v1, v4}, Landroid/privacy/surrogate/PrivacyLocationManager;-><init>(Landroid/location/ILocationManager;Landroid/content/Context;)V
+ 
+     sput-object v3, Landroid/app/ContextImpl;->sLocationManager:Landroid/location/LocationManager;
+ 
+-    :cond_18
++    :cond_1c
+     monitor-exit v2
+-    :try_end_19
+-    .catchall {:try_start_3 .. :try_end_19} :catchall_1c
++    :try_end_1d
++    .catchall {:try_start_3 .. :try_end_1d} :catchall_20
+ 
+     sget-object v2, Landroid/app/ContextImpl;->sLocationManager:Landroid/location/LocationManager;
+ 
+     return-object v2
+ 
+-    :catchall_1c
++    :catchall_20
+     move-exception v3
+ 
+-    :try_start_1d
++    :try_start_21
+     monitor-exit v2
+-    :try_end_1e
+-    .catchall {:try_start_1d .. :try_end_1e} :catchall_1c
++    :try_end_22
++    .catchall {:try_start_21 .. :try_end_22} :catchall_20
+ 
+     throw v3
+ .end method
+@@ -1341,6 +1351,67 @@
+     throw v1
+ .end method
+ 
++.method private getPrivacySettingsManager()Landroid/privacy/PrivacySettingsManager;
++    .registers 6
++
++    iget-object v2, p0, Landroid/app/ContextImpl;->mSync:Ljava/lang/Object;
++
++    monitor-enter v2
++
++    :try_start_3
++    sget-object v3, Landroid/app/ContextImpl;->sPrivacySettingsManager:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_f
++
++    sget-object v3, Landroid/app/ContextImpl;->sPrivacySettingsManager:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
++
++    move-result v3
++
++    if-nez v3, :cond_24
++
++    :cond_f
++    const-string v3, "privacy"
++
++    invoke-static {v3}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v0
++
++    invoke-static {v0}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v1
++
++    new-instance v3, Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {p0}, Landroid/app/ContextImpl;->getOuterContext()Landroid/content/Context;
++
++    move-result-object v4
++
++    invoke-direct {v3, v4, v1}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    sput-object v3, Landroid/app/ContextImpl;->sPrivacySettingsManager:Landroid/privacy/PrivacySettingsManager;
++
++    :cond_24
++    monitor-exit v2
++    :try_end_25
++    .catchall {:try_start_3 .. :try_end_25} :catchall_28
++
++    sget-object v2, Landroid/app/ContextImpl;->sPrivacySettingsManager:Landroid/privacy/PrivacySettingsManager;
++
++    return-object v2
++
++    :catchall_28
++    move-exception v3
++
++    :try_start_29
++    monitor-exit v2
++    :try_end_2a
++    .catchall {:try_start_29 .. :try_end_2a} :catchall_28
++
++    throw v3
++.end method
++
+ .method private getProfileManager()Landroid/app/ProfileManager;
+     .registers 5
+ 
+@@ -1570,13 +1641,13 @@
+ 
+     if-nez v1, :cond_12
+ 
+-    new-instance v1, Landroid/telephony/TelephonyManager;
++    new-instance v1, Landroid/privacy/surrogate/PrivacyTelephonyManager;
+ 
+     invoke-virtual {p0}, Landroid/app/ContextImpl;->getOuterContext()Landroid/content/Context;
+ 
+     move-result-object v2
+ 
+-    invoke-direct {v1, v2}, Landroid/telephony/TelephonyManager;-><init>(Landroid/content/Context;)V
++    invoke-direct {v1, v2}, Landroid/privacy/surrogate/PrivacyTelephonyManager;-><init>(Landroid/content/Context;)V
+ 
+     iput-object v1, p0, Landroid/app/ContextImpl;->mTelephonyManager:Landroid/telephony/TelephonyManager;
+ 
+@@ -4413,13 +4484,13 @@
+     goto/16 :goto_d
+ 
+     :cond_fe
+-    const-string v1, "storage"
++    const-string/jumbo v1, "storage"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_10c
++    if-eqz v1, :cond_10d
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getStorageManager()Landroid/os/storage/StorageManager;
+ 
+@@ -4427,14 +4498,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_10c
++    :cond_10d
+     const-string/jumbo v1, "usb"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_11b
++    if-eqz v1, :cond_11c
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getUsbManager()Landroid/hardware/usb/UsbManager;
+ 
+@@ -4442,14 +4513,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_11b
++    :cond_11c
+     const-string/jumbo v1, "vibrator"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_12a
++    if-eqz v1, :cond_12b
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getVibrator()Landroid/os/Vibrator;
+ 
+@@ -4457,23 +4528,23 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_12a
++    :cond_12b
+     const-string v1, "statusbar"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_14d
++    if-eqz v1, :cond_14e
+ 
+     iget-object v1, p0, Landroid/app/ContextImpl;->mSync:Ljava/lang/Object;
+ 
+     monitor-enter v1
+ 
+-    :try_start_135
++    :try_start_136
+     iget-object v2, p0, Landroid/app/ContextImpl;->mStatusBarManager:Landroid/app/StatusBarManager;
+ 
+-    if-nez v2, :cond_144
++    if-nez v2, :cond_145
+ 
+     new-instance v2, Landroid/app/StatusBarManager;
+ 
+@@ -4485,7 +4556,7 @@
+ 
+     iput-object v2, p0, Landroid/app/ContextImpl;->mStatusBarManager:Landroid/app/StatusBarManager;
+ 
+-    :cond_144
++    :cond_145
+     iget-object v2, p0, Landroid/app/ContextImpl;->mStatusBarManager:Landroid/app/StatusBarManager;
+ 
+     monitor-exit v1
+@@ -4494,23 +4565,23 @@
+ 
+     goto/16 :goto_d
+ 
+-    :catchall_14a
++    :catchall_14b
+     move-exception v2
+ 
+     monitor-exit v1
+-    :try_end_14c
+-    .catchall {:try_start_135 .. :try_end_14c} :catchall_14a
++    :try_end_14d
++    .catchall {:try_start_136 .. :try_end_14d} :catchall_14b
+ 
+     throw v2
+ 
+-    :cond_14d
++    :cond_14e
+     const-string v1, "audio"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_15b
++    if-eqz v1, :cond_15c
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getAudioManager()Landroid/media/AudioManager;
+ 
+@@ -4518,14 +4589,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_15b
++    :cond_15c
+     const-string v1, "phone"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_169
++    if-eqz v1, :cond_16a
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getTelephonyManager()Landroid/telephony/TelephonyManager;
+ 
+@@ -4533,14 +4604,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_169
++    :cond_16a
+     const-string v1, "clipboard"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_177
++    if-eqz v1, :cond_178
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getClipboardManager()Landroid/text/ClipboardManager;
+ 
+@@ -4548,14 +4619,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_177
++    :cond_178
+     const-string/jumbo v1, "wallpaper"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_186
++    if-eqz v1, :cond_187
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getWallpaperManager()Landroid/app/WallpaperManager;
+ 
+@@ -4563,14 +4634,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_186
++    :cond_187
+     const-string v1, "dropbox"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_194
++    if-eqz v1, :cond_195
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getDropBoxManager()Landroid/os/DropBoxManager;
+ 
+@@ -4578,14 +4649,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_194
++    :cond_195
+     const-string v1, "device_policy"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_1a2
++    if-eqz v1, :cond_1a3
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getDevicePolicyManager()Landroid/app/admin/DevicePolicyManager;
+ 
+@@ -4593,14 +4664,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_1a2
++    :cond_1a3
+     const-string/jumbo v1, "uimode"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_1b1
++    if-eqz v1, :cond_1b2
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getUiModeManager()Landroid/app/UiModeManager;
+ 
+@@ -4608,14 +4679,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_1b1
++    :cond_1b2
+     const-string v1, "download"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_1bf
++    if-eqz v1, :cond_1c0
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getDownloadManager()Landroid/app/DownloadManager;
+ 
+@@ -4623,14 +4694,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_1bf
++    :cond_1c0
+     const-string v1, "nfc"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_1cd
++    if-eqz v1, :cond_1ce
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getNfcManager()Landroid/nfc/NfcManager;
+ 
+@@ -4638,14 +4709,14 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_1cd
++    :cond_1ce
+     const-string v1, "WiMax"
+ 
+     invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+     move-result v1
+ 
+-    if-eqz v1, :cond_1db
++    if-eqz v1, :cond_1dc
+ 
+     invoke-direct {p0}, Landroid/app/ContextImpl;->getWimaxManager()Ljava/lang/Object;
+ 
+@@ -4653,7 +4724,22 @@
+ 
+     goto/16 :goto_d
+ 
+-    :cond_1db
++    :cond_1dc
++    const-string v1, "privacy"
++
++    invoke-virtual {v1, p1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v1
++
++    if-eqz v1, :cond_1ea
++
++    invoke-direct {p0}, Landroid/app/ContextImpl;->getPrivacySettingsManager()Landroid/privacy/PrivacySettingsManager;
++
++    move-result-object v1
++
++    goto/16 :goto_d
++
++    :cond_1ea
+     const/4 v1, 0x0
+ 
+     goto/16 :goto_d

@@ -1,0 +1,199 @@
+diff -Npru stock-framework/smali/android/provider/Settings$Secure.smali ext-framework/smali/android/provider/Settings$Secure.smali
+--- stock-framework/smali/android/provider/Settings$Secure.smali	2012-11-08 09:12:17.190944101 -0600
++++ ext-framework/smali/android/provider/Settings$Secure.smali	2012-11-08 09:11:56.762842802 -0600
+@@ -292,6 +292,8 @@
+ 
+ .field public static final PREFERRED_TTY_MODE:Ljava/lang/String; = "preferred_tty_mode"
+ 
++.field private static final PRIVACY_TAG:Ljava/lang/String; = "PM,SecureSettings"
++
+ .field public static final READ_EXTERNAL_STORAGE_ENFORCED_DEFAULT:Ljava/lang/String; = "read_external_storage_enforced_default"
+ 
+ .field public static final REBOOT_INTERVAL:Ljava/lang/String; = "reboot_interval"
+@@ -567,6 +569,14 @@
+ 
+ .field public static final WTF_IS_FATAL:Ljava/lang/String; = "wtf_is_fatal"
+ 
++.field private static context:Landroid/content/Context;
++
++.field private static mPm:Landroid/content/pm/IPackageManager;
++
++.field private static pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++.field private static privacyMode:Z
++
+ .field private static sIsSystemProcess:Z
+ 
+ .field private static sLockSettings:Lcom/android/internal/widget/ILockSettings;
+@@ -582,6 +592,8 @@
+ 
+     const/4 v3, 0x3
+ 
++    const/4 v2, 0x0
++
+     sput-object v0, Landroid/provider/Settings$Secure;->sNameValueCache:Landroid/provider/Settings$NameValueCache;
+ 
+     sput-object v0, Landroid/provider/Settings$Secure;->sLockSettings:Lcom/android/internal/widget/ILockSettings;
+@@ -618,15 +630,15 @@
+ 
+     sput-object v0, Landroid/provider/Settings$Secure;->CONTENT_URI:Landroid/net/Uri;
+ 
++    sput-boolean v2, Landroid/provider/Settings$Secure;->privacyMode:Z
++
+     const/16 v0, 0x1e
+ 
+     new-array v0, v0, [Ljava/lang/String;
+ 
+-    const/4 v1, 0x0
++    const-string v1, "adb_enabled"
+ 
+-    const-string v2, "adb_enabled"
+-
+-    aput-object v2, v0, v1
++    aput-object v1, v0, v2
+ 
+     const/4 v1, 0x1
+ 
+@@ -1083,6 +1095,70 @@
+     goto :goto_a
+ .end method
+ 
++.method private static getPackageName()[Ljava/lang/String;
++    .registers 5
++
++    :try_start_0
++    sget-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    if-eqz v3, :cond_f
++
++    invoke-static {}, Landroid/os/Process;->myUid()I
++
++    move-result v2
++
++    sget-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    invoke-interface {v3, v2}, Landroid/content/pm/IPackageManager;->getPackagesForUid(I)[Ljava/lang/String;
++
++    move-result-object v1
++
++    :goto_e
++    return-object v1
++
++    :cond_f
++    const-string/jumbo v3, "package"
++
++    invoke-static {v3}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v3
++
++    invoke-static {v3}, Landroid/content/pm/IPackageManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/content/pm/IPackageManager;
++
++    move-result-object v3
++
++    sput-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    invoke-static {}, Landroid/os/Process;->myUid()I
++
++    move-result v2
++
++    sget-object v3, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    invoke-interface {v3, v2}, Landroid/content/pm/IPackageManager;->getPackagesForUid(I)[Ljava/lang/String;
++    :try_end_25
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_25} :catch_27
++
++    move-result-object v1
++
++    goto :goto_e
++
++    :catch_27
++    move-exception v0
++
++    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
++
++    const-string v3, "PM,SecureSettings"
++
++    const-string/jumbo v4, "something went wrong with getting package name"
++
++    invoke-static {v3, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v1, 0x0
++
++    goto :goto_e
++.end method
++
+ .method public static declared-synchronized getString(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;
+     .registers 7
+ 
+@@ -1217,6 +1293,71 @@
+     return-object v0
+ .end method
+ 
++.method private static initiate()V
++    .registers 4
++
++    const/4 v1, 0x0
++
++    :try_start_1
++    sput-object v1, Landroid/provider/Settings$Secure;->context:Landroid/content/Context;
++
++    new-instance v1, Landroid/privacy/PrivacySettingsManager;
++
++    sget-object v2, Landroid/provider/Settings$Secure;->context:Landroid/content/Context;
++
++    const-string/jumbo v3, "privacy"
++
++    invoke-static {v3}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v3
++
++    invoke-static {v3}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v3
++
++    invoke-direct {v1, v2, v3}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    sput-object v1, Landroid/provider/Settings$Secure;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string/jumbo v1, "package"
++
++    invoke-static {v1}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v1
++
++    invoke-static {v1}, Landroid/content/pm/IPackageManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/content/pm/IPackageManager;
++
++    move-result-object v1
++
++    sput-object v1, Landroid/provider/Settings$Secure;->mPm:Landroid/content/pm/IPackageManager;
++
++    const/4 v1, 0x1
++
++    sput-boolean v1, Landroid/provider/Settings$Secure;->privacyMode:Z
++    :try_end_27
++    .catch Ljava/lang/Exception; {:try_start_1 .. :try_end_27} :catch_28
++
++    :goto_27
++    return-void
++
++    :catch_28
++    move-exception v0
++
++    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
++
++    const-string v1, "PM,SecureSettings"
++
++    const-string v2, "Something went wrong with initalize variables"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v1, 0x0
++
++    sput-boolean v1, Landroid/provider/Settings$Secure;->privacyMode:Z
++
++    goto :goto_27
++.end method
++
+ .method public static final isLocationProviderEnabled(Landroid/content/ContentResolver;Ljava/lang/String;)Z
+     .registers 4
+ 

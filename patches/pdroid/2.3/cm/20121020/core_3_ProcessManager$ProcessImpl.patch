@@ -1,0 +1,41 @@
+diff -Npru stock-core/smali/java/lang/ProcessManager$ProcessImpl.smali pdroid-core/smali/java/lang/ProcessManager$ProcessImpl.smali
+--- stock-core/smali/java/lang/ProcessManager$ProcessImpl.smali	2012-10-22 10:57:19.329784229 -0500
++++ pdroid-core/smali/java/lang/ProcessManager$ProcessImpl.smali	2012-10-22 10:57:42.725900249 -0500
+@@ -52,12 +52,21 @@
+ 
+     iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->errorStream:Ljava/io/InputStream;
+ 
++    const-string v0, "systemLogsSetting"
++
++    invoke-static {v0, p1}, Ljava/lang/PrivacyProcessManager;->hasPrivacyPermission(Ljava/lang/String;I)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_2d
++
+     new-instance v0, Ljava/lang/ProcessManager$ProcessInputStream;
+ 
+     invoke-direct {v0, p2, v1}, Ljava/lang/ProcessManager$ProcessInputStream;-><init>(Ljava/io/FileDescriptor;Ljava/lang/ProcessManager$1;)V
+ 
+     iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->inputStream:Ljava/io/InputStream;
+ 
++    :goto_25
+     new-instance v0, Ljava/lang/ProcessManager$ProcessOutputStream;
+ 
+     invoke-direct {v0, p3, v1}, Ljava/lang/ProcessManager$ProcessOutputStream;-><init>(Ljava/io/FileDescriptor;Ljava/lang/ProcessManager$1;)V
+@@ -65,6 +74,15 @@
+     iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->outputStream:Ljava/io/OutputStream;
+ 
+     return-void
++
++    :cond_2d
++    new-instance v0, Ljava/lang/PrivacyInputStream;
++
++    invoke-direct {v0}, Ljava/lang/PrivacyInputStream;-><init>()V
++
++    iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->inputStream:Ljava/io/InputStream;
++
++    goto :goto_25
+ .end method
+ 
+ 

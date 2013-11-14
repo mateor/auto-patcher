@@ -1,0 +1,54 @@
+diff -Npru stock-framework/smali/android/content/ContentResolver.smali pdroid-framework/smali/android/content/ContentResolver.smali
+--- stock-framework/smali/android/content/ContentResolver.smali	2012-10-22 10:39:59.040625718 -0500
++++ pdroid-framework/smali/android/content/ContentResolver.smali	2012-10-22 10:39:39.928530948 -0500
+@@ -2949,7 +2949,13 @@
+ 
+     move-result-object v9
+ 
+-    if-nez v9, :cond_1e
++    iget-object v1, p0, Landroid/content/ContentResolver;->mContext:Landroid/content/Context;
++
++    invoke-static {p1, p2, v1, v9}, Landroid/privacy/surrogate/PrivacyContentResolver;->enforcePrivacyPermission(Landroid/net/Uri;[Ljava/lang/String;Landroid/content/Context;Landroid/database/Cursor;)Landroid/database/Cursor;
++
++    move-result-object v9
++
++    if-nez v9, :cond_24
+ 
+     invoke-virtual {p0, v0}, Landroid/content/ContentResolver;->releaseProvider(Landroid/content/IContentProvider;)Z
+ 
+@@ -2957,7 +2963,7 @@
+ 
+     goto :goto_7
+ 
+-    :cond_1e
++    :cond_24
+     invoke-interface {v9}, Landroid/database/Cursor;->getCount()I
+ 
+     invoke-static {}, Landroid/os/SystemClock;->uptimeMillis()J
+@@ -2981,13 +2987,13 @@
+     new-instance v1, Landroid/content/ContentResolver$CursorWrapperInner;
+ 
+     invoke-direct {v1, p0, v9, v0}, Landroid/content/ContentResolver$CursorWrapperInner;-><init>(Landroid/content/ContentResolver;Landroid/database/Cursor;Landroid/content/IContentProvider;)V
+-    :try_end_35
+-    .catch Landroid/os/RemoteException; {:try_start_8 .. :try_end_35} :catch_36
+-    .catch Ljava/lang/RuntimeException; {:try_start_8 .. :try_end_35} :catch_3d
++    :try_end_3b
++    .catch Landroid/os/RemoteException; {:try_start_8 .. :try_end_3b} :catch_3c
++    .catch Ljava/lang/RuntimeException; {:try_start_8 .. :try_end_3b} :catch_43
+ 
+     goto :goto_7
+ 
+-    :catch_36
++    :catch_3c
+     move-exception v1
+ 
+     move-object v8, v1
+@@ -2998,7 +3004,7 @@
+ 
+     goto :goto_7
+ 
+-    :catch_3d
++    :catch_43
+     move-exception v1
+ 
+     move-object v8, v1

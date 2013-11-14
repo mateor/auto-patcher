@@ -1,0 +1,206 @@
+diff -Npru stock-services/smali/com/android/server/am/ActivityManagerService.smali pdroid-services/smali/com/android/server/am/ActivityManagerService.smali
+--- stock-services/smali/com/android/server/am/ActivityManagerService.smali	2012-11-02 22:29:33.031500890 -0500
++++ pdroid-services/smali/com/android/server/am/ActivityManagerService.smali	2012-11-02 22:30:01.215640650 -0500
+@@ -41313,7 +41313,7 @@
+     :try_start_16
+     monitor-enter p0
+     :try_end_17
+-    .catchall {:try_start_16 .. :try_end_17} :catchall_3b
++    .catchall {:try_start_16 .. :try_end_17} :catchall_42
+ 
+     :try_start_17
+     invoke-virtual {p0, p1}, Lcom/android/server/am/ActivityManagerService;->broadcastRecordForReceiverLocked(Landroid/os/IBinder;)Lcom/android/server/am/BroadcastRecord;
+@@ -41341,40 +41341,46 @@
+     :cond_28
+     monitor-exit p0
+     :try_end_29
+-    .catchall {:try_start_17 .. :try_end_29} :catchall_38
++    .catchall {:try_start_17 .. :try_end_29} :catchall_3f
+ 
+-    if-eqz v7, :cond_31
++    if-eqz v7, :cond_38
+ 
+     :try_start_2b
+     iget-object v0, v1, Lcom/android/server/am/BroadcastRecord;->queue:Lcom/android/server/am/BroadcastQueue;
+ 
++    iget-object v2, p0, Lcom/android/server/am/ActivityManagerService;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0, v2}, Lcom/android/server/am/BroadcastQueue;->setContext(Landroid/content/Context;)V
++
++    iget-object v0, v1, Lcom/android/server/am/BroadcastRecord;->queue:Lcom/android/server/am/BroadcastQueue;
++
+     const/4 v2, 0x0
+ 
+     invoke-virtual {v0, v2}, Lcom/android/server/am/BroadcastQueue;->processNextBroadcast(Z)V
+ 
+-    :cond_31
++    :cond_38
+     invoke-virtual {p0}, Lcom/android/server/am/ActivityManagerService;->trimApplications()V
+-    :try_end_34
+-    .catchall {:try_start_2b .. :try_end_34} :catchall_3b
++    :try_end_3b
++    .catchall {:try_start_2b .. :try_end_3b} :catchall_42
+ 
+     invoke-static {v8, v9}, Landroid/os/Binder;->restoreCallingIdentity(J)V
+ 
+     return-void
+ 
+-    :catchall_38
++    :catchall_3f
+     move-exception v0
+ 
+-    :try_start_39
++    :try_start_40
+     monitor-exit p0
+-    :try_end_3a
+-    .catchall {:try_start_39 .. :try_end_3a} :catchall_38
++    :try_end_41
++    .catchall {:try_start_40 .. :try_end_41} :catchall_3f
+ 
+-    :try_start_3a
++    :try_start_41
+     throw v0
+-    :try_end_3b
+-    .catchall {:try_start_3a .. :try_end_3b} :catchall_3b
++    :try_end_42
++    .catchall {:try_start_41 .. :try_end_42} :catchall_42
+ 
+-    :catchall_3b
++    :catchall_42
+     move-exception v0
+ 
+     invoke-static {v8, v9}, Landroid/os/Binder;->restoreCallingIdentity(J)V
+@@ -59146,7 +59152,7 @@
+     :try_start_5
+     monitor-enter p0
+     :try_end_6
+-    .catchall {:try_start_5 .. :try_end_6} :catchall_61
++    .catchall {:try_start_5 .. :try_end_6} :catchall_68
+ 
+     :try_start_6
+     iget-object v0, p0, Lcom/android/server/am/ActivityManagerService;->mRegisteredReceivers:Ljava/util/HashMap;
+@@ -59161,11 +59167,11 @@
+ 
+     check-cast v12, Lcom/android/server/am/ReceiverList;
+ 
+-    if-eqz v12, :cond_54
++    if-eqz v12, :cond_5b
+ 
+     iget-object v0, v12, Lcom/android/server/am/ReceiverList;->curBroadcast:Lcom/android/server/am/BroadcastRecord;
+ 
+-    if-eqz v0, :cond_35
++    if-eqz v0, :cond_3c
+ 
+     iget-object v11, v12, Lcom/android/server/am/ReceiverList;->curBroadcast:Lcom/android/server/am/BroadcastRecord;
+ 
+@@ -59189,20 +59195,26 @@
+ 
+     move-result v7
+ 
+-    if-eqz v7, :cond_35
++    if-eqz v7, :cond_3c
+ 
+     const/4 v8, 0x1
+ 
+     iget-object v0, v11, Lcom/android/server/am/BroadcastRecord;->queue:Lcom/android/server/am/BroadcastQueue;
+ 
++    iget-object v1, p0, Lcom/android/server/am/ActivityManagerService;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0, v1}, Lcom/android/server/am/BroadcastQueue;->setContext(Landroid/content/Context;)V
++
++    iget-object v0, v11, Lcom/android/server/am/BroadcastRecord;->queue:Lcom/android/server/am/BroadcastQueue;
++
+     const/4 v1, 0x0
+ 
+     invoke-virtual {v0, v1}, Lcom/android/server/am/BroadcastQueue;->processNextBroadcast(Z)V
+ 
+-    :cond_35
++    :cond_3c
+     iget-object v0, v12, Lcom/android/server/am/ReceiverList;->app:Lcom/android/server/am/ProcessRecord;
+ 
+-    if-eqz v0, :cond_40
++    if-eqz v0, :cond_47
+ 
+     iget-object v0, v12, Lcom/android/server/am/ReceiverList;->app:Lcom/android/server/am/ProcessRecord;
+ 
+@@ -59210,12 +59222,12 @@
+ 
+     invoke-virtual {v0, v12}, Ljava/util/HashSet;->remove(Ljava/lang/Object;)Z
+ 
+-    :cond_40
++    :cond_47
+     invoke-virtual {p0, v12}, Lcom/android/server/am/ActivityManagerService;->removeReceiverLocked(Lcom/android/server/am/ReceiverList;)V
+ 
+     iget-boolean v0, v12, Lcom/android/server/am/ReceiverList;->linkedToDeath:Z
+ 
+-    if-eqz v0, :cond_54
++    if-eqz v0, :cond_5b
+ 
+     const/4 v0, 0x0
+ 
+@@ -59231,47 +59243,47 @@
+ 
+     invoke-interface {v0, v12, v1}, Landroid/os/IBinder;->unlinkToDeath(Landroid/os/IBinder$DeathRecipient;I)Z
+ 
+-    :cond_54
++    :cond_5b
+     monitor-exit p0
+-    :try_end_55
+-    .catchall {:try_start_6 .. :try_end_55} :catchall_5e
++    :try_end_5c
++    .catchall {:try_start_6 .. :try_end_5c} :catchall_65
+ 
+-    if-eqz v8, :cond_66
++    if-eqz v8, :cond_6d
+ 
+-    :try_start_57
++    :try_start_5e
+     invoke-virtual {p0}, Lcom/android/server/am/ActivityManagerService;->trimApplications()V
+-    :try_end_5a
+-    .catchall {:try_start_57 .. :try_end_5a} :catchall_61
++    :try_end_61
++    .catchall {:try_start_5e .. :try_end_61} :catchall_68
+ 
+     invoke-static {v9, v10}, Landroid/os/Binder;->restoreCallingIdentity(J)V
+ 
+-    :goto_5d
++    :goto_64
+     return-void
+ 
+-    :catchall_5e
++    :catchall_65
+     move-exception v0
+ 
+-    :try_start_5f
++    :try_start_66
+     monitor-exit p0
+-    :try_end_60
+-    .catchall {:try_start_5f .. :try_end_60} :catchall_5e
++    :try_end_67
++    .catchall {:try_start_66 .. :try_end_67} :catchall_65
+ 
+-    :try_start_60
++    :try_start_67
+     throw v0
+-    :try_end_61
+-    .catchall {:try_start_60 .. :try_end_61} :catchall_61
++    :try_end_68
++    .catchall {:try_start_67 .. :try_end_68} :catchall_68
+ 
+-    :catchall_61
++    :catchall_68
+     move-exception v0
+ 
+     invoke-static {v9, v10}, Landroid/os/Binder;->restoreCallingIdentity(J)V
+ 
+     throw v0
+ 
+-    :cond_66
++    :cond_6d
+     invoke-static {v9, v10}, Landroid/os/Binder;->restoreCallingIdentity(J)V
+ 
+-    goto :goto_5d
++    goto :goto_64
+ .end method
+ 
+ .method public unstableProviderDied(Landroid/os/IBinder;)V

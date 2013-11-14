@@ -1,0 +1,118 @@
+diff -NpruEbB stock_framework/smali/android/media/MediaPlayer.smali moded_framework/smali/android/media/MediaPlayer.smali
+--- stock_framework/smali/android/media/MediaPlayer.smali	2012-08-14 09:22:21.176222975 -0700
++++ moded_framework/smali/android/media/MediaPlayer.smali	2012-08-14 09:22:47.192391580 -0700
+@@ -985,9 +985,9 @@
+ 
+     invoke-virtual {v7, p2, v0}, Landroid/content/ContentResolver;->openAssetFileDescriptor(Landroid/net/Uri;Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;
+     :try_end_21
+-    .catchall {:try_start_17 .. :try_end_21} :catchall_6e
+-    .catch Ljava/lang/SecurityException; {:try_start_17 .. :try_end_21} :catch_52
+-    .catch Ljava/io/IOException; {:try_start_17 .. :try_end_21} :catch_67
++    .catchall {:try_start_17 .. :try_end_21} :catchall_64
++    .catch Ljava/lang/SecurityException; {:try_start_17 .. :try_end_21} :catch_4f
++    .catch Ljava/io/IOException; {:try_start_17 .. :try_end_21} :catch_6b
+ 
+     move-result-object v6
+ 
+@@ -995,6 +995,7 @@
+ 
+     if-eqz v6, :cond_15
+ 
++    :goto_26
+     invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->close()V
+ 
+     goto :goto_15
+@@ -1009,27 +1010,20 @@
+ 
+     cmp-long v0, v0, v2
+ 
+-    if-gez v0, :cond_41
++    if-gez v0, :cond_3e
+ 
+     invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->getFileDescriptor()Ljava/io/FileDescriptor;
+ 
+     move-result-object v0
+ 
+     invoke-virtual {p0, v0}, Landroid/media/MediaPlayer;->setDataSource(Ljava/io/FileDescriptor;)V
+-    :try_end_3b
+-    .catchall {:try_start_2a .. :try_end_3b} :catchall_6e
+-    .catch Ljava/lang/SecurityException; {:try_start_2a .. :try_end_3b} :catch_52
+-    .catch Ljava/io/IOException; {:try_start_2a .. :try_end_3b} :catch_67
+ 
+     :goto_3b
+     if-eqz v6, :cond_15
+ 
+-    invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->close()V
+-
+-    goto :goto_15
++    goto :goto_26
+ 
+-    :cond_41
+-    :try_start_41
++    :cond_3e
+     invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->getFileDescriptor()Ljava/io/FileDescriptor;
+ 
+     move-result-object v1
+@@ -1045,22 +1039,22 @@
+     move-object v0, p0
+ 
+     invoke-virtual/range {v0 .. v5}, Landroid/media/MediaPlayer;->setDataSource(Ljava/io/FileDescriptor;JJ)V
+-    :try_end_51
+-    .catchall {:try_start_41 .. :try_end_51} :catchall_6e
+-    .catch Ljava/lang/SecurityException; {:try_start_41 .. :try_end_51} :catch_52
+-    .catch Ljava/io/IOException; {:try_start_41 .. :try_end_51} :catch_67
++    :try_end_4e
++    .catchall {:try_start_2a .. :try_end_4e} :catchall_64
++    .catch Ljava/lang/SecurityException; {:try_start_2a .. :try_end_4e} :catch_4f
++    .catch Ljava/io/IOException; {:try_start_2a .. :try_end_4e} :catch_6b
+ 
+     goto :goto_3b
+ 
+-    :catch_52
++    :catch_4f
+     move-exception v0
+ 
+-    if-eqz v6, :cond_58
++    if-eqz v6, :cond_55
+ 
++    :goto_52
+     invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->close()V
+ 
+-    :cond_58
+-    :goto_58
++    :cond_55
+     const-string v0, "MediaPlayer"
+ 
+     const-string v1, "Couldn\'t open file on client side, trying server side"
+@@ -1075,24 +1069,22 @@
+ 
+     goto :goto_15
+ 
+-    :catch_67
++    :catchall_64
+     move-exception v0
+ 
+-    if-eqz v6, :cond_58
++    if-eqz v6, :cond_6a
+ 
+     invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->close()V
+ 
+-    goto :goto_58
++    :cond_6a
++    throw v0
+ 
+-    :catchall_6e
++    :catch_6b
+     move-exception v0
+ 
+-    if-eqz v6, :cond_74
+-
+-    invoke-virtual {v6}, Landroid/content/res/AssetFileDescriptor;->close()V
++    if-eqz v6, :cond_55
+ 
+-    :cond_74
+-    throw v0
++    goto :goto_52
+ .end method
+ 
+ .method public setDataSource(Ljava/io/FileDescriptor;)V

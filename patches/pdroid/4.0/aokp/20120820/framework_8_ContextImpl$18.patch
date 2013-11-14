@@ -1,0 +1,37 @@
+diff -NpruEbB stock_framework/smali/android/app/ContextImpl$18.smali moded_framework/smali/android/app/ContextImpl$18.smali
+--- stock_framework/smali/android/app/ContextImpl$18.smali	2012-08-11 16:37:22.846792573 -0700
++++ moded_framework/smali/android/app/ContextImpl$18.smali	2012-08-11 16:37:44.209859145 -0700
+@@ -26,21 +26,25 @@
+ 
+ # virtual methods
+ .method public createStaticService()Ljava/lang/Object;
+-    .registers 4
++    .registers 5
+ 
+-    const-string v1, "location"
++    const-string v2, "location"
+ 
+-    invoke-static {v1}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+ 
+     move-result-object v0
+ 
+-    new-instance v1, Landroid/location/LocationManager;
+-
+     invoke-static {v0}, Landroid/location/ILocationManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/location/ILocationManager;
+ 
+-    move-result-object v2
++    move-result-object v1
++
++    new-instance v2, Landroid/privacy/surrogate/PrivacyLocationManager;
++
++    invoke-static {}, Landroid/app/ContextImpl;->getStaticOuterContext()Landroid/content/Context;
++
++    move-result-object v3
+ 
+-    invoke-direct {v1, v2}, Landroid/location/LocationManager;-><init>(Landroid/location/ILocationManager;)V
++    invoke-direct {v2, v1, v3}, Landroid/privacy/surrogate/PrivacyLocationManager;-><init>(Landroid/location/ILocationManager;Landroid/content/Context;)V
+ 
+-    return-object v1
++    return-object v2
+ .end method

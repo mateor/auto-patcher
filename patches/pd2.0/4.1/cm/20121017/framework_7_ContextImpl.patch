@@ -1,0 +1,69 @@
+diff -Npru stock-framework/smali/android/app/ContextImpl.smali ext-framework/smali/android/app/ContextImpl.smali
+--- stock-framework/smali/android/app/ContextImpl.smali	2012-11-06 15:02:59.286167793 -0600
++++ ext-framework/smali/android/app/ContextImpl.smali	2012-11-06 15:03:15.746249420 -0600
+@@ -36,6 +36,8 @@
+ 
+ .field private static sNextPerContextServiceCacheIndex:I
+ 
++.field private static sOuterContext:Landroid/content/Context;
++
+ .field private static final sSharedPrefs:Ljava/util/HashMap;
+     .annotation system Ldalvik/annotation/Signature;
+         value = {
+@@ -442,6 +444,14 @@
+ 
+     invoke-static {v0, v1}, Landroid/app/ContextImpl;->registerService(Ljava/lang/String;Landroid/app/ContextImpl$ServiceFetcher;)V
+ 
++    const-string/jumbo v0, "privacy"
++
++    new-instance v1, Landroid/app/ContextImpl$40;
++
++    invoke-direct {v1}, Landroid/app/ContextImpl$40;-><init>()V
++
++    invoke-static {v0, v1}, Landroid/app/ContextImpl;->registerService(Ljava/lang/String;Landroid/app/ContextImpl$ServiceFetcher;)V
++
+     return-void
+ .end method
+ 
+@@ -476,6 +486,8 @@
+ 
+     iput-object p0, p0, Landroid/app/ContextImpl;->mOuterContext:Landroid/content/Context;
+ 
++    sput-object p0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     return-void
+ .end method
+ 
+@@ -530,6 +542,8 @@
+ 
+     iput-object p0, p0, Landroid/app/ContextImpl;->mOuterContext:Landroid/content/Context;
+ 
++    sput-object p0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     return-void
+ .end method
+ 
+@@ -999,6 +1013,14 @@
+     throw v0
+ .end method
+ 
++.method static final getStaticOuterContext()Landroid/content/Context;
++    .registers 1
++
++    sget-object v0, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
++    return-object v0
++.end method
++
+ .method private getWallpaperManager()Landroid/app/WallpaperManager;
+     .registers 2
+ 
+@@ -4272,6 +4294,8 @@
+ 
+     iput-object p1, p0, Landroid/app/ContextImpl;->mOuterContext:Landroid/content/Context;
+ 
++    sput-object p1, Landroid/app/ContextImpl;->sOuterContext:Landroid/content/Context;
++
+     return-void
+ .end method
+ 

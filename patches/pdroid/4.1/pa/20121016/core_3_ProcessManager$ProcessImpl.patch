@@ -1,0 +1,41 @@
+diff -Npru stock_core/smali/java/lang/ProcessManager$ProcessImpl.smali moded_core/smali/java/lang/ProcessManager$ProcessImpl.smali
+--- stock_core/smali/java/lang/ProcessManager$ProcessImpl.smali	2012-06-14 15:21:02.827548393 -0500
++++ moded_core/smali/java/lang/ProcessManager$ProcessImpl.smali	2012-06-14 15:22:52.504092243 -0500
+@@ -52,12 +52,21 @@
+ 
+     iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->errorStream:Ljava/io/InputStream;
+ 
++    const-string v0, "systemLogsSetting"
++
++    invoke-static {v0, p1}, Ljava/lang/PrivacyProcessManager;->hasPrivacyPermission(Ljava/lang/String;I)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_2d
++
+     new-instance v0, Ljava/lang/ProcessManager$ProcessInputStream;
+ 
+     invoke-direct {v0, p2, v1}, Ljava/lang/ProcessManager$ProcessInputStream;-><init>(Ljava/io/FileDescriptor;Ljava/lang/ProcessManager$1;)V
+ 
+     iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->inputStream:Ljava/io/InputStream;
+ 
++    :goto_25
+     new-instance v0, Ljava/lang/ProcessManager$ProcessOutputStream;
+ 
+     invoke-direct {v0, p3, v1}, Ljava/lang/ProcessManager$ProcessOutputStream;-><init>(Ljava/io/FileDescriptor;Ljava/lang/ProcessManager$1;)V
+@@ -65,6 +74,15 @@
+     iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->outputStream:Ljava/io/OutputStream;
+ 
+     return-void
++
++    :cond_2d
++    new-instance v0, Ljava/lang/PrivacyInputStream;
++
++    invoke-direct {v0}, Ljava/lang/PrivacyInputStream;-><init>()V
++
++    iput-object v0, p0, Ljava/lang/ProcessManager$ProcessImpl;->inputStream:Ljava/io/InputStream;
++
++    goto :goto_25
+ .end method
+ 
+ .method static synthetic access$300(Ljava/lang/ProcessManager$ProcessImpl;)I
