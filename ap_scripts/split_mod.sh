@@ -33,7 +33,7 @@ if [ $# -gt 0 ]; then
           fi
           FILE=${FILE##*/}
           args+=($FILE)
-     done./
+     done
      args=( ${args[@]//*'split_patch'*} )
 fi
 
