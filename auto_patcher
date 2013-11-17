@@ -396,7 +396,6 @@ mismatch_error () {
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
      printtask "!!! error: $@"
      printtask "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-     echo ""
      cleanup
      brief_help
 }
@@ -640,7 +639,7 @@ mods_info () {
      ROM_CONFLICTS=(None)
      UNKNOWN_MOD=false
      DEVICE_LIMIT="None"
-     case $PID in
+     case "$PID" in
      mods)
           mods_display
           exit
@@ -701,11 +700,10 @@ mods_info () {
           FLOOR=4.1.2
           CEILING=4.4.0
           DESC="A fork of the open-source PDroid and Pdroid2.0 framework."
-          DEV="CollegeDev/FFU5y/wbedard/mateorod/Community"
-          DEPENDENCY="PDroidManager(opensource) or PDroid2.0(CollegeDev)"
+          DEV="CollegeDev/FFU5y/wbedard/mateor/Community"
+          DEPENDENCY="PDroidManager(opensource)"
           WEBSITE="http://forum.xda-developers.com/showthread.php?t=1994860"
           if [[ $ANDR == "4.1" ]]; then
-               # Still borked, perhaps never to be fixed. PDroid works, and we SHOULD output a helpful message.
                ROM_CONFLICTS=( pa cm )
           fi
           ;;
@@ -835,8 +833,14 @@ rom_compat_check () {
 }
 
 rom_compat_error () {
-     print_error "$PID is incompatible with $RID!!!"
-}
+     echo ""
+     if ( [[ "$PID" == openpdroid ]] && [[ "$ANDR" == 4.1 ]] ); then
+          echo "  OpenPdroid support for CyanogenMod was broken around 2/05/13"
+          echo "  Use a ROM from before then or patch for 'pdroid' instead"
+     fi
+     # lets also add the common names for $RID (like rom_name)
+     print_error "$PID is incompatible with $ROMNAME for Android $ANDR !!!"
+}B
 
 device_compat_check () {
      O=${#DEVICE_LIMIT[@]}
@@ -986,15 +990,39 @@ romtype_set () {
      case $RID in
      cm)
           ROMTYPE="cm"
+          ROMNAME="CyanogenMod"
           ;;
      aokp*)
           ROMTYPE="aokp"
+          ROMNAME="AOKP"
           ;;
      pa)
           ROMTYPE="pa"
+          ROMNAME="ParanoidAndroid"
+          ;;
+     .aosp-slim)
+          ROMTYPE="aosp"
+          ROMNAME="SlimRom"
+          ;;
+     .aosp-pac)
+          ROMTYPE="aosp"
+          ROMNAME="PAC-man"
+          ;;
+     .aosp-vanir)
+          ROMTYPE="aosp"
+          ROMNAME="VanirAOSP"
+          ;;
+     .aosp-omni)
+          ROMTYPE="aosp"
+          ROMNAME="OmniRom"
+          ;;
+     .aosp-root)
+          ROMTYPE="aosp"
+          ROMNAME="RootBox"
           ;;
      *)
           ROMTYPE="aosp"
+          ROMNAME="AOSP"
           ;;
      esac
 }
@@ -1237,7 +1265,7 @@ context_editor (){
                break
           done
      else
-          print_error "No patch sets create the proper ContextImpl file. Please upload log!"
+          print_error "This rom needs updated patches! Please post log on github.com/mateor/auto-patcher" # ( NOT READY I DON"T GUESS) or look at mateor/patchScripts to create your own"
      fi
 
      # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
