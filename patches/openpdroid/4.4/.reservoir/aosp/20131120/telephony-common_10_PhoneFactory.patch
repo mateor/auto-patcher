@@ -1,0 +1,123 @@
+diff -Npruw stock-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali pdroid-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali
+--- stock-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali	2013-11-20 10:37:45.644113769 -0600
++++ pdroid-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali	2013-11-20 10:38:01.624113350 -0600
+@@ -62,7 +62,7 @@
+ 
+     packed-switch v1, :pswitch_data_26
+ 
+-    new-instance v0, Lcom/android/internal/telephony/cdma/CDMAPhone;
++    new-instance v0, Landroid/privacy/surrogate/PrivacyCDMAPhone;
+ 
+     sget-object v1, Lcom/android/internal/telephony/PhoneFactory;->sContext:Landroid/content/Context;
+ 
+@@ -70,7 +70,7 @@
+ 
+     sget-object v4, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v0, v1, v3, v4}, Lcom/android/internal/telephony/cdma/CDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v3, v4}, Landroid/privacy/surrogate/PrivacyCDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     :goto_15
+     monitor-exit v2
+@@ -78,7 +78,7 @@
+     return-object v0
+ 
+     :pswitch_17
+-    new-instance v0, Lcom/android/internal/telephony/cdma/CDMALTEPhone;
++    new-instance v0, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;
+ 
+     sget-object v1, Lcom/android/internal/telephony/PhoneFactory;->sContext:Landroid/content/Context;
+ 
+@@ -86,7 +86,7 @@
+ 
+     sget-object v4, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v0, v1, v3, v4}, Lcom/android/internal/telephony/cdma/CDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v3, v4}, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     goto :goto_15
+ 
+@@ -151,7 +151,7 @@
+     monitor-enter v2
+ 
+     :try_start_3
+-    new-instance v0, Lcom/android/internal/telephony/gsm/GSMPhone;
++    new-instance v0, Landroid/privacy/surrogate/PrivacyGSMPhone;
+ 
+     sget-object v1, Lcom/android/internal/telephony/PhoneFactory;->sContext:Landroid/content/Context;
+ 
+@@ -159,7 +159,7 @@
+ 
+     sget-object v4, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v0, v1, v3, v4}, Lcom/android/internal/telephony/gsm/GSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v3, v4}, Landroid/privacy/surrogate/PrivacyGSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     monitor-exit v2
+ 
+@@ -342,17 +342,17 @@
+ 
+     invoke-static {v9, v11}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v9, Lcom/android/internal/telephony/PhoneProxy;
++    new-instance v9, Landroid/privacy/surrogate/PrivacyPhoneProxy;
+ 
+-    new-instance v11, Lcom/android/internal/telephony/gsm/GSMPhone;
++    new-instance v11, Landroid/privacy/surrogate/PrivacyGSMPhone;
+ 
+     sget-object v12, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+ 
+     sget-object v13, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v11, p0, v12, v13}, Lcom/android/internal/telephony/gsm/GSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v11, p0, v12, v13}, Landroid/privacy/surrogate/PrivacyGSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+-    invoke-direct {v9, v11}, Lcom/android/internal/telephony/PhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;)V
++    invoke-direct {v9, v11, p0}, Landroid/privacy/surrogate/PrivacyPhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;Landroid/content/Context;)V
+ 
+     sput-object v9, Lcom/android/internal/telephony/PhoneFactory;->sProxyPhone:Lcom/android/internal/telephony/Phone;
+ 
+@@ -460,17 +460,17 @@
+ 
+     invoke-static {v9, v11}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v9, Lcom/android/internal/telephony/PhoneProxy;
++    new-instance v9, Landroid/privacy/surrogate/PrivacyPhoneProxy;
+ 
+-    new-instance v11, Lcom/android/internal/telephony/cdma/CDMAPhone;
++    new-instance v11, Landroid/privacy/surrogate/PrivacyCDMAPhone;
+ 
+     sget-object v12, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+ 
+     sget-object v13, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v11, p0, v12, v13}, Lcom/android/internal/telephony/cdma/CDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v11, p0, v12, v13}, Landroid/privacy/surrogate/PrivacyCDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+-    invoke-direct {v9, v11}, Lcom/android/internal/telephony/PhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;)V
++    invoke-direct {v9, v11, p0}, Landroid/privacy/surrogate/PrivacyPhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;Landroid/content/Context;)V
+ 
+     sput-object v9, Lcom/android/internal/telephony/PhoneFactory;->sProxyPhone:Lcom/android/internal/telephony/Phone;
+ 
+@@ -483,17 +483,17 @@
+ 
+     invoke-static {v9, v11}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v9, Lcom/android/internal/telephony/PhoneProxy;
++    new-instance v9, Landroid/privacy/surrogate/PrivacyPhoneProxy;
+ 
+-    new-instance v11, Lcom/android/internal/telephony/cdma/CDMALTEPhone;
++    new-instance v11, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;
+ 
+     sget-object v12, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+ 
+     sget-object v13, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v11, p0, v12, v13}, Lcom/android/internal/telephony/cdma/CDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v11, p0, v12, v13}, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+-    invoke-direct {v9, v11}, Lcom/android/internal/telephony/PhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;)V
++    invoke-direct {v9, v11, p0}, Landroid/privacy/surrogate/PrivacyPhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;Landroid/content/Context;)V
+ 
+     sput-object v9, Lcom/android/internal/telephony/PhoneFactory;->sProxyPhone:Lcom/android/internal/telephony/Phone;
+     :try_end_122
