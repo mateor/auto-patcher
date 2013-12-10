@@ -1,0 +1,327 @@
+diff -Npruw stock-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali pdroid-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali
+--- stock-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali	2013-12-09 11:43:10.784372477 -0600
++++ pdroid-telephony-common/smali/com/android/internal/telephony/PhoneFactory.smali	2013-12-09 11:43:24.504372117 -0600
+@@ -62,7 +62,7 @@
+ 
+     packed-switch v1, :pswitch_data_26
+ 
+-    new-instance v0, Lcom/android/internal/telephony/cdma/CDMAPhone;
++    new-instance v0, Landroid/privacy/surrogate/PrivacyCDMAPhone;
+ 
+     sget-object v1, Lcom/android/internal/telephony/PhoneFactory;->sContext:Landroid/content/Context;
+ 
+@@ -70,7 +70,7 @@
+ 
+     sget-object v4, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v0, v1, v3, v4}, Lcom/android/internal/telephony/cdma/CDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v3, v4}, Landroid/privacy/surrogate/PrivacyCDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     :goto_15
+     monitor-exit v2
+@@ -78,7 +78,7 @@
+     return-object v0
+ 
+     :pswitch_17
+-    new-instance v0, Lcom/android/internal/telephony/cdma/CDMALTEPhone;
++    new-instance v0, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;
+ 
+     sget-object v1, Lcom/android/internal/telephony/PhoneFactory;->sContext:Landroid/content/Context;
+ 
+@@ -86,7 +86,7 @@
+ 
+     sget-object v4, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v0, v1, v3, v4}, Lcom/android/internal/telephony/cdma/CDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v3, v4}, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     goto :goto_15
+ 
+@@ -151,7 +151,7 @@
+     monitor-enter v2
+ 
+     :try_start_3
+-    new-instance v0, Lcom/android/internal/telephony/gsm/GSMPhone;
++    new-instance v0, Landroid/privacy/surrogate/PrivacyGSMPhone;
+ 
+     sget-object v1, Lcom/android/internal/telephony/PhoneFactory;->sContext:Landroid/content/Context;
+ 
+@@ -159,7 +159,7 @@
+ 
+     sget-object v4, Lcom/android/internal/telephony/PhoneFactory;->sPhoneNotifier:Lcom/android/internal/telephony/PhoneNotifier;
+ 
+-    invoke-direct {v0, v1, v3, v4}, Lcom/android/internal/telephony/gsm/GSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v3, v4}, Landroid/privacy/surrogate/PrivacyGSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     monitor-exit v2
+ 
+@@ -186,7 +186,7 @@
+     :try_start_3
+     sget-boolean v17, Lcom/android/internal/telephony/PhoneFactory;->sMadeDefaults:Z
+ 
+-    if-nez v17, :cond_19a
++    if-nez v17, :cond_19c
+ 
+     invoke-static {}, Landroid/os/Looper;->myLooper()Landroid/os/Looper;
+ 
+@@ -240,11 +240,11 @@
+ 
+     invoke-direct {v0, v1}, Landroid/net/LocalServerSocket;-><init>(Ljava/lang/String;)V
+     :try_end_31
+-    .catch Ljava/io/IOException; {:try_start_26 .. :try_end_31} :catch_19c
++    .catch Ljava/io/IOException; {:try_start_26 .. :try_end_31} :catch_19e
+     .catchall {:try_start_26 .. :try_end_31} :catchall_1f
+ 
+     :goto_31
+-    if-nez v10, :cond_1a0
++    if-nez v10, :cond_1a2
+ 
+     :try_start_33
+     new-instance v17, Lcom/android/internal/telephony/DefaultPhoneNotifier;
+@@ -491,7 +491,7 @@
+ 
+     sput-object v17, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+     :try_end_129
+-    .catch Ljava/lang/Exception; {:try_start_c4 .. :try_end_129} :catch_1bc
++    .catch Ljava/lang/Exception; {:try_start_c4 .. :try_end_129} :catch_1be
+     .catchall {:try_start_c4 .. :try_end_129} :catchall_1f
+ 
+     :try_start_129
+@@ -511,7 +511,7 @@
+ 
+     move/from16 v0, v17
+ 
+-    if-ne v13, v0, :cond_1d0
++    if-ne v13, v0, :cond_1d2
+ 
+     const-string v17, "PhoneFactory"
+ 
+@@ -523,9 +523,9 @@
+ 
+     invoke-static {v0, v1}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v17, Lcom/android/internal/telephony/PhoneProxy;
++    new-instance v17, Landroid/privacy/surrogate/PrivacyPhoneProxy;
+ 
+-    new-instance v19, Lcom/android/internal/telephony/gsm/GSMPhone;
++    new-instance v19, Landroid/privacy/surrogate/PrivacyGSMPhone;
+ 
+     sget-object v20, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+ 
+@@ -539,18 +539,20 @@
+ 
+     move-object/from16 v3, v21
+ 
+-    invoke-direct {v0, v1, v2, v3}, Lcom/android/internal/telephony/gsm/GSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v2, v3}, Landroid/privacy/surrogate/PrivacyGSMPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     move-object/from16 v0, v17
+ 
+     move-object/from16 v1, v19
+ 
+-    invoke-direct {v0, v1}, Lcom/android/internal/telephony/PhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;)V
++    move-object/from16 v2, p0
++
++    invoke-direct {v0, v1, v2}, Landroid/privacy/surrogate/PrivacyPhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;Landroid/content/Context;)V
+ 
+     sput-object v17, Lcom/android/internal/telephony/PhoneFactory;->sProxyPhone:Lcom/android/internal/telephony/Phone;
+ 
+-    :cond_163
+-    :goto_163
++    :cond_165
++    :goto_165
+     const/16 v17, 0x1
+ 
+     move-object/from16 v0, p0
+@@ -563,13 +565,13 @@
+ 
+     const-string v12, "NONE"
+ 
+-    if-eqz v6, :cond_175
++    if-eqz v6, :cond_177
+ 
+     invoke-virtual {v6}, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
+ 
+     move-result-object v12
+ 
+-    :cond_175
++    :cond_177
+     const-string v17, "PhoneFactory"
+ 
+     new-instance v19, Ljava/lang/StringBuilder;
+@@ -604,24 +606,24 @@
+ 
+     sput-boolean v17, Lcom/android/internal/telephony/PhoneFactory;->sMadeDefaults:Z
+ 
+-    :cond_19a
++    :cond_19c
+     monitor-exit v18
+ 
+     return-void
+ 
+-    :catch_19c
++    :catch_19e
+     move-exception v9
+ 
+     const/4 v10, 0x1
+ 
+     goto/16 :goto_31
+ 
+-    :cond_1a0
++    :cond_1a2
+     const/16 v17, 0x3
+ 
+     move/from16 v0, v17
+ 
+-    if-le v15, v0, :cond_1b2
++    if-le v15, v0, :cond_1b4
+ 
+     new-instance v17, Ljava/lang/RuntimeException;
+ 
+@@ -634,29 +636,29 @@
+     invoke-direct {v0, v1}, Ljava/lang/RuntimeException;-><init>(Ljava/lang/String;)V
+ 
+     throw v17
+-    :try_end_1b2
+-    .catchall {:try_start_129 .. :try_end_1b2} :catchall_1f
++    :try_end_1b4
++    .catchall {:try_start_129 .. :try_end_1b4} :catchall_1f
+ 
+-    :cond_1b2
++    :cond_1b4
+     const-wide/16 v19, 0x7d0
+ 
+-    :try_start_1b4
++    :try_start_1b6
+     invoke-static/range {v19 .. v20}, Ljava/lang/Thread;->sleep(J)V
+-    :try_end_1b7
+-    .catch Ljava/lang/InterruptedException; {:try_start_1b4 .. :try_end_1b7} :catch_1b9
+-    .catchall {:try_start_1b4 .. :try_end_1b7} :catchall_1f
++    :try_end_1b9
++    .catch Ljava/lang/InterruptedException; {:try_start_1b6 .. :try_end_1b9} :catch_1bb
++    .catchall {:try_start_1b6 .. :try_end_1b9} :catchall_1f
+ 
+     goto/16 :goto_23
+ 
+-    :catch_1b9
++    :catch_1bb
+     move-exception v17
+ 
+     goto/16 :goto_23
+ 
+-    :catch_1bc
++    :catch_1be
+     move-exception v8
+ 
+-    :try_start_1bd
++    :try_start_1bf
+     const-string v17, "PhoneFactory"
+ 
+     const-string v19, "Unable to construct command interface"
+@@ -675,18 +677,18 @@
+ 
+     throw v17
+ 
+-    :cond_1d0
++    :cond_1d2
+     const/16 v17, 0x2
+ 
+     move/from16 v0, v17
+ 
+-    if-ne v13, v0, :cond_163
++    if-ne v13, v0, :cond_165
+ 
+     invoke-static {}, Landroid/telephony/TelephonyManager;->getLteOnCdmaModeStatic()I
+ 
+     move-result v17
+ 
+-    packed-switch v17, :pswitch_data_230
++    packed-switch v17, :pswitch_data_236
+ 
+     const-string v17, "PhoneFactory"
+ 
+@@ -698,9 +700,9 @@
+ 
+     invoke-static {v0, v1}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v17, Lcom/android/internal/telephony/PhoneProxy;
++    new-instance v17, Landroid/privacy/surrogate/PrivacyPhoneProxy;
+ 
+-    new-instance v19, Lcom/android/internal/telephony/cdma/CDMAPhone;
++    new-instance v19, Landroid/privacy/surrogate/PrivacyCDMAPhone;
+ 
+     sget-object v20, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+ 
+@@ -714,19 +716,21 @@
+ 
+     move-object/from16 v3, v21
+ 
+-    invoke-direct {v0, v1, v2, v3}, Lcom/android/internal/telephony/cdma/CDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v2, v3}, Landroid/privacy/surrogate/PrivacyCDMAPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     move-object/from16 v0, v17
+ 
+     move-object/from16 v1, v19
+ 
+-    invoke-direct {v0, v1}, Lcom/android/internal/telephony/PhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;)V
++    move-object/from16 v2, p0
++
++    invoke-direct {v0, v1, v2}, Landroid/privacy/surrogate/PrivacyPhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;Landroid/content/Context;)V
+ 
+     sput-object v17, Lcom/android/internal/telephony/PhoneFactory;->sProxyPhone:Lcom/android/internal/telephony/Phone;
+ 
+-    goto/16 :goto_163
++    goto/16 :goto_165
+ 
+-    :pswitch_206
++    :pswitch_20a
+     const-string v17, "PhoneFactory"
+ 
+     const-string v19, "Creating CDMALTEPhone"
+@@ -737,9 +741,9 @@
+ 
+     invoke-static {v0, v1}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v17, Lcom/android/internal/telephony/PhoneProxy;
++    new-instance v17, Landroid/privacy/surrogate/PrivacyPhoneProxy;
+ 
+-    new-instance v19, Lcom/android/internal/telephony/cdma/CDMALTEPhone;
++    new-instance v19, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;
+ 
+     sget-object v20, Lcom/android/internal/telephony/PhoneFactory;->sCommandsInterface:Lcom/android/internal/telephony/CommandsInterface;
+ 
+@@ -753,25 +757,27 @@
+ 
+     move-object/from16 v3, v21
+ 
+-    invoke-direct {v0, v1, v2, v3}, Lcom/android/internal/telephony/cdma/CDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
++    invoke-direct {v0, v1, v2, v3}, Landroid/privacy/surrogate/PrivacyCDMALTEPhone;-><init>(Landroid/content/Context;Lcom/android/internal/telephony/CommandsInterface;Lcom/android/internal/telephony/PhoneNotifier;)V
+ 
+     move-object/from16 v0, v17
+ 
+     move-object/from16 v1, v19
+ 
+-    invoke-direct {v0, v1}, Lcom/android/internal/telephony/PhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;)V
++    move-object/from16 v2, p0
++
++    invoke-direct {v0, v1, v2}, Landroid/privacy/surrogate/PrivacyPhoneProxy;-><init>(Lcom/android/internal/telephony/PhoneBase;Landroid/content/Context;)V
+ 
+     sput-object v17, Lcom/android/internal/telephony/PhoneFactory;->sProxyPhone:Lcom/android/internal/telephony/Phone;
+-    :try_end_22d
+-    .catchall {:try_start_1bd .. :try_end_22d} :catchall_1f
++    :try_end_233
++    .catchall {:try_start_1bf .. :try_end_233} :catchall_1f
+ 
+-    goto/16 :goto_163
++    goto/16 :goto_165
+ 
+     nop
+ 
+-    :pswitch_data_230
++    :pswitch_data_236
+     .packed-switch 0x1
+-        :pswitch_206
++        :pswitch_20a
+     .end packed-switch
+ .end method
+ 
