@@ -189,13 +189,13 @@
 # 2013.11.14. (v3.6.2) Update some reservoirs
 # 2013.12.06. (v3.6.3) Update some patches
 # 2013.12.08. (v3.6.5) Support for 4.4.1
-
+# 2013.12.12. (v3.6.6) Support for 4.4.2, and better/strict handling of priv-app/Mms.apk
 
 # SHELL PROGRAMMING NOTES:
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.6.54"
+VERSION="v3.6.6"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
 PATCHES_VERSION="20131213"
 CURRENT_ANDROID="4.4.2"
@@ -1683,6 +1683,7 @@ for P in ${PID[@]}; do
           # added for the use-case of apktool failure
           @system/*apk) # apks to decompile with smali binaries instead of apktool
                [[ ${JID[@]} =~ ${FILE:1} ]] || JID=(${JID[@]} ${FILE:1})
+               [[ ${JAPKID[@]} =~ ${FILE:1} ]] || JAPKID=(${JAPKID[@]} ${FILE:1})
                FORMATTED_FILE=${FILE:1}
                echo "set_perm(0, 0, 0644, \"/$FORMATTED_FILE\");" >> UPDATE.txt
                ;;
@@ -1701,17 +1702,22 @@ for P in ${PID[@]}; do
           esac
      done
 done
+
+# extract system files
+printtask "### unzip rom ###"
+jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG"
+
+# Test for Mms.apk and remove unfound apk from queue. (used to look in priv-app and app)
+for MMS in ${JAPKID[@]}; do
+     [ -f "$MMS" ] || JID=( ${JID[@]//$MMS} )
+done
+
 print_to_log "### DELETE FILES= ${EID[@]}"
 print_to_log "### COPY FILES= ${CID[@]}"
 print_to_log "### JAR FILES= ${JID[@]}"
 print_to_log "### APK FILES= ${AID[@]}"
 print_to_log "### IMG FILES= ${IID[@]}"
 print_to_log "### TXT FILES= ${TID[@]}"
-
-# extract system files
-printtask "### unzip rom ###"
-jar -xvf "$ROMX" ${JID[@]} ${AID[@]} ${IID[@]} ${TID[@]} 2>> "$LOG" || print_error "failed extracting ${JID[@]} ${AID[@]} ${IID[@]} from $ROMX !!!"
-
 
 # Update/Restore.zip scripts and prep 
 printtask "### create updater script ###"
@@ -1916,8 +1922,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           else
           # check for abscense of any apks decompiled by baksmali ('@'* in files.txt).
                if [ ! -d "tmp/${FILE}.out" ] ; then
-                    echo "## No $JAR in ROM ###" >> "$LOG"
-                    declare -a JID=( ${JID[@]/$FILE/} )
+                    echo "### No $JAR in ROM ###" >> "$LOG"
                fi
                NAME=$JAR # TODO: Maybe rename this, since it now encompases apks at times
           fi
