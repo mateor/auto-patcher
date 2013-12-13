@@ -481,18 +481,13 @@ odex_error () {
 }
 
 no_network_access () {
-     PING_CHECK "www.github.com" >> "$LOG" 2>&1 && NETWORK=true # second try and check github
-     git fetch origin >> "$LOG" 2>&1 && NETWORK=true # we may not have ping but still have a git connection
-     PING_CHECK "www.google.com" >> "$LOG" 2>&1 # test for internet in general
-     if [[ "$NETWORK" == true ]]; then
-          return
-     else
-          printtask "Check for update failed, probably because of no internet access."
-          echo "The autopatcher will continue with current local version: $VERSION"
-          NETWORK=false
-          echo ""
-          sleep 2
-     fi
+     NETWORK=false # assume that we don't have network
+     git fetch origin >> "$LOG" 2>&1 && NETWORK=true && return # we should focus on git fetch only
+     PING_CHECK "www.google.com" >> "$LOG" 2>&1 # test for internet in general, if git fetch fails
+     printtask "Check for update failed, probably because of no internet access."
+     echo "The autopatcher will continue with current local version: $VERSION"
+     echo ""
+     sleep 2
 }
 
 auto_update_error () {
