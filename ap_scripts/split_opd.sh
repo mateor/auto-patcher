@@ -38,7 +38,7 @@ echo "files are ${files[@]}"
 
 # TODO make sure there is only one of each, as in delete all old ${smali}.patches before splitting.
 
-wanted_patches=( "*preloaded*" "*ContextImpl*patch" "*Instrumentation*patch" "*ContentResolver*patch" "*Camera*patch" "*NetworkInfo*patch" "*SystemProperties*patch" "*Settings*patch" "*MicrophoneInput*patch" "*AudioRecord*patch" "*MediaRecorder*patch" "*preloaded-classes*patch" "*IPrivacy*patch"  "*Privacy*patch" "*BroadcastQueue*patch" "*PhoneStateListener*patch" "*ServiceState*patch" "*WifiInfo*patch" "*ProcessManager*patch" "*HttpUtils*patch" "*ServerThread*patch" "*TelephonyRegistry*patch" "*CDMAPhone*patch" "Cdma*patch" "*GSMPhone*patch" "*GsmServiceStateTracker*patch" "*SimSmsInterfaceManager*patch" "*VoiceMailConstants*patch" "*PhoneFactory*patch" "*RIL*Sender*patch" "*Sip*patch" "*SMSDispatcher*patch" "*IccSmsInterfaceManager*patch")
+wanted_patches=( "*preloaded*" "*ContextImpl*patch" "*Instrumentation*patch" "*ContentResolver*patch" "*Camera*patch" "*NetworkInfo*patch" "*SystemProperties*patch" "*_Settings*patch" "*MicrophoneInput*patch" "*AudioRecord*patch" "*MediaRecorder*patch" "*preloaded-classes*patch" "*IPrivacy*patch"  "*Privacy*patch" "*BroadcastQueue*patch" "*PhoneStateListener*patch" "*ServiceState*patch" "*WifiInfo*patch" "*ProcessManager*patch" "*HttpUtils*patch" "*ServerThread*patch" "*TelephonyRegistry*patch" "*CDMAPhone*patch" "Cdma*patch" "*GSMPhone*patch" "*GsmServiceStateTracker*patch" "*SimSmsInterfaceManager*patch" "*VoiceMailConstants*patch" "*PhoneFactory*patch" "*RIL*Sender*patch" "*Sip*patch" "*SMSDispatcher*patch" "*IccSmsInterfaceManager*patch")
 for f in ${files[@]}; do
      for w in ${wanted_patches[@]}; do
            if [ $f == $w ]; then
