@@ -1,0 +1,30 @@
+diff -Npruw stock-framework/smali/android/app/ContextImpl$42.smali pdroid-framework/smali/android/app/ContextImpl$42.smali
+--- stock-framework/smali/android/app/ContextImpl$42.smali	2013-12-20 02:32:02.804938316 -0600
++++ pdroid-framework/smali/android/app/ContextImpl$42.smali	2013-12-20 02:32:20.276937800 -0600
+@@ -26,12 +26,22 @@
+ 
+ # virtual methods
+ .method public createService(Landroid/app/ContextImpl;)Ljava/lang/Object;
+-    .registers 3
++    .registers 5
+     .param p1    # Landroid/app/ContextImpl;
+ 
+-    new-instance v0, Landroid/hardware/camera2/CameraManager;
++    const-string v2, "appops"
+ 
+-    invoke-direct {v0, p1}, Landroid/hardware/camera2/CameraManager;-><init>(Landroid/content/Context;)V
++    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+ 
+-    return-object v0
++    move-result-object v0
++
++    invoke-static {v0}, Lcom/android/internal/app/IAppOpsService$Stub;->asInterface(Landroid/os/IBinder;)Lcom/android/internal/app/IAppOpsService;
++
++    move-result-object v1
++
++    new-instance v2, Landroid/app/AppOpsManager;
++
++    invoke-direct {v2, p1, v1}, Landroid/app/AppOpsManager;-><init>(Landroid/content/Context;Lcom/android/internal/app/IAppOpsService;)V
++
++    return-object v2
+ .end method

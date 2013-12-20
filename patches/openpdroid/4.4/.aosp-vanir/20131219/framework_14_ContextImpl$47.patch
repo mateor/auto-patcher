@@ -1,0 +1,32 @@
+diff -Npruw stock-framework/smali/android/app/ContextImpl$47.smali pdroid-framework/smali/android/app/ContextImpl$47.smali
+--- stock-framework/smali/android/app/ContextImpl$47.smali	2013-12-20 02:32:02.804938316 -0600
++++ pdroid-framework/smali/android/app/ContextImpl$47.smali	2013-12-20 02:32:20.276937800 -0600
+@@ -26,22 +26,18 @@
+ 
+ # virtual methods
+ .method public createService(Landroid/app/ContextImpl;)Ljava/lang/Object;
+-    .registers 5
++    .registers 3
+     .param p1    # Landroid/app/ContextImpl;
+ 
+-    const-string v2, "battery"
++    iget-object v0, p1, Landroid/app/ContextImpl;->mMainThread:Landroid/app/ActivityThread;
+ 
+-    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++    invoke-virtual {v0}, Landroid/app/ActivityThread;->getHandler()Landroid/os/Handler;
+ 
+     move-result-object v0
+ 
+-    invoke-static {v0}, Landroid/app/IBatteryService$Stub;->asInterface(Landroid/os/IBinder;)Landroid/app/IBatteryService;
++    invoke-static {p1, v0}, Landroid/net/wimax/WimaxHelper;->createWimaxService(Landroid/content/Context;Landroid/os/Handler;)Ljava/lang/Object;
+ 
+-    move-result-object v1
+-
+-    new-instance v2, Landroid/os/BatteryManager;
+-
+-    invoke-direct {v2, v1, p1}, Landroid/os/BatteryManager;-><init>(Landroid/app/IBatteryService;Landroid/content/Context;)V
++    move-result-object v0
+ 
+-    return-object v2
++    return-object v0
+ .end method

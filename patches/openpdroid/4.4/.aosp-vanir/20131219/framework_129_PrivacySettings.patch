@@ -1,0 +1,3403 @@
+diff -Npruw stock-framework/smali/android/privacy/PrivacySettings.smali pdroid-framework/smali/android/privacy/PrivacySettings.smali
+--- stock-framework/smali/android/privacy/PrivacySettings.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-framework/smali/android/privacy/PrivacySettings.smali	2013-12-20 02:32:23.352937709 -0600
+@@ -0,0 +1,3399 @@
++.class public final Landroid/privacy/PrivacySettings;
++.super Landroid/privacy/PrivacySettingsStub;
++.source "PrivacySettings.java"
++
++# interfaces
++.implements Landroid/os/Parcelable;
++
++
++# static fields
++.field public static final CREATOR:Landroid/os/Parcelable$Creator;
++    .annotation system Ldalvik/annotation/Signature;
++        value = {
++            "Landroid/os/Parcelable$Creator",
++            "<",
++            "Landroid/privacy/PrivacySettings;",
++            ">;"
++        }
++    .end annotation
++.end field
++
++.field public static final CUSTOM:B = 0x2t
++
++.field public static final DATA_ACCOUNTS_LIST:Ljava/lang/String; = "accountsList"
++
++.field public static final DATA_ANDROID_ID:Ljava/lang/String; = "android_id"
++
++.field public static final DATA_AUTH_TOKENS:Ljava/lang/String; = "authTokens"
++
++.field public static final DATA_BOOKMARKS:Ljava/lang/String; = "bookmarks"
++
++.field public static final DATA_CALENDAR:Ljava/lang/String; = "calendar"
++
++.field public static final DATA_CALL_LOG:Ljava/lang/String; = "callLog"
++
++.field public static final DATA_CAMERA:Ljava/lang/String; = "camera"
++
++.field public static final DATA_CONTACTS:Ljava/lang/String; = "contacts"
++
++.field public static final DATA_DEVICE_ID:Ljava/lang/String; = "deviceID"
++
++.field public static final DATA_ICC_ACCESS:Ljava/lang/String; = "iccAccess"
++
++.field public static final DATA_INCOMING_CALL:Ljava/lang/String; = "incomingCall"
++
++.field public static final DATA_INTENT_BOOT_COMPLETED:Ljava/lang/String; = "intentBootCompleted"
++
++.field public static final DATA_IP_TABLES:Ljava/lang/String; = "iptables"
++
++.field public static final DATA_LINE_1_NUMBER:Ljava/lang/String; = "line1Number"
++
++.field public static final DATA_LOCATION_GPS:Ljava/lang/String; = "locationGPS"
++
++.field public static final DATA_LOCATION_NETWORK:Ljava/lang/String; = "locationNetwork"
++
++.field public static final DATA_MMS:Ljava/lang/String; = "mms"
++
++.field public static final DATA_MMS_SMS:Ljava/lang/String; = "mmsSms"
++
++.field public static final DATA_NETWORK_INFO_CURRENT:Ljava/lang/String; = "networkInfoCurrent"
++
++.field public static final DATA_NETWORK_INFO_SIM:Ljava/lang/String; = "networkInfoSIM"
++
++.field public static final DATA_OUTGOING_CALL:Ljava/lang/String; = "outgoingCall"
++
++.field public static final DATA_PHONE_CALL:Ljava/lang/String; = "phoneCall"
++
++.field public static final DATA_RECORD_AUDIO:Ljava/lang/String; = "recordAudio"
++
++.field public static final DATA_SEND_MMS:Ljava/lang/String; = "sendMms"
++
++.field public static final DATA_SIM_SERIAL:Ljava/lang/String; = "simSerial"
++
++.field public static final DATA_SMS:Ljava/lang/String; = "sms"
++
++.field public static final DATA_SMS_SEND:Ljava/lang/String; = "SmsSend"
++
++.field public static final DATA_SUBSCRIBER_ID:Ljava/lang/String; = "subscriberID"
++
++.field public static final DATA_SWITCH_CONNECTIVITY:Ljava/lang/String; = "switchconnectivity"
++
++.field public static final DATA_SWITCH_WIFI_STATE:Ljava/lang/String; = "switchWifiState"
++
++.field public static final DATA_SYSTEM_LOGS:Ljava/lang/String; = "systemLogs"
++
++.field public static final DATA_WIFI_INFO:Ljava/lang/String; = "wifiInfo"
++
++.field public static final EMPTY:B = 0x1t
++
++.field public static final ID_PATTERN:[Ljava/lang/String;
++
++.field public static final RANDOM:B = 0x3t
++
++.field public static final REAL:B = 0x0t
++
++.field public static final SETTING_NOTIFY_OFF:B = 0x0t
++
++.field public static final SETTING_NOTIFY_ON:B = 0x1t
++
++
++# instance fields
++.field private final _id:Ljava/lang/Integer;
++
++.field private accountsAuthTokensSetting:B
++
++.field private accountsSetting:B
++
++.field private addOnManagementSetting:B
++
++.field private allowedContacts:[I
++
++.field private androidID:Ljava/lang/String;
++
++.field private androidIdSetting:B
++
++.field private bookmarksSetting:B
++
++.field private calendarSetting:B
++
++.field private callLogSetting:B
++
++.field private cameraSetting:B
++
++.field private contactsSetting:B
++
++.field private deviceId:Ljava/lang/String;
++
++.field private deviceIdSetting:B
++
++.field private forceOnlineState:B
++
++.field private iccAccessSetting:B
++
++.field private incomingCallsSetting:B
++
++.field private intentBootCompletedSetting:B
++
++.field private ipTableProtectSetting:B
++
++.field private line1Number:Ljava/lang/String;
++
++.field private line1NumberSetting:B
++
++.field private locationGpsLat:Ljava/lang/String;
++
++.field private locationGpsLon:Ljava/lang/String;
++
++.field private locationGpsSetting:B
++
++.field private locationNetworkLat:Ljava/lang/String;
++
++.field private locationNetworkLon:Ljava/lang/String;
++
++.field private locationNetworkSetting:B
++
++.field private mmsSetting:B
++
++.field private networkInfoSetting:B
++
++.field private notificationSetting:B
++
++.field private outgoingCallsSetting:B
++
++.field private packageName:Ljava/lang/String;
++
++.field private phoneCallSetting:B
++
++.field private recordAudioSetting:B
++
++.field private sendMmsSetting:B
++
++.field private simInfoSetting:B
++
++.field private simSerialNumber:Ljava/lang/String;
++
++.field private simSerialNumberSetting:B
++
++.field private smsSendSetting:B
++
++.field private smsSetting:B
++
++.field private subscriberId:Ljava/lang/String;
++
++.field private subscriberIdSetting:B
++
++.field private switchConnectivitySetting:B
++
++.field private switchWifiStateSetting:B
++
++.field private systemLogsSetting:B
++
++.field private uid:I
++
++.field private wifiInfoSetting:B
++
++
++# direct methods
++.method static constructor <clinit>()V
++    .registers 3
++
++    const/16 v0, 0x10
++
++    new-array v0, v0, [Ljava/lang/String;
++
++    const/4 v1, 0x0
++
++    const-string v2, "0"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x1
++
++    const-string v2, "1"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x2
++
++    const-string v2, "2"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x3
++
++    const-string v2, "3"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x4
++
++    const-string v2, "4"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x5
++
++    const-string v2, "5"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x6
++
++    const-string v2, "6"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x7
++
++    const-string v2, "7"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x8
++
++    const-string v2, "8"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x9
++
++    const-string v2, "9"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xa
++
++    const-string v2, "a"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xb
++
++    const-string v2, "b"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xc
++
++    const-string v2, "c"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xd
++
++    const-string v2, "d"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xe
++
++    const-string v2, "e"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xf
++
++    const-string v2, "f"
++
++    aput-object v2, v0, v1
++
++    sput-object v0, Landroid/privacy/PrivacySettings;->ID_PATTERN:[Ljava/lang/String;
++
++    new-instance v0, Landroid/privacy/PrivacySettings$1;
++
++    invoke-direct {v0}, Landroid/privacy/PrivacySettings$1;-><init>()V
++
++    sput-object v0, Landroid/privacy/PrivacySettings;->CREATOR:Landroid/os/Parcelable$Creator;
++
++    return-void
++.end method
++
++.method public constructor <init>(Landroid/os/Parcel;)V
++    .registers 4
++    .param p1    # Landroid/os/Parcel;
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettingsStub;-><init>()V
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readInt()I
++
++    move-result v0
++
++    const/4 v1, -0x1
++
++    if-ne v0, v1, :cond_122
++
++    const/4 v1, 0x0
++
++    :goto_b
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readInt()I
++
++    move-result v1
++
++    iput v1, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->createIntArray()[I
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readString()Ljava/lang/String;
++
++    move-result-object v1
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    invoke-virtual {p1}, Landroid/os/Parcel;->readByte()B
++
++    move-result v1
++
++    iput-byte v1, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    return-void
++
++    :cond_122
++    invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v1
++
++    goto/16 :goto_b
++.end method
++
++.method public constructor <init>(Ljava/lang/Integer;Ljava/lang/String;I)V
++    .registers 7
++    .param p1    # Ljava/lang/Integer;
++    .param p2    # Ljava/lang/String;
++    .param p3    # I
++
++    const/4 v2, 0x1
++
++    const/4 v1, 0x0
++
++    const/4 v0, 0x0
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettingsStub;-><init>()V
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    iput-object p2, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    iput p3, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    return-void
++.end method
++
++.method public constructor <init>(Ljava/lang/Integer;Ljava/lang/String;IBLjava/lang/String;BLjava/lang/String;BLjava/lang/String;Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;BBBLjava/lang/String;BLjava/lang/String;BBBBBBBBBBBBBBBB[IBBBBBBLjava/lang/String;BBBBB)V
++    .registers 50
++    .param p1    # Ljava/lang/Integer;
++    .param p2    # Ljava/lang/String;
++    .param p3    # I
++    .param p4    # B
++    .param p5    # Ljava/lang/String;
++    .param p6    # B
++    .param p7    # Ljava/lang/String;
++    .param p8    # B
++    .param p9    # Ljava/lang/String;
++    .param p10    # Ljava/lang/String;
++    .param p11    # B
++    .param p12    # Ljava/lang/String;
++    .param p13    # Ljava/lang/String;
++    .param p14    # B
++    .param p15    # B
++    .param p16    # B
++    .param p17    # Ljava/lang/String;
++    .param p18    # B
++    .param p19    # Ljava/lang/String;
++    .param p20    # B
++    .param p21    # B
++    .param p22    # B
++    .param p23    # B
++    .param p24    # B
++    .param p25    # B
++    .param p26    # B
++    .param p27    # B
++    .param p28    # B
++    .param p29    # B
++    .param p30    # B
++    .param p31    # B
++    .param p32    # B
++    .param p33    # B
++    .param p34    # B
++    .param p35    # B
++    .param p36    # [I
++    .param p37    # B
++    .param p38    # B
++    .param p39    # B
++    .param p40    # B
++    .param p41    # B
++    .param p42    # B
++    .param p43    # Ljava/lang/String;
++    .param p44    # B
++    .param p45    # B
++    .param p46    # B
++    .param p47    # B
++    .param p48    # B
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettingsStub;-><init>()V
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    iput-object p2, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    iput p3, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    iput-byte p4, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    iput-object p5, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    iput-byte p6, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    iput-object p7, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    iput-byte p8, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    iput-object p9, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    iput-object p10, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    iput-byte p11, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    iput-object p12, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    iput-object p13, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    iput-byte p14, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    move/from16 v0, p15
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    move/from16 v0, p16
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    move-object/from16 v0, p17
++
++    iput-object v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    move/from16 v0, p18
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    move-object/from16 v0, p19
++
++    iput-object v0, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    move/from16 v0, p20
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    move/from16 v0, p21
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    move/from16 v0, p22
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    move/from16 v0, p23
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    move/from16 v0, p24
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    move/from16 v0, p25
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    move/from16 v0, p26
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    move/from16 v0, p27
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    move/from16 v0, p28
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    move/from16 v0, p29
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    move/from16 v0, p30
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    move/from16 v0, p34
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    move/from16 v0, p35
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    move/from16 v0, p32
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    move/from16 v0, p33
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    move-object/from16 v0, p36
++
++    iput-object v0, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    move/from16 v0, p37
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    move/from16 v0, p38
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    move/from16 v0, p39
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    move/from16 v0, p40
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    move/from16 v0, p41
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    move/from16 v0, p42
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    move-object/from16 v0, p43
++
++    iput-object v0, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    move/from16 v0, p44
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    move/from16 v0, p45
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    move/from16 v0, p46
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    move/from16 v0, p47
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    move/from16 v0, p48
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    return-void
++.end method
++
++.method public constructor <init>(Ljava/lang/Integer;Ljava/lang/String;IZ)V
++    .registers 9
++    .param p1    # Ljava/lang/Integer;
++    .param p2    # Ljava/lang/String;
++    .param p3    # I
++    .param p4    # Z
++
++    const/4 v3, 0x0
++
++    const/4 v2, 0x3
++
++    const/4 v1, 0x0
++
++    const/4 v0, 0x1
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettingsStub;-><init>()V
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    iput-object p2, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    iput p3, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    if-eqz p4, :cond_68
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    iput-byte v3, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    iput-byte v3, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    :goto_67
++    return-void
++
++    :cond_68
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    iput-byte v3, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    iput-byte v2, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    iput-object v1, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    iput-byte v3, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    iput-byte v0, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    goto :goto_67
++.end method
++
++.method private getRandomLat()Ljava/lang/String;
++    .registers 10
++
++    const-wide v7, 0x4056800000000000L
++
++    invoke-static {}, Ljava/lang/Math;->random()D
++
++    move-result-wide v3
++
++    const-wide v5, 0x4066800000000000L
++
++    mul-double v0, v3, v5
++
++    cmpl-double v3, v0, v7
++
++    if-lez v3, :cond_35
++
++    new-instance v2, Ljava/math/BigDecimal;
++
++    sub-double v3, v0, v7
++
++    invoke-direct {v2, v3, v4}, Ljava/math/BigDecimal;-><init>(D)V
++
++    :goto_1b
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    const/4 v4, 0x6
++
++    const/4 v5, 0x4
++
++    invoke-virtual {v2, v4, v5}, Ljava/math/BigDecimal;->setScale(II)Ljava/math/BigDecimal;
++
++    move-result-object v4
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const-string v4, ""
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v3
++
++    return-object v3
++
++    :cond_35
++    new-instance v2, Ljava/math/BigDecimal;
++
++    neg-double v3, v0
++
++    invoke-direct {v2, v3, v4}, Ljava/math/BigDecimal;-><init>(D)V
++
++    goto :goto_1b
++.end method
++
++.method private getRandomLon()Ljava/lang/String;
++    .registers 10
++
++    const-wide v7, 0x4066800000000000L
++
++    invoke-static {}, Ljava/lang/Math;->random()D
++
++    move-result-wide v3
++
++    const-wide v5, 0x4076800000000000L
++
++    mul-double v0, v3, v5
++
++    cmpl-double v3, v0, v7
++
++    if-lez v3, :cond_35
++
++    new-instance v2, Ljava/math/BigDecimal;
++
++    sub-double v3, v0, v7
++
++    invoke-direct {v2, v3, v4}, Ljava/math/BigDecimal;-><init>(D)V
++
++    :goto_1b
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    const/4 v4, 0x6
++
++    const/4 v5, 0x4
++
++    invoke-virtual {v2, v4, v5}, Ljava/math/BigDecimal;->setScale(II)Ljava/math/BigDecimal;
++
++    move-result-object v4
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const-string v4, ""
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v3
++
++    return-object v3
++
++    :cond_35
++    new-instance v2, Ljava/math/BigDecimal;
++
++    neg-double v3, v0
++
++    invoke-direct {v2, v3, v4}, Ljava/math/BigDecimal;-><init>(D)V
++
++    goto :goto_1b
++.end method
++
++
++# virtual methods
++.method public describeContents()I
++    .registers 2
++
++    const/4 v0, 0x0
++
++    return v0
++.end method
++
++.method public getAccountsAuthTokensSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    return v0
++.end method
++
++.method public getAccountsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    return v0
++.end method
++
++.method public getAddOnManagementSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    return v0
++.end method
++
++.method public getAllowedContacts()[I
++    .registers 2
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    return-object v0
++.end method
++
++.method public getAndroidID()Ljava/lang/String;
++    .registers 6
++
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    const/4 v4, 0x1
++
++    if-ne v3, v4, :cond_9
++
++    const-string/jumbo v3, "q4a5w896ay21dr46"
++
++    :goto_8
++    return-object v3
++
++    :cond_9
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    const/4 v4, 0x3
++
++    if-ne v3, v4, :cond_36
++
++    new-instance v2, Ljava/util/Random;
++
++    invoke-direct {v2}, Ljava/util/Random;-><init>()V
++
++    new-instance v1, Ljava/lang/StringBuilder;
++
++    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
++
++    const/4 v0, 0x0
++
++    :goto_19
++    sget-object v3, Landroid/privacy/PrivacySettings;->ID_PATTERN:[Ljava/lang/String;
++
++    array-length v3, v3
++
++    if-ge v0, v3, :cond_31
++
++    sget-object v3, Landroid/privacy/PrivacySettings;->ID_PATTERN:[Ljava/lang/String;
++
++    sget-object v4, Landroid/privacy/PrivacySettings;->ID_PATTERN:[Ljava/lang/String;
++
++    array-length v4, v4
++
++    add-int/lit8 v4, v4, -0x1
++
++    invoke-virtual {v2, v4}, Ljava/util/Random;->nextInt(I)I
++
++    move-result v4
++
++    aget-object v3, v3, v4
++
++    invoke-virtual {v1, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    add-int/lit8 v0, v0, 0x1
++
++    goto :goto_19
++
++    :cond_31
++    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_8
++
++    :cond_36
++    iget-object v3, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    goto :goto_8
++.end method
++
++.method public getAndroidIdSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    return v0
++.end method
++
++.method public getBookmarksSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    return v0
++.end method
++
++.method public getCalendarSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    return v0
++.end method
++
++.method public getCallLogSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    return v0
++.end method
++
++.method public getCameraSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    return v0
++.end method
++
++.method public getContactsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    return v0
++.end method
++
++.method public getDeviceId()Ljava/lang/String;
++    .registers 9
++
++    const/4 v7, 0x0
++
++    const/16 v6, 0xf
++
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    const/4 v4, 0x1
++
++    if-ne v3, v4, :cond_b
++
++    const-string v3, ""
++
++    :goto_a
++    return-object v3
++
++    :cond_b
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    const/4 v4, 0x3
++
++    if-ne v3, v4, :cond_62
++
++    new-instance v1, Ljava/util/Random;
++
++    invoke-direct {v1}, Ljava/util/Random;-><init>()V
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v1}, Ljava/util/Random;->nextLong()J
++
++    move-result-wide v4
++
++    invoke-static {v4, v5}, Ljava/lang/Math;->abs(J)J
++
++    move-result-wide v4
++
++    invoke-virtual {v3, v4, v5}, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const-string v4, ""
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/String;->length()I
++
++    move-result v3
++
++    if-le v3, v6, :cond_3b
++
++    invoke-virtual {v2, v7, v6}, Ljava/lang/String;->substring(II)Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_a
++
++    :cond_3b
++    invoke-virtual {v2}, Ljava/lang/String;->length()I
++
++    move-result v0
++
++    :goto_3f
++    const/16 v3, 0x10
++
++    if-gt v0, v3, :cond_5d
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v3, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const/16 v4, 0x9
++
++    invoke-virtual {v1, v4}, Ljava/util/Random;->nextInt(I)I
++
++    move-result v4
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    add-int/lit8 v0, v0, 0x1
++
++    goto :goto_3f
++
++    :cond_5d
++    invoke-virtual {v2, v7, v6}, Ljava/lang/String;->substring(II)Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_a
++
++    :cond_62
++    iget-object v3, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    goto :goto_a
++.end method
++
++.method public getDeviceIdSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    return v0
++.end method
++
++.method public getForceOnlineState()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    return v0
++.end method
++
++.method public getIccAccessSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    return v0
++.end method
++
++.method public getIncomingCallsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    return v0
++.end method
++
++.method public getIntentBootCompletedSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    return v0
++.end method
++
++.method public getIpTableProtectSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    return v0
++.end method
++
++.method public getLine1Number()Ljava/lang/String;
++    .registers 9
++
++    const/4 v7, 0x0
++
++    const/16 v6, 0xd
++
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    const/4 v4, 0x1
++
++    if-ne v3, v4, :cond_b
++
++    const-string v3, ""
++
++    :goto_a
++    return-object v3
++
++    :cond_b
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    const/4 v4, 0x3
++
++    if-ne v3, v4, :cond_68
++
++    new-instance v1, Ljava/util/Random;
++
++    invoke-direct {v1}, Ljava/util/Random;-><init>()V
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v4, "+"
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v1}, Ljava/util/Random;->nextLong()J
++
++    move-result-wide v4
++
++    invoke-static {v4, v5}, Ljava/lang/Math;->abs(J)J
++
++    move-result-wide v4
++
++    invoke-virtual {v3, v4, v5}, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const-string v4, ""
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/String;->length()I
++
++    move-result v3
++
++    if-le v3, v6, :cond_41
++
++    invoke-virtual {v2, v7, v6}, Ljava/lang/String;->substring(II)Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_a
++
++    :cond_41
++    invoke-virtual {v2}, Ljava/lang/String;->length()I
++
++    move-result v0
++
++    :goto_45
++    const/16 v3, 0xe
++
++    if-gt v0, v3, :cond_63
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v3, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const/16 v4, 0x9
++
++    invoke-virtual {v1, v4}, Ljava/util/Random;->nextInt(I)I
++
++    move-result v4
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    add-int/lit8 v0, v0, 0x1
++
++    goto :goto_45
++
++    :cond_63
++    invoke-virtual {v2, v7, v6}, Ljava/lang/String;->substring(II)Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_a
++
++    :cond_68
++    iget-object v3, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    goto :goto_a
++.end method
++
++.method public getLine1NumberSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    return v0
++.end method
++
++.method public getLocationGpsLat()Ljava/lang/String;
++    .registers 3
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    const/4 v1, 0x1
++
++    if-ne v0, v1, :cond_8
++
++    const-string v0, ""
++
++    :goto_7
++    return-object v0
++
++    :cond_8
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    const/4 v1, 0x3
++
++    if-ne v0, v1, :cond_12
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettings;->getRandomLat()Ljava/lang/String;
++
++    move-result-object v0
++
++    goto :goto_7
++
++    :cond_12
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    goto :goto_7
++.end method
++
++.method public getLocationGpsLon()Ljava/lang/String;
++    .registers 3
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    const/4 v1, 0x1
++
++    if-ne v0, v1, :cond_8
++
++    const-string v0, ""
++
++    :goto_7
++    return-object v0
++
++    :cond_8
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    const/4 v1, 0x3
++
++    if-ne v0, v1, :cond_12
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettings;->getRandomLon()Ljava/lang/String;
++
++    move-result-object v0
++
++    goto :goto_7
++
++    :cond_12
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    goto :goto_7
++.end method
++
++.method public getLocationGpsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    return v0
++.end method
++
++.method public getLocationNetworkLat()Ljava/lang/String;
++    .registers 3
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    const/4 v1, 0x1
++
++    if-ne v0, v1, :cond_8
++
++    const-string v0, ""
++
++    :goto_7
++    return-object v0
++
++    :cond_8
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    const/4 v1, 0x3
++
++    if-ne v0, v1, :cond_12
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettings;->getRandomLat()Ljava/lang/String;
++
++    move-result-object v0
++
++    goto :goto_7
++
++    :cond_12
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    goto :goto_7
++.end method
++
++.method public getLocationNetworkLon()Ljava/lang/String;
++    .registers 3
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    const/4 v1, 0x1
++
++    if-ne v0, v1, :cond_8
++
++    const-string v0, ""
++
++    :goto_7
++    return-object v0
++
++    :cond_8
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    const/4 v1, 0x3
++
++    if-ne v0, v1, :cond_12
++
++    invoke-direct {p0}, Landroid/privacy/PrivacySettings;->getRandomLon()Ljava/lang/String;
++
++    move-result-object v0
++
++    goto :goto_7
++
++    :cond_12
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    goto :goto_7
++.end method
++
++.method public getLocationNetworkSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    return v0
++.end method
++
++.method public getMmsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    return v0
++.end method
++
++.method public getNetworkInfoSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    return v0
++.end method
++
++.method public getNotificationSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    return v0
++.end method
++
++.method public getOutgoingCallsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    return v0
++.end method
++
++.method public getPackageName()Ljava/lang/String;
++    .registers 2
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    return-object v0
++.end method
++
++.method public getPhoneCallSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    return v0
++.end method
++
++.method public getRecordAudioSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    return v0
++.end method
++
++.method public getSendMmsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    return v0
++.end method
++
++.method public getSimInfoSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    return v0
++.end method
++
++.method public getSimSerialNumber()Ljava/lang/String;
++    .registers 5
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    const/4 v2, 0x1
++
++    if-ne v1, v2, :cond_8
++
++    const-string v1, ""
++
++    :goto_7
++    return-object v1
++
++    :cond_8
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    const/4 v2, 0x3
++
++    if-ne v1, v2, :cond_2e
++
++    new-instance v0, Ljava/util/Random;
++
++    invoke-direct {v0}, Ljava/util/Random;-><init>()V
++
++    new-instance v1, Ljava/lang/StringBuilder;
++
++    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v0}, Ljava/util/Random;->nextLong()J
++
++    move-result-wide v2
++
++    invoke-static {v2, v3}, Ljava/lang/Math;->abs(J)J
++
++    move-result-wide v2
++
++    invoke-virtual {v1, v2, v3}, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    const-string v2, ""
++
++    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v1
++
++    goto :goto_7
++
++    :cond_2e
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    goto :goto_7
++.end method
++
++.method public getSimSerialNumberSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    return v0
++.end method
++
++.method public getSmsSendSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    return v0
++.end method
++
++.method public getSmsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    return v0
++.end method
++
++.method public getSubscriberId()Ljava/lang/String;
++    .registers 9
++
++    const/4 v7, 0x0
++
++    const/16 v6, 0xf
++
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    const/4 v4, 0x1
++
++    if-ne v3, v4, :cond_b
++
++    const-string v3, ""
++
++    :goto_a
++    return-object v3
++
++    :cond_b
++    iget-byte v3, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    const/4 v4, 0x3
++
++    if-ne v3, v4, :cond_62
++
++    new-instance v1, Ljava/util/Random;
++
++    invoke-direct {v1}, Ljava/util/Random;-><init>()V
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v1}, Ljava/util/Random;->nextLong()J
++
++    move-result-wide v4
++
++    invoke-static {v4, v5}, Ljava/lang/Math;->abs(J)J
++
++    move-result-wide v4
++
++    invoke-virtual {v3, v4, v5}, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const-string v4, ""
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/String;->length()I
++
++    move-result v3
++
++    if-le v3, v6, :cond_3b
++
++    invoke-virtual {v2, v7, v6}, Ljava/lang/String;->substring(II)Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_a
++
++    :cond_3b
++    invoke-virtual {v2}, Ljava/lang/String;->length()I
++
++    move-result v0
++
++    :goto_3f
++    const/16 v3, 0x10
++
++    if-gt v0, v3, :cond_5d
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v3, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    const/16 v4, 0x9
++
++    invoke-virtual {v1, v4}, Ljava/util/Random;->nextInt(I)I
++
++    move-result v4
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    add-int/lit8 v0, v0, 0x1
++
++    goto :goto_3f
++
++    :cond_5d
++    invoke-virtual {v2, v7, v6}, Ljava/lang/String;->substring(II)Ljava/lang/String;
++
++    move-result-object v3
++
++    goto :goto_a
++
++    :cond_62
++    iget-object v3, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    goto :goto_a
++.end method
++
++.method public getSubscriberIdSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    return v0
++.end method
++
++.method public getSwitchConnectivitySetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    return v0
++.end method
++
++.method public getSwitchWifiStateSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    return v0
++.end method
++
++.method public getSystemLogsSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    return v0
++.end method
++
++.method public getUid()I
++    .registers 2
++
++    iget v0, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    return v0
++.end method
++
++.method public getWifiInfoSetting()B
++    .registers 2
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    return v0
++.end method
++
++.method public get_id()Ljava/lang/Integer;
++    .registers 2
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    return-object v0
++.end method
++
++.method public setAccountsAuthTokensSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    return-void
++.end method
++
++.method public setAccountsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    return-void
++.end method
++
++.method public setAddOnManagementSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    return-void
++.end method
++
++.method public setAllowedContacts([I)V
++    .registers 2
++    .param p1    # [I
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    return-void
++.end method
++
++.method public setAndroidID(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setAndroidIdSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    return-void
++.end method
++
++.method public setBookmarksSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    return-void
++.end method
++
++.method public setCalendarSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    return-void
++.end method
++
++.method public setCallLogSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    return-void
++.end method
++
++.method public setCameraSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    return-void
++.end method
++
++.method public setContactsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    return-void
++.end method
++
++.method public setDeviceId(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setDeviceIdSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    return-void
++.end method
++
++.method public setForceOnlineState(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    return-void
++.end method
++
++.method public setIccAccessSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    return-void
++.end method
++
++.method public setIncomingCallsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    return-void
++.end method
++
++.method public setIntentBootCompletedSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    return-void
++.end method
++
++.method public setIpTableProtectSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    return-void
++.end method
++
++.method public setLine1Number(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setLine1NumberSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    return-void
++.end method
++
++.method public setLocationGpsLat(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setLocationGpsLon(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setLocationGpsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    return-void
++.end method
++
++.method public setLocationNetworkLat(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setLocationNetworkLon(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setLocationNetworkSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    return-void
++.end method
++
++.method public setMmsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    return-void
++.end method
++
++.method public setNetworkInfoSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    return-void
++.end method
++
++.method public setNotificationSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    return-void
++.end method
++
++.method public setOutgoingCallsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    return-void
++.end method
++
++.method public setPackageName(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setPhoneCallSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    return-void
++.end method
++
++.method public setRecordAudioSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    return-void
++.end method
++
++.method public setSendMmsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    return-void
++.end method
++
++.method public setSimInfoSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    return-void
++.end method
++
++.method public setSimSerialNumber(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setSimSerialNumberSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    return-void
++.end method
++
++.method public setSmsSendSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    return-void
++.end method
++
++.method public setSmsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    return-void
++.end method
++
++.method public setSubscriberId(Ljava/lang/String;)V
++    .registers 2
++    .param p1    # Ljava/lang/String;
++
++    iput-object p1, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public setSubscriberIdSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    return-void
++.end method
++
++.method public setSwitchConnectivitySetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    return-void
++.end method
++
++.method public setSwitchWifiStateSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    return-void
++.end method
++
++.method public setSystemLogsSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    return-void
++.end method
++
++.method public setUid(I)V
++    .registers 2
++    .param p1    # I
++
++    iput p1, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    return-void
++.end method
++
++.method public setWifiInfoSetting(B)V
++    .registers 2
++    .param p1    # B
++
++    iput-byte p1, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    return-void
++.end method
++
++.method public toString()Ljava/lang/String;
++    .registers 3
++
++    new-instance v0, Ljava/lang/StringBuilder;
++
++    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v1, "PrivacySettings [_id="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", accountsAuthTokensSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", accountsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", bookmarksSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", calendarSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", callLogSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", contactsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", deviceId="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", deviceIdSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", incomingCallsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", intentBootCompletedSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", line1Number="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", line1NumberSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", locationGpsLat="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", locationGpsLon="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", locationGpsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", locationNetworkLat="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", locationNetworkLon="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", locationNetworkSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", mmsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", networkInfoSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", notificationSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", outgoingCallsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", packageName="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", simInfoSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", simSerialNumber="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", simSerialNumberSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", smsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", subscriberId="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", subscriberIdSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", systemLogsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", uid="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget v1, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", phoneCallSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", smsSendSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", recordAudioSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", cameraSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", ipTableProtectSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", iccAccessSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", addOnManagementSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", android ID="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", androidIdSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", wifiInfoSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", switchConnectivitySetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", sendMmsSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", forceOnlineState="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, ", switchWifiStateSetting="
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    iget-byte v1, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    const-string v1, "]"
++
++    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v0
++
++    return-object v0
++.end method
++
++.method public writeToParcel(Landroid/os/Parcel;I)V
++    .registers 4
++    .param p1    # Landroid/os/Parcel;
++    .param p2    # I
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    if-nez v0, :cond_ef
++
++    const/4 v0, -0x1
++
++    :goto_5
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeInt(I)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->packageName:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget v0, p0, Landroid/privacy/PrivacySettings;->uid:I
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeInt(I)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->deviceIdSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->deviceId:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->line1NumberSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->line1Number:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationGpsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationGpsLat:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationGpsLon:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkLat:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->locationNetworkLon:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->networkInfoSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->simInfoSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumberSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->simSerialNumber:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->subscriberIdSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->subscriberId:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->accountsAuthTokensSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->outgoingCallsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->incomingCallsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->contactsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->calendarSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->mmsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->callLogSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->bookmarksSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->systemLogsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->notificationSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->intentBootCompletedSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->cameraSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->recordAudioSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->allowedContacts:[I
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeIntArray([I)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->smsSendSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->phoneCallSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->ipTableProtectSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->iccAccessSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->addOnManagementSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->androidIdSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->androidID:Ljava/lang/String;
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->wifiInfoSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->switchConnectivitySetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->sendMmsSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->forceOnlineState:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    iget-byte v0, p0, Landroid/privacy/PrivacySettings;->switchWifiStateSetting:B
++
++    invoke-virtual {p1, v0}, Landroid/os/Parcel;->writeByte(B)V
++
++    return-void
++
++    :cond_ef
++    iget-object v0, p0, Landroid/privacy/PrivacySettings;->_id:Ljava/lang/Integer;
++
++    invoke-virtual {v0}, Ljava/lang/Integer;->intValue()I
++
++    move-result v0
++
++    goto/16 :goto_5
++.end method
