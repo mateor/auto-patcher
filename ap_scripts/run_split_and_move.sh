@@ -40,8 +40,14 @@ dirs=$(find patches/openpdroid/4.2 -name 201*)
 dirs+=$(find patches/openpdroid/4.3 -name 201*)
 dirs+=$(find patches/openpdroid/4.4 -name 201*)
 
-for d in $dirs; do 
+for d in ${dirs[@]}; do 
      cd ~/android/auto-patcher/$d
      ~/android/auto-patcher/ap_scripts/split_opd.sh ${args[@]}
-     [[ -f preloaded.patch ]] && mv -v preloaded.patch framework_00_preloaded.patch
+done
+
+dirs+=$(find patches/pdroid -name 201*)
+dirs+=$(find patches/pd2.0 -name 201*)
+for d in ${dirs[@]}; do 
+    cd ~/android/auto-patcher/$d
+    [[ -f preloaded.patch ]] && mv -v preloaded.patch framework_00_preloaded.patch
 done
