@@ -1,0 +1,1100 @@
+diff -Npruw stock-telephony-common/smali/com/android/internal/telephony/SMSDispatcher.smali pdroid-telephony-common/smali/com/android/internal/telephony/SMSDispatcher.smali
+--- stock-telephony-common/smali/com/android/internal/telephony/SMSDispatcher.smali	2013-12-17 15:51:25.306561334 -0600
++++ pdroid-telephony-common/smali/com/android/internal/telephony/SMSDispatcher.smali	2013-12-17 15:51:40.934561994 -0600
+@@ -15,6 +15,10 @@
+ 
+ 
+ # static fields
++.field protected static final ACCESS_TYPE_ICC:I = 0x1
++
++.field protected static final ACCESS_TYPE_SMS_MMS:I = 0x0
++
+ .field static final DBG:Z = false
+ 
+ .field private static final DESTINATION_PORT_COLUMN:I = 0x2
+@@ -65,6 +69,8 @@
+ 
+ .field private static final PREMIUM_RULE_USE_SIM:I = 0x1
+ 
++.field protected static final P_TAG:Ljava/lang/String; = "PrivacySMSDispatcher"
++
+ .field public static final RECEIVE_EMERGENCY_BROADCAST_PERMISSION:Ljava/lang/String; = "android.permission.RECEIVE_EMERGENCY_BROADCAST"
+ 
+ .field public static final RECEIVE_SMS_PERMISSION:Ljava/lang/String; = "android.permission.RECEIVE_SMS"
+@@ -140,6 +146,8 @@
+ 
+ .field protected final mWapPush:Lcom/android/internal/telephony/WapPushOverSms;
+ 
++.field protected pSetMan:Landroid/privacy/PrivacySettingsManager;
++
+ 
+ # direct methods
+ .method static constructor <clinit>()V
+@@ -203,7 +211,9 @@
+ .end method
+ 
+ .method protected constructor <init>(Lcom/android/internal/telephony/PhoneBase;Lcom/android/internal/telephony/SmsStorageMonitor;Lcom/android/internal/telephony/SmsUsageMonitor;)V
+-    .registers 9
++    .registers 10
++
++    const/4 v5, 0x0
+ 
+     const/4 v1, 0x1
+ 
+@@ -305,9 +315,7 @@
+ 
+     new-instance v0, Lcom/android/internal/telephony/SMSDispatcher$MockSmsReceiver;
+ 
+-    const/4 v3, 0x0
+-
+-    invoke-direct {v0, p0, v3}, Lcom/android/internal/telephony/SMSDispatcher$MockSmsReceiver;-><init>(Lcom/android/internal/telephony/SMSDispatcher;Lcom/android/internal/telephony/SMSDispatcher$1;)V
++    invoke-direct {v0, p0, v5}, Lcom/android/internal/telephony/SMSDispatcher$MockSmsReceiver;-><init>(Lcom/android/internal/telephony/SMSDispatcher;Lcom/android/internal/telephony/SMSDispatcher$1;)V
+ 
+     iput-object v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->mMockSmsReceiver:Lcom/android/internal/telephony/SMSDispatcher$MockSmsReceiver;
+ 
+@@ -317,6 +325,25 @@
+ 
+     invoke-direct {p0}, Lcom/android/internal/telephony/SMSDispatcher;->createWakelock()V
+ 
++    iget-object v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-nez v0, :cond_89
++
++    new-instance v0, Landroid/privacy/PrivacySettingsManager;
++
++    const-string v3, "privacy"
++
++    invoke-static {v3}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v3
++
++    invoke-static {v3}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v3
++
++    invoke-direct {v0, v5, v3}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    :cond_89
+     iget-object v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->mContext:Landroid/content/Context;
+ 
+     invoke-virtual {v0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+@@ -339,11 +366,11 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_f6
++    if-nez v0, :cond_109
+ 
+     move v0, v1
+ 
+-    :goto_90
++    :goto_a3
+     iput-boolean v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsReceiveDisabled:Z
+ 
+     const-string v0, "telephony.sms.send"
+@@ -354,9 +381,9 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_f8
++    if-nez v0, :cond_10b
+ 
+-    :goto_9c
++    :goto_af
+     iput-boolean v1, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsSendDisabled:Z
+ 
+     const-string v0, "telephony.sms.pseudo_multipart"
+@@ -445,15 +472,15 @@
+ 
+     return-void
+ 
+-    :cond_f6
++    :cond_109
+     move v0, v2
+ 
+-    goto :goto_90
++    goto :goto_a3
+ 
+-    :cond_f8
++    :cond_10b
+     move v1, v2
+ 
+-    goto :goto_9c
++    goto :goto_af
+ .end method
+ 
+ .method private createWakelock()V
+@@ -1618,6 +1645,26 @@
+ .method public abstract getImsSmsFormat()Ljava/lang/String;
+ .end method
+ 
++.method protected getPackageName()[Ljava/lang/String;
++    .registers 4
++
++    iget-object v2, p0, Lcom/android/internal/telephony/SMSDispatcher;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v2}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
++
++    move-result-object v1
++
++    invoke-static {}, Landroid/os/Binder;->getCallingUid()I
++
++    move-result v2
++
++    invoke-virtual {v1, v2}, Landroid/content/pm/PackageManager;->getPackagesForUid(I)[Ljava/lang/String;
++
++    move-result-object v0
++
++    return-object v0
++.end method
++
+ .method public getPremiumSmsPermission(Ljava/lang/String;)I
+     .registers 3
+ 
+@@ -2581,9 +2628,351 @@
+     goto/16 :goto_42
+ .end method
+ 
++.method protected isAllowed([Ljava/lang/String;I)Z
++    .registers 12
++
++    const/4 v8, -0x1
++
++    const/4 v4, 0x1
++
++    const/4 v3, 0x0
++
++    packed-switch p2, :pswitch_data_e6
++
++    const/4 v5, 0x0
++
++    :try_start_7
++    aget-object v5, p1, v5
++
++    const/4 v6, 0x0
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++
++    move v3, v4
++
++    :goto_e
++    return v3
++
++    :pswitch_f
++    const/4 v2, 0x0
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-nez v5, :cond_26
++
++    new-instance v5, Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v6, 0x0
++
++    const-string v7, "privacy"
++
++    invoke-static {v7}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v7
++
++    invoke-static {v7}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v7
++
++    invoke-direct {v5, v6, v7}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    iput-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    :cond_26
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v5, :cond_7e
++
++    if-eqz p1, :cond_7e
++
++    const/4 v1, 0x0
++
++    :goto_2d
++    array-length v5, p1
++
++    if-ge v1, v5, :cond_75
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    aget-object v6, p1, v1
++
++    const/4 v7, -0x1
++
++    invoke-virtual {v5, v6, v7}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v2
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v5, :cond_71
++
++    if-eqz v2, :cond_71
++
++    invoke-virtual {v2}, Landroid/privacy/PrivacySettings;->getSmsSendSetting()B
++
++    move-result v5
++
++    if-eqz v5, :cond_71
++
++    aget-object v5, p1, v1
++
++    const/4 v6, 0x1
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++    :try_end_4b
++    .catch Ljava/lang/Exception; {:try_start_7 .. :try_end_4b} :catch_4c
++
++    goto :goto_e
++
++    :catch_4c
++    move-exception v0
++
++    const-string v5, "PrivacySMSDispatcher"
++
++    const-string v6, "Got exception while checking for sms or ICC acess permission"
++
++    invoke-static {v5, v6}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
++
++    if-eqz p1, :cond_6f
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v5, :cond_6f
++
++    array-length v5, p1
++
++    if-lez v5, :cond_6f
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    aget-object v6, p1, v3
++
++    invoke-virtual {v5, v6, v8}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v2
++
++    if-eqz v2, :cond_6f
++
++    aget-object v5, p1, v3
++
++    invoke-virtual {p0, p2, v5, v3}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++
++    :cond_6f
++    move v3, v4
++
++    goto :goto_e
++
++    :cond_71
++    const/4 v2, 0x0
++
++    add-int/lit8 v1, v1, 0x1
++
++    goto :goto_2d
++
++    :cond_75
++    const/4 v5, 0x0
++
++    :try_start_76
++    aget-object v5, p1, v5
++
++    const/4 v6, 0x0
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++
++    move v3, v4
++
++    goto :goto_e
++
++    :cond_7e
++    if-eqz p1, :cond_8a
++
++    array-length v5, p1
++
++    if-lez v5, :cond_8a
++
++    const/4 v5, 0x0
++
++    aget-object v5, p1, v5
++
++    const/4 v6, 0x0
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++
++    :cond_8a
++    move v3, v4
++
++    goto :goto_e
++
++    :pswitch_8c
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-nez v5, :cond_a2
++
++    new-instance v5, Landroid/privacy/PrivacySettingsManager;
++
++    const/4 v6, 0x0
++
++    const-string v7, "privacy"
++
++    invoke-static {v7}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v7
++
++    invoke-static {v7}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v7
++
++    invoke-direct {v5, v6, v7}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    iput-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    :cond_a2
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v5, :cond_d7
++
++    if-eqz p1, :cond_d7
++
++    const/4 v1, 0x0
++
++    :goto_a9
++    array-length v5, p1
++
++    if-ge v1, v5, :cond_cd
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    aget-object v6, p1, v1
++
++    const/4 v7, -0x1
++
++    invoke-virtual {v5, v6, v7}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++
++    move-result-object v2
++
++    iget-object v5, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v5, :cond_c9
++
++    if-eqz v2, :cond_c9
++
++    invoke-virtual {v2}, Landroid/privacy/PrivacySettings;->getIccAccessSetting()B
++
++    move-result v5
++
++    if-eqz v5, :cond_c9
++
++    aget-object v5, p1, v1
++
++    const/4 v6, 0x1
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++
++    goto/16 :goto_e
++
++    :cond_c9
++    const/4 v2, 0x0
++
++    add-int/lit8 v1, v1, 0x1
++
++    goto :goto_a9
++
++    :cond_cd
++    const/4 v5, 0x0
++
++    aget-object v5, p1, v5
++
++    const/4 v6, 0x0
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++
++    move v3, v4
++
++    goto/16 :goto_e
++
++    :cond_d7
++    if-eqz p1, :cond_e3
++
++    array-length v5, p1
++
++    if-lez v5, :cond_e3
++
++    const/4 v5, 0x0
++
++    aget-object v5, p1, v5
++
++    const/4 v6, 0x0
++
++    invoke-virtual {p0, p2, v5, v6}, Lcom/android/internal/telephony/SMSDispatcher;->notify(ILjava/lang/String;B)V
++    :try_end_e3
++    .catch Ljava/lang/Exception; {:try_start_76 .. :try_end_e3} :catch_4c
++
++    :cond_e3
++    move v3, v4
++
++    goto/16 :goto_e
++
++    :pswitch_data_e6
++    .packed-switch 0x0
++        :pswitch_f
++        :pswitch_8c
++    .end packed-switch
++.end method
++
+ .method public abstract isIms()Z
+ .end method
+ 
++.method protected notify(ILjava/lang/String;B)V
++    .registers 11
++
++    const/4 v2, 0x0
++
++    const/4 v5, 0x0
++
++    packed-switch p1, :pswitch_data_1c
++
++    :goto_5
++    return-void
++
++    :pswitch_6
++    iget-object v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v4, "SmsSend"
++
++    move-object v1, p2
++
++    move v3, p3
++
++    move-object v6, v5
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto :goto_5
++
++    :pswitch_11
++    iget-object v0, p0, Lcom/android/internal/telephony/SMSDispatcher;->pSetMan:Landroid/privacy/PrivacySettingsManager;
++
++    const-string v4, "iccAccess"
++
++    move-object v1, p2
++
++    move v3, p3
++
++    move-object v6, v5
++
++    invoke-virtual/range {v0 .. v6}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++
++    goto :goto_5
++
++    :pswitch_data_1c
++    .packed-switch 0x0
++        :pswitch_6
++        :pswitch_11
++    .end packed-switch
++.end method
++
+ .method protected processMessagePart([BLjava/lang/String;IIIJIZ)I
+     .registers 34
+ 
+@@ -2748,15 +3137,14 @@
+ 
+     invoke-static {v3, v4}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
+     :try_end_9b
+-    .catchall {:try_start_5 .. :try_end_9b} :catchall_199
+-    .catch Landroid/database/SQLException; {:try_start_5 .. :try_end_9b} :catch_18c
++    .catchall {:try_start_5 .. :try_end_9b} :catchall_19f
++    .catch Landroid/database/SQLException; {:try_start_5 .. :try_end_9b} :catch_18f
+ 
+     :cond_9b
+     const/4 v3, 0x1
+ 
+     if-eqz v9, :cond_a1
+ 
+-    :goto_9e
+     invoke-interface {v9}, Landroid/database/Cursor;->close()V
+ 
+     :cond_a1
+@@ -2801,7 +3189,7 @@
+ 
+     add-int/lit8 v3, p5, -0x1
+ 
+-    if-eq v10, v3, :cond_12a
++    if-eq v10, v3, :cond_12d
+ 
+     new-instance v23, Landroid/content/ContentValues;
+ 
+@@ -2891,14 +3279,20 @@
+     move-object/from16 v0, v23
+ 
+     invoke-virtual {v3, v4, v0}, Landroid/content/ContentResolver;->insert(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;
++    :try_end_125
++    .catchall {:try_start_a2 .. :try_end_125} :catchall_19f
++    .catch Landroid/database/SQLException; {:try_start_a2 .. :try_end_125} :catch_18f
+ 
+     const/4 v3, 0x1
+ 
+     if-eqz v9, :cond_a1
+ 
+-    goto/16 :goto_9e
++    invoke-interface {v9}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_12a
++    goto/16 :goto_a1
++
++    :cond_12d
++    :try_start_12d
+     move/from16 v0, p5
+ 
+     new-array v0, v0, [[B
+@@ -2907,8 +3301,8 @@
+ 
+     const/4 v15, 0x0
+ 
+-    :goto_131
+-    if-ge v15, v10, :cond_15b
++    :goto_134
++    if-ge v15, v10, :cond_15e
+ 
+     invoke-interface {v9}, Landroid/database/Cursor;->moveToNext()Z
+ 
+@@ -2918,11 +3312,11 @@
+ 
+     move-result v11
+ 
+-    if-nez p9, :cond_13f
++    if-nez p9, :cond_142
+ 
+     add-int/lit8 v11, v11, -0x1
+ 
+-    :cond_13f
++    :cond_142
+     const/4 v3, 0x0
+ 
+     invoke-interface {v9, v3}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
+@@ -2935,7 +3329,7 @@
+ 
+     aput-object v3, v20, v11
+ 
+-    if-nez v11, :cond_158
++    if-nez v11, :cond_15b
+ 
+     const/4 v3, 0x2
+ 
+@@ -2943,7 +3337,7 @@
+ 
+     move-result v3
+ 
+-    if-nez v3, :cond_158
++    if-nez v3, :cond_15b
+ 
+     const/4 v3, 0x2
+ 
+@@ -2951,17 +3345,17 @@
+ 
+     move-result p8
+ 
+-    :cond_158
++    :cond_15b
+     add-int/lit8 v15, v15, 0x1
+ 
+-    goto :goto_131
++    goto :goto_134
+ 
+-    :cond_15b
+-    if-eqz p9, :cond_187
++    :cond_15e
++    if-eqz p9, :cond_18a
+ 
+     aput-object p1, v20, p4
+ 
+-    :goto_15f
++    :goto_162
+     move-object/from16 v0, p0
+ 
+     iget-object v3, v0, Lcom/android/internal/telephony/SMSDispatcher;->mResolver:Landroid/content/ContentResolver;
+@@ -2969,16 +3363,16 @@
+     sget-object v4, Lcom/android/internal/telephony/SMSDispatcher;->mRawUri:Landroid/net/Uri;
+ 
+     invoke-virtual {v3, v4, v6, v7}, Landroid/content/ContentResolver;->delete(Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I
+-    :try_end_168
+-    .catchall {:try_start_a2 .. :try_end_168} :catchall_199
+-    .catch Landroid/database/SQLException; {:try_start_a2 .. :try_end_168} :catch_18c
++    :try_end_16b
++    .catchall {:try_start_12d .. :try_end_16b} :catchall_19f
++    .catch Landroid/database/SQLException; {:try_start_12d .. :try_end_16b} :catch_18f
+ 
+-    if-eqz v9, :cond_16d
++    if-eqz v9, :cond_170
+ 
+     invoke-interface {v9}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_16d
+-    if-eqz p9, :cond_1c8
++    :cond_170
++    if-eqz p9, :cond_1ce
+ 
+     new-instance v19, Ljava/io/ByteArrayOutputStream;
+ 
+@@ -2986,10 +3380,10 @@
+ 
+     const/4 v15, 0x0
+ 
+-    :goto_175
++    :goto_178
+     move/from16 v0, p5
+ 
+-    if-ge v15, v0, :cond_1a0
++    if-ge v15, v0, :cond_1a6
+ 
+     aget-object v3, v20, v15
+ 
+@@ -3005,48 +3399,50 @@
+ 
+     add-int/lit8 v15, v15, 0x1
+ 
+-    goto :goto_175
++    goto :goto_178
+ 
+-    :cond_187
++    :cond_18a
+     add-int/lit8 v3, p4, -0x1
+ 
+-    :try_start_189
++    :try_start_18c
+     aput-object p1, v20, v3
+-    :try_end_18b
+-    .catchall {:try_start_189 .. :try_end_18b} :catchall_199
+-    .catch Landroid/database/SQLException; {:try_start_189 .. :try_end_18b} :catch_18c
++    :try_end_18e
++    .catchall {:try_start_18c .. :try_end_18e} :catchall_19f
++    .catch Landroid/database/SQLException; {:try_start_18c .. :try_end_18e} :catch_18f
+ 
+-    goto :goto_15f
++    goto :goto_162
+ 
+-    :catch_18c
++    :catch_18f
+     move-exception v14
+ 
+-    :try_start_18d
++    :try_start_190
+     const-string v3, "SMSDispatcher"
+ 
+     const-string v4, "Can\'t access multipart SMS database"
+ 
+     invoke-static {v3, v4, v14}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+-    :try_end_194
+-    .catchall {:try_start_18d .. :try_end_194} :catchall_199
++    :try_end_197
++    .catchall {:try_start_190 .. :try_end_197} :catchall_19f
+ 
+     const/4 v3, 0x2
+ 
+     if-eqz v9, :cond_a1
+ 
+-    goto/16 :goto_9e
++    invoke-interface {v9}, Landroid/database/Cursor;->close()V
++
++    goto/16 :goto_a1
+ 
+-    :catchall_199
++    :catchall_19f
+     move-exception v3
+ 
+-    if-eqz v9, :cond_19f
++    if-eqz v9, :cond_1a5
+ 
+     invoke-interface {v9}, Landroid/database/Cursor;->close()V
+ 
+-    :cond_19f
++    :cond_1a5
+     throw v3
+ 
+-    :cond_1a0
++    :cond_1a6
+     invoke-virtual/range {v19 .. v19}, Ljava/io/ByteArrayOutputStream;->toByteArray()[B
+ 
+     move-result-object v13
+@@ -3055,7 +3451,7 @@
+ 
+     move/from16 v0, p8
+ 
+-    if-ne v0, v3, :cond_1b4
++    if-ne v0, v3, :cond_1ba
+ 
+     move-object/from16 v0, p0
+ 
+@@ -3067,7 +3463,7 @@
+ 
+     goto/16 :goto_a1
+ 
+-    :cond_1b4
++    :cond_1ba
+     const/4 v3, 0x1
+ 
+     new-array v0, v3, [[B
+@@ -3090,18 +3486,18 @@
+ 
+     goto/16 :goto_a1
+ 
+-    :cond_1c8
++    :cond_1ce
+     const/4 v3, -0x1
+ 
+     move/from16 v0, p8
+ 
+-    if-eq v0, v3, :cond_20f
++    if-eq v0, v3, :cond_215
+ 
+     const/16 v3, 0xb84
+ 
+     move/from16 v0, p8
+ 
+-    if-ne v0, v3, :cond_203
++    if-ne v0, v3, :cond_209
+ 
+     new-instance v19, Ljava/io/ByteArrayOutputStream;
+ 
+@@ -3109,10 +3505,10 @@
+ 
+     const/4 v15, 0x0
+ 
+-    :goto_1d9
++    :goto_1df
+     move/from16 v0, p5
+ 
+-    if-ge v15, v0, :cond_1f5
++    if-ge v15, v0, :cond_1fb
+ 
+     aget-object v3, v20, v15
+ 
+@@ -3138,9 +3534,9 @@
+ 
+     add-int/lit8 v15, v15, 0x1
+ 
+-    goto :goto_1d9
++    goto :goto_1df
+ 
+-    :cond_1f5
++    :cond_1fb
+     move-object/from16 v0, p0
+ 
+     iget-object v3, v0, Lcom/android/internal/telephony/SMSDispatcher;->mWapPush:Lcom/android/internal/telephony/WapPushOverSms;
+@@ -3155,7 +3551,7 @@
+ 
+     goto/16 :goto_a1
+ 
+-    :cond_203
++    :cond_209
+     move-object/from16 v0, p0
+ 
+     move-object/from16 v1, v20
+@@ -3164,19 +3560,19 @@
+ 
+     invoke-virtual {v0, v1, v2}, Lcom/android/internal/telephony/SMSDispatcher;->dispatchPortAddressedPdus([[BI)V
+ 
+-    :goto_20c
++    :goto_212
+     const/4 v3, -0x1
+ 
+     goto/16 :goto_a1
+ 
+-    :cond_20f
++    :cond_215
+     move-object/from16 v0, p0
+ 
+     move-object/from16 v1, v20
+ 
+     invoke-virtual {v0, v1}, Lcom/android/internal/telephony/SMSDispatcher;->dispatchPdus([[B)V
+ 
+-    goto :goto_20c
++    goto :goto_212
+ .end method
+ 
+ .method protected abstract sendData(Ljava/lang/String;Ljava/lang/String;I[BLandroid/app/PendingIntent;Landroid/app/PendingIntent;)V
+@@ -3399,6 +3795,8 @@
+ 
+     const/4 v12, 0x4
+ 
++    const/4 v10, 0x0
++
+     const/4 v11, 0x1
+ 
+     iget-object v3, p1, Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;->mData:Ljava/util/HashMap;
+@@ -3419,49 +3817,82 @@
+ 
+     iget-boolean v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mSmsSendDisabled:Z
+ 
+-    if-eqz v9, :cond_23
++    if-eqz v9, :cond_24
+ 
+-    if-eqz v7, :cond_1b
++    if-eqz v7, :cond_1c
+ 
+     const/4 v9, 0x4
+ 
+-    :try_start_18
++    :try_start_19
+     invoke-virtual {v7, v9}, Landroid/app/PendingIntent;->send(I)V
+-    :try_end_1b
+-    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_18 .. :try_end_1b} :catch_b0
++    :try_end_1c
++    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_19 .. :try_end_1c} :catch_cc
+ 
+-    :cond_1b
+-    :goto_1b
++    :cond_1c
++    :goto_1c
+     const-string v9, "SMSDispatcher"
+ 
+     const-string v10, "Device does not support sending sms."
+ 
+     invoke-static {v9, v10}, Landroid/telephony/Rlog;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    :cond_22
+-    :goto_22
++    :cond_23
++    :goto_23
+     return-void
+ 
+-    :cond_23
+-    if-nez v5, :cond_2e
++    :cond_24
++    if-nez v5, :cond_2f
+ 
+-    if-eqz v7, :cond_22
++    if-eqz v7, :cond_23
+ 
+     const/4 v9, 0x3
+ 
+-    :try_start_28
++    :try_start_29
+     invoke-virtual {v7, v9}, Landroid/app/PendingIntent;->send(I)V
+-    :try_end_2b
+-    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_28 .. :try_end_2b} :catch_2c
++    :try_end_2c
++    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_29 .. :try_end_2c} :catch_2d
+ 
+-    goto :goto_22
++    goto :goto_23
+ 
+-    :catch_2c
++    :catch_2d
+     move-exception v9
+ 
+-    goto :goto_22
++    goto :goto_23
+ 
+-    :cond_2e
++    :cond_2f
++    invoke-virtual {p0}, Lcom/android/internal/telephony/SMSDispatcher;->getPackageName()[Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {p0, v9, v10}, Lcom/android/internal/telephony/SMSDispatcher;->isAllowed([Ljava/lang/String;I)Z
++
++    move-result v9
++
++    if-nez v9, :cond_49
++
++    if-eqz v7, :cond_23
++
++    const/4 v9, 0x1
++
++    :try_start_3c
++    invoke-virtual {v7, v9}, Landroid/app/PendingIntent;->send(I)V
++
++    const-string v9, "SMSDispatcher"
++
++    const-string v10, "fake also delivery state to radio off!"
++
++    invoke-static {v9, v10}, Landroid/telephony/Rlog;->i(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_46
++    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_3c .. :try_end_46} :catch_47
++
++    goto :goto_23
++
++    :catch_47
++    move-exception v9
++
++    goto :goto_23
++
++    :cond_49
+     iget-object v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mContext:Landroid/content/Context;
+ 
+     invoke-virtual {v9}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
+@@ -3476,31 +3907,31 @@
+ 
+     move-result-object v4
+ 
+-    if-eqz v4, :cond_41
++    if-eqz v4, :cond_5c
+ 
+     array-length v9, v4
+ 
+-    if-nez v9, :cond_58
++    if-nez v9, :cond_73
+ 
+-    :cond_41
++    :cond_5c
+     const-string v9, "SMSDispatcher"
+ 
+     const-string v10, "Can\'t get calling app package name: refusing to send SMS"
+ 
+     invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    if-eqz v7, :cond_22
++    if-eqz v7, :cond_23
+ 
+     const/4 v9, 0x1
+ 
+-    :try_start_4b
++    :try_start_66
+     invoke-virtual {v7, v9}, Landroid/app/PendingIntent;->send(I)V
+-    :try_end_4e
+-    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_4b .. :try_end_4e} :catch_4f
++    :try_end_69
++    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_66 .. :try_end_69} :catch_6a
+ 
+-    goto :goto_22
++    goto :goto_23
+ 
+-    :catch_4f
++    :catch_6a
+     move-exception v2
+ 
+     const-string v9, "SMSDispatcher"
+@@ -3509,21 +3940,21 @@
+ 
+     invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    goto :goto_22
++    goto :goto_23
+ 
+-    :cond_58
++    :cond_73
+     const/4 v0, 0x0
+ 
+     const/4 v9, 0x0
+ 
+-    :try_start_5a
++    :try_start_75
+     aget-object v9, v4, v9
+ 
+     const/16 v10, 0x40
+ 
+     invoke-virtual {v6, v9, v10}, Landroid/content/pm/PackageManager;->getPackageInfo(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;
+-    :try_end_61
+-    .catch Landroid/content/pm/PackageManager$NameNotFoundException; {:try_start_5a .. :try_end_61} :catch_7a
++    :try_end_7c
++    .catch Landroid/content/pm/PackageManager$NameNotFoundException; {:try_start_75 .. :try_end_7c} :catch_95
+ 
+     move-result-object v0
+ 
+@@ -3531,7 +3962,7 @@
+ 
+     move-result v9
+ 
+-    if-eqz v9, :cond_22
++    if-eqz v9, :cond_23
+ 
+     iget-object v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mUsageMonitor:Lcom/android/internal/telephony/SmsUsageMonitor;
+ 
+@@ -3541,7 +3972,7 @@
+ 
+     move-result v9
+ 
+-    if-nez v9, :cond_92
++    if-nez v9, :cond_ae
+ 
+     invoke-virtual {p0, v12, p1}, Lcom/android/internal/telephony/SMSDispatcher;->obtainMessage(ILjava/lang/Object;)Landroid/os/Message;
+ 
+@@ -3549,9 +3980,9 @@
+ 
+     invoke-virtual {p0, v9}, Lcom/android/internal/telephony/SMSDispatcher;->sendMessage(Landroid/os/Message;)Z
+ 
+-    goto :goto_22
++    goto :goto_23
+ 
+-    :catch_7a
++    :catch_95
+     move-exception v1
+ 
+     const-string v9, "SMSDispatcher"
+@@ -3560,18 +3991,18 @@
+ 
+     invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    if-eqz v7, :cond_22
++    if-eqz v7, :cond_23
+ 
+     const/4 v9, 0x1
+ 
+-    :try_start_85
++    :try_start_a0
+     invoke-virtual {v7, v9}, Landroid/app/PendingIntent;->send(I)V
+-    :try_end_88
+-    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_85 .. :try_end_88} :catch_89
++    :try_end_a3
++    .catch Landroid/app/PendingIntent$CanceledException; {:try_start_a0 .. :try_end_a3} :catch_a4
+ 
+-    goto :goto_22
++    goto :goto_23
+ 
+-    :catch_89
++    :catch_a4
+     move-exception v2
+ 
+     const-string v9, "SMSDispatcher"
+@@ -3580,9 +4011,9 @@
+ 
+     invoke-static {v9, v10}, Landroid/telephony/Rlog;->e(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    goto :goto_22
++    goto/16 :goto_23
+ 
+-    :cond_92
++    :cond_ae
+     iget-object v9, p0, Lcom/android/internal/telephony/SMSDispatcher;->mPhone:Lcom/android/internal/telephony/PhoneBase;
+ 
+     invoke-virtual {v9}, Lcom/android/internal/telephony/PhoneBase;->getServiceState()Landroid/telephony/ServiceState;
+@@ -3597,25 +4028,25 @@
+ 
+     move-result v9
+ 
+-    if-nez v9, :cond_ab
++    if-nez v9, :cond_c7
+ 
+-    if-eqz v8, :cond_ab
++    if-eqz v8, :cond_c7
+ 
+     iget-object v9, p1, Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;->mSentIntent:Landroid/app/PendingIntent;
+ 
+     invoke-static {v8, v9}, Lcom/android/internal/telephony/SMSDispatcher;->handleNotInService(ILandroid/app/PendingIntent;)V
+ 
+-    goto/16 :goto_22
++    goto/16 :goto_23
+ 
+-    :cond_ab
++    :cond_c7
+     invoke-virtual {p0, p1}, Lcom/android/internal/telephony/SMSDispatcher;->sendSms(Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;)V
+ 
+-    goto/16 :goto_22
++    goto/16 :goto_23
+ 
+-    :catch_b0
++    :catch_cc
+     move-exception v9
+ 
+-    goto/16 :goto_1b
++    goto/16 :goto_1c
+ .end method
+ 
+ .method public abstract sendRetrySms(Lcom/android/internal/telephony/SMSDispatcher$SmsTracker;)V
