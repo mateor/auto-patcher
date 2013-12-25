@@ -1,0 +1,3221 @@
+diff -Npruw stock-framework/smali/android/app/Instrumentation.smali pdroid-framework/smali/android/app/Instrumentation.smali
+--- stock-framework/smali/android/app/Instrumentation.smali	2013-12-25 16:17:46.482520316 -0600
++++ pdroid-framework/smali/android/app/Instrumentation.smali	2013-12-25 16:18:01.898519860 -0600
+@@ -6,7 +6,6 @@
+ # annotations
+ .annotation system Ldalvik/annotation/MemberClasses;
+     value = {
+-        Landroid/app/Instrumentation$1;,
+         Landroid/app/Instrumentation$Idler;,
+         Landroid/app/Instrumentation$ActivityGoing;,
+         Landroid/app/Instrumentation$ActivityWaiter;,
+@@ -53,6 +52,8 @@
+ 
+ .field private mPerformanceCollector:Landroid/os/PerformanceCollector;
+ 
++.field private mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
+ .field private mRunner:Ljava/lang/Thread;
+ 
+ .field private final mSync:Ljava/lang/Object;
+@@ -941,7 +942,7 @@
+ .end method
+ 
+ .method public execStartActivitiesAsUser(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Activity;[Landroid/content/Intent;Landroid/os/Bundle;I)V
+-    .registers 21
++    .registers 32
+     .param p1    # Landroid/content/Context;
+     .param p2    # Landroid/os/IBinder;
+     .param p3    # Landroid/os/IBinder;
+@@ -950,187 +951,129 @@
+     .param p6    # Landroid/os/Bundle;
+     .param p7    # I
+ 
+-    move-object v2, p2
+-
+-    check-cast v2, Landroid/app/IApplicationThread;
+-
+-    iget-object v1, p0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+-
+-    if-eqz v1, :cond_37
+-
+-    iget-object v3, p0, Landroid/app/Instrumentation;->mSync:Ljava/lang/Object;
+-
+-    monitor-enter v3
+-
+-    :try_start_a
+-    iget-object v1, p0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+-
+-    invoke-interface {v1}, Ljava/util/List;->size()I
+-
+-    move-result v9
+-
+-    const/4 v11, 0x0
+-
+-    :goto_11
+-    if-ge v11, v9, :cond_36
+-
+-    iget-object v1, p0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+-
+-    invoke-interface {v1, v11}, Ljava/util/List;->get(I)Ljava/lang/Object;
+-
+-    move-result-object v10
+-
+-    check-cast v10, Landroid/app/Instrumentation$ActivityMonitor;
+-
+-    const/4 v1, 0x0
+-
+-    const/4 v4, 0x0
+-
+-    aget-object v4, p5, v4
+-
+-    invoke-virtual {v10, p1, v1, v4}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++    move-object/from16 v3, p2
+ 
+-    move-result v1
++    check-cast v3, Landroid/app/IApplicationThread;
+ 
+-    if-eqz v1, :cond_33
++    const-string v2, "Instrumentation"
+ 
+-    iget v1, v10, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    new-instance v4, Ljava/lang/StringBuilder;
+ 
+-    add-int/lit8 v1, v1, 0x1
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    iput v1, v10, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: execStartActivitiesAsUser for "
+ 
+-    invoke-virtual {v10}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-result v1
++    move-result-object v4
+ 
+-    if-eqz v1, :cond_36
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    monitor-exit v3
++    move-result-object v5
+ 
+-    :goto_32
+-    return-void
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    :cond_33
+-    add-int/lit8 v11, v11, 0x1
++    move-result-object v4
+ 
+-    goto :goto_11
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    :cond_36
+-    monitor-exit v3
+-    :try_end_37
+-    .catchall {:try_start_a .. :try_end_37} :catchall_5b
++    move-result-object v4
+ 
+-    :cond_37
+-    :try_start_37
+-    move-object/from16 v0, p5
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    array-length v1, v0
++    if-eqz p5, :cond_6f
+ 
+-    new-array v5, v1, [Ljava/lang/String;
++    const/4 v14, 0x0
+ 
+-    const/4 v11, 0x0
++    move-object/from16 v13, p5
+ 
+-    :goto_3d
+-    move-object/from16 v0, p5
++    array-length v0, v13
+ 
+-    array-length v1, v0
++    move/from16 v20, v0
+ 
+-    if-ge v11, v1, :cond_5e
++    const/16 v18, 0x0
+ 
+-    aget-object v1, p5, v11
++    :goto_2a
++    move/from16 v0, v18
+ 
+-    invoke-virtual {v1}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++    move/from16 v1, v20
+ 
+-    aget-object v1, p5, v11
++    if-ge v0, v1, :cond_51
+ 
+-    invoke-virtual {v1}, Landroid/content/Intent;->prepareToLeaveProcess()V
++    aget-object v19, v13, v18
+ 
+-    aget-object v1, p5, v11
++    :try_start_32
++    invoke-virtual/range {v19 .. v19}, Landroid/content/Intent;->getAction()Ljava/lang/String;
+ 
+-    invoke-virtual {p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    move-result-object v2
+ 
+-    move-result-object v3
++    if-eqz v2, :cond_cc
+ 
+-    invoke-virtual {v1, v3}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++    invoke-virtual/range {v19 .. v19}, Landroid/content/Intent;->getAction()Ljava/lang/String;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+-    aput-object v1, v5, v11
+-    :try_end_58
+-    .catch Landroid/os/RemoteException; {:try_start_37 .. :try_end_58} :catch_79
++    const-string v4, "android.intent.action.CALL"
+ 
+-    add-int/lit8 v11, v11, 0x1
++    invoke-virtual {v2, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    goto :goto_3d
++    move-result v2
+ 
+-    :catchall_5b
+-    move-exception v1
++    if-nez v2, :cond_50
+ 
+-    :try_start_5c
+-    monitor-exit v3
+-    :try_end_5d
+-    .catchall {:try_start_5c .. :try_end_5d} :catchall_5b
++    invoke-virtual/range {v19 .. v19}, Landroid/content/Intent;->getAction()Ljava/lang/String;
+ 
+-    throw v1
++    move-result-object v2
+ 
+-    :cond_5e
+-    :try_start_5e
+-    invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
++    const-string v4, "android.intent.action.DIAL"
+ 
+-    move-result-object v1
++    invoke-virtual {v2, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    :try_end_4d
++    .catch Ljava/lang/Exception; {:try_start_32 .. :try_end_4d} :catch_ae
+ 
+-    invoke-virtual {p1}, Landroid/content/Context;->getBasePackageName()Ljava/lang/String;
++    move-result v2
+ 
+-    move-result-object v3
++    if-eqz v2, :cond_cc
+ 
+-    move-object/from16 v4, p5
++    :cond_50
++    const/4 v14, 0x1
+ 
+-    move-object/from16 v6, p3
++    :cond_51
++    if-nez v14, :cond_d0
+ 
+-    move-object/from16 v7, p6
++    const-string v2, "Instrumentation"
+ 
+-    move/from16 v8, p7
++    new-instance v4, Ljava/lang/StringBuilder;
+ 
+-    invoke-interface/range {v1 .. v8}, Landroid/app/IActivityManager;->startActivities(Landroid/app/IApplicationThread;Ljava/lang/String;[Landroid/content/Intent;[Ljava/lang/String;Landroid/os/IBinder;Landroid/os/Bundle;I)I
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    move-result v12
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: No provided intents triggered checking for "
+ 
+-    const/4 v1, 0x0
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    aget-object v1, p5, v1
++    move-result-object v4
+ 
+-    invoke-static {v12, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
+-    :try_end_78
+-    .catch Landroid/os/RemoteException; {:try_start_5e .. :try_end_78} :catch_79
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    goto :goto_32
++    move-result-object v5
+ 
+-    :catch_79
+-    move-exception v1
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    goto :goto_32
+-.end method
++    move-result-object v4
+ 
+-.method public execStartActivity(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Activity;Landroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/Instrumentation$ActivityResult;
+-    .registers 26
+-    .param p1    # Landroid/content/Context;
+-    .param p2    # Landroid/os/IBinder;
+-    .param p3    # Landroid/os/IBinder;
+-    .param p4    # Landroid/app/Activity;
+-    .param p5    # Landroid/content/Intent;
+-    .param p6    # I
+-    .param p7    # Landroid/os/Bundle;
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-object/from16 v3, p2
++    move-result-object v4
+ 
+-    check-cast v3, Landroid/app/IApplicationThread;
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
++    :cond_6f
++    :goto_6f
+     move-object/from16 v0, p0
+ 
+     iget-object v2, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+ 
+-    if-eqz v2, :cond_4e
++    if-eqz v2, :cond_289
+ 
+     move-object/from16 v0, p0
+ 
+@@ -1138,480 +1081,614 @@
+ 
+     monitor-enter v4
+ 
+-    :try_start_f
++    :try_start_7a
+     move-object/from16 v0, p0
+ 
+     iget-object v2, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+ 
+     invoke-interface {v2}, Ljava/util/List;->size()I
+ 
+-    move-result v14
++    move-result v10
+ 
+-    const/16 v16, 0x0
++    const/16 v17, 0x0
+ 
+-    :goto_19
+-    move/from16 v0, v16
++    :goto_84
++    move/from16 v0, v17
+ 
+-    if-ge v0, v14, :cond_4d
++    if-ge v0, v10, :cond_288
+ 
+     move-object/from16 v0, p0
+ 
+     iget-object v2, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+ 
+-    move/from16 v0, v16
++    move/from16 v0, v17
+ 
+     invoke-interface {v2, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
+ 
+-    move-result-object v15
++    move-result-object v12
+ 
+-    check-cast v15, Landroid/app/Instrumentation$ActivityMonitor;
++    check-cast v12, Landroid/app/Instrumentation$ActivityMonitor;
+ 
+     const/4 v2, 0x0
+ 
+-    move-object/from16 v0, p1
++    const/4 v5, 0x0
+ 
+-    move-object/from16 v1, p5
++    aget-object v5, p5, v5
++
++    move-object/from16 v0, p1
+ 
+-    invoke-virtual {v15, v0, v2, v1}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++    invoke-virtual {v12, v0, v2, v5}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
+ 
+     move-result v2
+ 
+-    if-eqz v2, :cond_4a
++    if-eqz v2, :cond_284
+ 
+-    iget v2, v15, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    iget v2, v12, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
+ 
+     add-int/lit8 v2, v2, 0x1
+ 
+-    iput v2, v15, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    iput v2, v12, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
+ 
+-    invoke-virtual {v15}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++    invoke-virtual {v12}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
+ 
+     move-result v2
+ 
+-    if-eqz v2, :cond_4d
+-
+-    if-ltz p6, :cond_48
+-
+-    invoke-virtual {v15}, Landroid/app/Instrumentation$ActivityMonitor;->getResult()Landroid/app/Instrumentation$ActivityResult;
+-
+-    move-result-object v2
++    if-eqz v2, :cond_288
+ 
+-    :goto_46
+     monitor-exit v4
++    :try_end_ad
++    .catchall {:try_start_7a .. :try_end_ad} :catchall_2b0
+ 
+-    :goto_47
+-    return-object v2
++    :goto_ad
++    return-void
+ 
+-    :cond_48
+-    const/4 v2, 0x0
++    :catch_ae
++    move-exception v15
+ 
+-    goto :goto_46
++    const-string v2, "Instrumentation"
+ 
+-    :cond_4a
+-    add-int/lit8 v16, v16, 0x1
++    new-instance v4, Ljava/lang/StringBuilder;
+ 
+-    goto :goto_19
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    :cond_4d
+-    monitor-exit v4
+-    :try_end_4e
+-    .catchall {:try_start_f .. :try_end_4e} :catchall_84
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: Exception occurred when checking intents for "
+ 
+-    :cond_4e
+-    :try_start_4e
+-    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->prepareToLeaveProcess()V
++    move-result-object v4
+ 
+-    invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    move-result-object v2
++    move-result-object v5
+ 
+-    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getBasePackageName()Ljava/lang/String;
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+     move-result-object v4
+ 
+-    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v5
++    move-result-object v4
+ 
+-    move-object/from16 v0, p5
++    invoke-static {v2, v4, v15}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    invoke-virtual {v0, v5}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++    const/4 v14, 0x1
+ 
+-    move-result-object v6
++    :cond_cc
++    add-int/lit8 v18, v18, 0x1
+ 
+-    if-eqz p4, :cond_87
++    goto/16 :goto_2a
+ 
+-    move-object/from16 v0, p4
++    :cond_d0
++    const-string v2, "Instrumentation"
+ 
+-    iget-object v8, v0, Landroid/app/Activity;->mEmbeddedID:Ljava/lang/String;
++    new-instance v4, Ljava/lang/StringBuilder;
+ 
+-    :goto_6c
+-    const/4 v10, 0x0
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    const/4 v11, 0x0
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: One or more intents triggered checking for "
+ 
+-    const/4 v12, 0x0
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v5, p5
++    move-result-object v4
+ 
+-    move-object/from16 v7, p3
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    move/from16 v9, p6
++    move-result-object v5
+ 
+-    move-object/from16 v13, p7
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-interface/range {v2 .. v13}, Landroid/app/IActivityManager;->startActivity(Landroid/app/IApplicationThread;Ljava/lang/String;Landroid/content/Intent;Ljava/lang/String;Landroid/os/IBinder;Ljava/lang/String;IILjava/lang/String;Landroid/os/ParcelFileDescriptor;Landroid/os/Bundle;)I
++    move-result-object v4
+ 
+-    move-result v17
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move/from16 v0, v17
++    move-result-object v4
+ 
+-    move-object/from16 v1, p5
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-static {v0, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
+-    :try_end_82
+-    .catch Landroid/os/RemoteException; {:try_start_4e .. :try_end_82} :catch_89
++    move-object/from16 v0, p0
+ 
+-    :goto_82
+-    const/4 v2, 0x0
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    goto :goto_47
++    if-eqz v2, :cond_fc
+ 
+-    :catchall_84
+-    move-exception v2
++    move-object/from16 v0, p0
+ 
+-    :try_start_85
+-    monitor-exit v4
+-    :try_end_86
+-    .catchall {:try_start_85 .. :try_end_86} :catchall_84
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    throw v2
++    invoke-virtual {v2}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
+ 
+-    :cond_87
+-    const/4 v8, 0x0
++    move-result v2
+ 
+-    goto :goto_6c
++    if-nez v2, :cond_193
+ 
+-    :catch_89
+-    move-exception v2
++    :cond_fc
++    new-instance v2, Landroid/privacy/PrivacySettingsManager;
+ 
+-    goto :goto_82
+-.end method
++    const-string/jumbo v4, "privacy"
+ 
+-.method public execStartActivity(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Activity;Landroid/content/Intent;ILandroid/os/Bundle;Landroid/os/UserHandle;)Landroid/app/Instrumentation$ActivityResult;
+-    .registers 29
+-    .param p1    # Landroid/content/Context;
+-    .param p2    # Landroid/os/IBinder;
+-    .param p3    # Landroid/os/IBinder;
+-    .param p4    # Landroid/app/Activity;
+-    .param p5    # Landroid/content/Intent;
+-    .param p6    # I
+-    .param p7    # Landroid/os/Bundle;
+-    .param p8    # Landroid/os/UserHandle;
++    invoke-static {v4}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+ 
+-    move-object/from16 v4, p2
++    move-result-object v4
+ 
+-    check-cast v4, Landroid/app/IApplicationThread;
++    invoke-static {v4}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
+ 
+-    move-object/from16 v0, p0
++    move-result-object v4
+ 
+-    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++    move-object/from16 v0, p1
+ 
+-    if-eqz v3, :cond_56
++    invoke-direct {v2, v0, v4}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
+ 
+     move-object/from16 v0, p0
+ 
+-    iget-object v5, v0, Landroid/app/Instrumentation;->mSync:Ljava/lang/Object;
+-
+-    monitor-enter v5
++    iput-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    :try_start_f
+     move-object/from16 v0, p0
+ 
+-    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+-
+-    invoke-interface {v3}, Ljava/util/List;->size()I
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    move-result v16
++    if-eqz v2, :cond_18b
+ 
+-    const/16 v18, 0x0
++    const-string v2, "Instrumentation"
+ 
+-    :goto_19
+-    move/from16 v0, v18
++    const-string v4, "PDroid:Instrumentation:execStartActivitiesAsUser: Obtained privacy service"
+ 
+-    move/from16 v1, v16
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    if-ge v0, v1, :cond_55
++    :goto_11f
++    const/4 v11, 0x0
+ 
+     move-object/from16 v0, p0
+ 
+-    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
+-
+-    move/from16 v0, v18
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-interface {v3, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
++    if-eqz v2, :cond_130
+ 
+-    move-result-object v17
++    move-object/from16 v0, p0
+ 
+-    check-cast v17, Landroid/app/Instrumentation$ActivityMonitor;
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    const/4 v3, 0x0
++    invoke-virtual {v2}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
+ 
+-    move-object/from16 v0, v17
++    move-result v2
+ 
+-    move-object/from16 v1, p1
++    if-nez v2, :cond_19b
+ 
+-    move-object/from16 v2, p5
++    :cond_130
++    const-string v2, "Instrumentation"
+ 
+-    invoke-virtual {v0, v1, v3, v2}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++    const-string v4, "PDroid:Instrumentation:execStartActivitiesAsUser: Privacy service not available - assuming permission denied"
+ 
+-    move-result v3
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    if-eqz v3, :cond_52
++    const/4 v11, 0x0
+ 
+-    move-object/from16 v0, v17
++    move-object/from16 v0, p0
+ 
+-    iget v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    add-int/lit8 v3, v3, 0x1
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    move-object/from16 v0, v17
++    move-result-object v4
+ 
+-    iput v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    const/4 v5, 0x1
+ 
+-    invoke-virtual/range {v17 .. v17}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++    const-string/jumbo v7, "phoneCall"
+ 
+-    move-result v3
++    const/4 v8, 0x0
+ 
+-    if-eqz v3, :cond_55
++    invoke-virtual {v2, v4, v5, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
+ 
+-    if-ltz p6, :cond_50
++    :goto_148
++    if-nez v11, :cond_6f
+ 
+-    invoke-virtual/range {v17 .. v17}, Landroid/app/Instrumentation$ActivityMonitor;->getResult()Landroid/app/Instrumentation$ActivityResult;
++    new-instance v16, Ljava/util/ArrayList;
+ 
+-    move-result-object v3
++    move-object/from16 v0, p5
+ 
+-    :goto_4e
+-    monitor-exit v5
++    array-length v2, v0
+ 
+-    :goto_4f
+-    return-object v3
++    move-object/from16 v0, v16
+ 
+-    :cond_50
+-    const/4 v3, 0x0
++    invoke-direct {v0, v2}, Ljava/util/ArrayList;-><init>(I)V
+ 
+-    goto :goto_4e
++    move-object/from16 v13, p5
+ 
+-    :cond_52
+-    add-int/lit8 v18, v18, 0x1
++    array-length v0, v13
+ 
+-    goto :goto_19
++    move/from16 v20, v0
+ 
+-    :cond_55
+-    monitor-exit v5
+-    :try_end_56
+-    .catchall {:try_start_f .. :try_end_56} :catchall_90
++    const/16 v18, 0x0
+ 
+-    :cond_56
+-    :try_start_56
+-    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++    :goto_15b
++    move/from16 v0, v18
+ 
+-    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->prepareToLeaveProcess()V
++    move/from16 v1, v20
+ 
+-    invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
++    if-ge v0, v1, :cond_261
+ 
+-    move-result-object v3
++    aget-object v19, v13, v18
+ 
+-    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getBasePackageName()Ljava/lang/String;
++    :try_start_163
++    invoke-virtual/range {v19 .. v19}, Landroid/content/Intent;->getAction()Ljava/lang/String;
+ 
+-    move-result-object v5
++    move-result-object v2
+ 
+-    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    if-eqz v2, :cond_181
+ 
+-    move-result-object v6
++    invoke-virtual/range {v19 .. v19}, Landroid/content/Intent;->getAction()Ljava/lang/String;
+ 
+-    move-object/from16 v0, p5
++    move-result-object v2
+ 
+-    invoke-virtual {v0, v6}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++    const-string v4, "android.intent.action.CALL"
+ 
+-    move-result-object v7
++    invoke-virtual {v2, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    if-eqz p4, :cond_93
++    move-result v2
+ 
+-    move-object/from16 v0, p4
++    if-nez v2, :cond_188
+ 
+-    iget-object v9, v0, Landroid/app/Activity;->mEmbeddedID:Ljava/lang/String;
++    invoke-virtual/range {v19 .. v19}, Landroid/content/Intent;->getAction()Ljava/lang/String;
+ 
+-    :goto_74
+-    const/4 v11, 0x0
++    move-result-object v2
+ 
+-    const/4 v12, 0x0
++    const-string v4, "android.intent.action.DIAL"
+ 
+-    const/4 v13, 0x0
++    invoke-virtual {v2, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    invoke-virtual/range {p8 .. p8}, Landroid/os/UserHandle;->getIdentifier()I
++    move-result v2
+ 
+-    move-result v15
++    if-nez v2, :cond_188
+ 
+-    move-object/from16 v6, p5
++    :cond_181
++    move-object/from16 v0, v16
+ 
+-    move-object/from16 v8, p3
++    move-object/from16 v1, v19
+ 
+-    move/from16 v10, p6
++    invoke-interface {v0, v1}, Ljava/util/List;->add(Ljava/lang/Object;)Z
++    :try_end_188
++    .catch Ljava/lang/Exception; {:try_start_163 .. :try_end_188} :catch_242
+ 
+-    move-object/from16 v14, p7
++    :cond_188
++    :goto_188
++    add-int/lit8 v18, v18, 0x1
+ 
+-    invoke-interface/range {v3 .. v15}, Landroid/app/IActivityManager;->startActivityAsUser(Landroid/app/IApplicationThread;Ljava/lang/String;Landroid/content/Intent;Ljava/lang/String;Landroid/os/IBinder;Ljava/lang/String;IILjava/lang/String;Landroid/os/ParcelFileDescriptor;Landroid/os/Bundle;I)I
++    goto :goto_15b
+ 
+-    move-result v19
++    :cond_18b
++    const-string v2, "Instrumentation"
+ 
+-    move/from16 v0, v19
++    const-string v4, "PDroid:Instrumentation:execStartActivitiesAsUser: Privacy service not obtained"
+ 
+-    move-object/from16 v1, p5
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-static {v0, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
+-    :try_end_8e
+-    .catch Landroid/os/RemoteException; {:try_start_56 .. :try_end_8e} :catch_95
++    goto :goto_11f
+ 
+-    :goto_8e
+-    const/4 v3, 0x0
++    :cond_193
++    const-string v2, "Instrumentation"
+ 
+-    goto :goto_4f
++    const-string v4, "PDroid:Instrumentation:execStartActivitiesAsUser: Already had privacy service"
+ 
+-    :catchall_90
+-    move-exception v3
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    :try_start_91
+-    monitor-exit v5
+-    :try_end_92
+-    .catchall {:try_start_91 .. :try_end_92} :catchall_90
++    goto :goto_11f
+ 
+-    throw v3
++    :cond_19b
++    move-object/from16 v0, p0
+ 
+-    :cond_93
+-    const/4 v9, 0x0
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    goto :goto_74
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    :catch_95
+-    move-exception v3
++    move-result-object v4
+ 
+-    goto :goto_8e
+-.end method
++    invoke-virtual {v2, v4}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
+ 
+-.method public execStartActivity(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Fragment;Landroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/Instrumentation$ActivityResult;
+-    .registers 26
+-    .param p1    # Landroid/content/Context;
+-    .param p2    # Landroid/os/IBinder;
+-    .param p3    # Landroid/os/IBinder;
+-    .param p4    # Landroid/app/Fragment;
+-    .param p5    # Landroid/content/Intent;
+-    .param p6    # I
+-    .param p7    # Landroid/os/Bundle;
++    move-result-object v21
+ 
+-    move-object/from16 v3, p2
++    if-nez v21, :cond_1d8
+ 
+-    check-cast v3, Landroid/app/IApplicationThread;
++    const-string v2, "Instrumentation"
+ 
+-    move-object/from16 v0, p0
++    new-instance v4, Ljava/lang/StringBuilder;
+ 
+-    iget-object v2, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    if-eqz v2, :cond_4e
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: Call intents allowed: No settings for package: "
+ 
+-    move-object/from16 v0, p0
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    iget-object v4, v0, Landroid/app/Instrumentation;->mSync:Ljava/lang/Object;
++    move-result-object v4
+ 
+-    monitor-enter v4
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    :try_start_f
+-    move-object/from16 v0, p0
++    move-result-object v5
+ 
+-    iget-object v2, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-interface {v2}, Ljava/util/List;->size()I
++    move-result-object v4
+ 
+-    move-result v14
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    const/16 v16, 0x0
++    move-result-object v4
+ 
+-    :goto_19
+-    move/from16 v0, v16
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    if-ge v0, v14, :cond_4d
++    const/4 v11, 0x1
+ 
+     move-object/from16 v0, p0
+ 
+-    iget-object v2, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    move/from16 v0, v16
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    invoke-interface {v2, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
++    move-result-object v4
+ 
+-    move-result-object v15
++    const/4 v5, 0x1
+ 
+-    check-cast v15, Landroid/app/Instrumentation$ActivityMonitor;
++    const-string/jumbo v7, "phoneCall"
+ 
+-    const/4 v2, 0x0
++    const/4 v8, 0x0
+ 
+-    move-object/from16 v0, p1
++    invoke-virtual {v2, v4, v5, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
+ 
+-    move-object/from16 v1, p5
++    goto/16 :goto_148
+ 
+-    invoke-virtual {v15, v0, v2, v1}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++    :cond_1d8
++    invoke-virtual/range {v21 .. v21}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
+ 
+     move-result v2
+ 
+-    if-eqz v2, :cond_4a
++    if-nez v2, :cond_210
+ 
+-    iget v2, v15, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    const-string v2, "Instrumentation"
+ 
+-    add-int/lit8 v2, v2, 0x1
++    new-instance v4, Ljava/lang/StringBuilder;
+ 
+-    iput v2, v15, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-virtual {v15}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: Call intents allowed: Settings permit "
+ 
+-    move-result v2
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    if-eqz v2, :cond_4d
++    move-result-object v4
+ 
+-    if-ltz p6, :cond_48
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    invoke-virtual {v15}, Landroid/app/Instrumentation$ActivityMonitor;->getResult()Landroid/app/Instrumentation$ActivityResult;
++    move-result-object v5
+ 
+-    move-result-object v2
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    :goto_46
+-    monitor-exit v4
++    move-result-object v4
+ 
+-    :goto_47
+-    return-object v2
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    :cond_48
+-    const/4 v2, 0x0
++    move-result-object v4
++
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v11, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v4
++
++    invoke-virtual/range {v21 .. v21}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v5
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v2, v4, v5, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_148
++
++    :cond_210
++    const-string v2, "Instrumentation"
++
++    new-instance v4, Ljava/lang/StringBuilder;
++
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: Call intents denied: Settings deny "
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v4
++
++    invoke-static {v2, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v11, 0x0
++
++    move-object/from16 v0, p0
++
++    iget-object v2, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v4
++
++    invoke-virtual/range {v21 .. v21}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v5
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v2, v4, v5, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_148
++
++    :catch_242
++    move-exception v15
++
++    const-string v2, "Instrumentation"
++
++    new-instance v4, Ljava/lang/StringBuilder;
++
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v5, "PDroid:Instrumentation:execStartActivitiesAsUser: Exception occurred when checking intent for "
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    goto :goto_46
++    move-result-object v4
++
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v4
++
++    invoke-static {v2, v4, v15}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto/16 :goto_188
++
++    :cond_261
++    invoke-interface/range {v16 .. v16}, Ljava/util/List;->size()I
++
++    move-result v2
++
++    new-array v2, v2, [Landroid/content/Intent;
++
++    move-object/from16 v0, v16
++
++    invoke-interface {v0, v2}, Ljava/util/List;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
++
++    move-result-object p5
++
++    check-cast p5, [Landroid/content/Intent;
++
++    move-object/from16 v23, p1
++
++    new-instance v2, Ljava/lang/Thread;
+ 
+-    :cond_4a
+-    add-int/lit8 v16, v16, 0x1
++    new-instance v4, Landroid/app/Instrumentation$2;
+ 
+-    goto :goto_19
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v23
++
++    invoke-direct {v4, v0, v1}, Landroid/app/Instrumentation$2;-><init>(Landroid/app/Instrumentation;Landroid/content/Context;)V
++
++    invoke-direct {v2, v4}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
++
++    invoke-virtual {v2}, Ljava/lang/Thread;->start()V
++
++    goto/16 :goto_6f
++
++    :cond_284
++    add-int/lit8 v17, v17, 0x1
++
++    goto/16 :goto_84
+ 
+-    :cond_4d
++    :cond_288
++    :try_start_288
+     monitor-exit v4
+-    :try_end_4e
+-    .catchall {:try_start_f .. :try_end_4e} :catchall_84
++    :try_end_289
++    .catchall {:try_start_288 .. :try_end_289} :catchall_2b0
+ 
+-    :cond_4e
+-    :try_start_4e
+-    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++    :cond_289
++    :try_start_289
++    move-object/from16 v0, p5
+ 
+-    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->prepareToLeaveProcess()V
++    array-length v2, v0
++
++    new-array v6, v2, [Ljava/lang/String;
++
++    const/16 v17, 0x0
++
++    :goto_290
++    move-object/from16 v0, p5
++
++    array-length v2, v0
+ 
++    move/from16 v0, v17
++
++    if-ge v0, v2, :cond_2b3
++
++    aget-object v2, p5, v17
++
++    invoke-virtual {v2}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++
++    aget-object v2, p5, v17
++
++    invoke-virtual {v2}, Landroid/content/Intent;->prepareToLeaveProcess()V
++
++    aget-object v2, p5, v17
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v4
++
++    invoke-virtual {v2, v4}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++
++    move-result-object v2
++
++    aput-object v2, v6, v17
++    :try_end_2ad
++    .catch Landroid/os/RemoteException; {:try_start_289 .. :try_end_2ad} :catch_2d1
++
++    add-int/lit8 v17, v17, 0x1
++
++    goto :goto_290
++
++    :catchall_2b0
++    move-exception v2
++
++    :try_start_2b1
++    monitor-exit v4
++    :try_end_2b2
++    .catchall {:try_start_2b1 .. :try_end_2b2} :catchall_2b0
++
++    throw v2
++
++    :cond_2b3
++    :try_start_2b3
+     invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
+ 
+     move-result-object v2
+@@ -1620,73 +1697,2027 @@
+ 
+     move-result-object v4
+ 
+-    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    move-object/from16 v5, p5
++
++    move-object/from16 v7, p3
++
++    move-object/from16 v8, p6
++
++    move/from16 v9, p7
++
++    invoke-interface/range {v2 .. v9}, Landroid/app/IActivityManager;->startActivities(Landroid/app/IApplicationThread;Ljava/lang/String;[Landroid/content/Intent;[Ljava/lang/String;Landroid/os/IBinder;Landroid/os/Bundle;I)I
++
++    move-result v22
++
++    const/4 v2, 0x0
++
++    aget-object v2, p5, v2
++
++    move/from16 v0, v22
++
++    invoke-static {v0, v2}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
++    :try_end_2cf
++    .catch Landroid/os/RemoteException; {:try_start_2b3 .. :try_end_2cf} :catch_2d1
++
++    goto/16 :goto_ad
++
++    :catch_2d1
++    move-exception v2
++
++    goto/16 :goto_ad
++.end method
++
++.method public execStartActivity(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Activity;Landroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/Instrumentation$ActivityResult;
++    .registers 31
++    .param p1    # Landroid/content/Context;
++    .param p2    # Landroid/os/IBinder;
++    .param p3    # Landroid/os/IBinder;
++    .param p4    # Landroid/app/Activity;
++    .param p5    # Landroid/content/Intent;
++    .param p6    # I
++    .param p7    # Landroid/os/Bundle;
++
++    move-object/from16 v4, p2
++
++    check-cast v4, Landroid/app/IApplicationThread;
++
++    const/16 v16, 0x1
++
++    :try_start_6
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity: execStartActivity for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+     move-result-object v5
+ 
+-    move-object/from16 v0, p5
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    if-eqz v3, :cond_ba
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    const-string v5, "android.intent.action.CALL"
++
++    invoke-virtual {v3, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v3
++
++    if-nez v3, :cond_40
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    const-string v5, "android.intent.action.DIAL"
++
++    invoke-virtual {v3, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v3
++
++    if-eqz v3, :cond_ba
++
++    :cond_40
++    const/16 v16, 0x0
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual {v0, v5}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity: Intent action = Intent.ACTION_CALL or Intent.ACTION_DIAL for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+     move-result-object v6
+ 
+-    if-eqz p4, :cond_87
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v0, p4
++    move-result-object v5
+ 
+-    iget-object v8, v0, Landroid/app/Fragment;->mWho:Ljava/lang/String;
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    :goto_6c
+-    const/4 v10, 0x0
++    move-result-object v5
+ 
+-    const/4 v11, 0x0
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    const/4 v12, 0x0
++    move-object/from16 v0, p0
+ 
+-    move-object/from16 v5, p5
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    move-object/from16 v7, p3
++    if-eqz v3, :cond_6e
+ 
+-    move/from16 v9, p6
++    move-object/from16 v0, p0
+ 
+-    move-object/from16 v13, p7
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-interface/range {v2 .. v13}, Landroid/app/IActivityManager;->startActivity(Landroid/app/IApplicationThread;Ljava/lang/String;Landroid/content/Intent;Ljava/lang/String;Landroid/os/IBinder;Ljava/lang/String;IILjava/lang/String;Landroid/os/ParcelFileDescriptor;Landroid/os/Bundle;)I
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
+ 
+-    move-result v17
++    move-result v3
+ 
+-    move/from16 v0, v17
++    if-nez v3, :cond_12e
+ 
+-    move-object/from16 v1, p5
++    :cond_6e
++    new-instance v3, Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-static {v0, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
+-    :try_end_82
+-    .catch Landroid/os/RemoteException; {:try_start_4e .. :try_end_82} :catch_89
++    const-string/jumbo v5, "privacy"
+ 
+-    :goto_82
+-    const/4 v2, 0x0
++    invoke-static {v5}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+ 
+-    goto :goto_47
++    move-result-object v5
+ 
+-    :catchall_84
+-    move-exception v2
++    invoke-static {v5}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
+ 
+-    :try_start_85
+-    monitor-exit v4
+-    :try_end_86
+-    .catchall {:try_start_85 .. :try_end_86} :catchall_84
++    move-result-object v5
+ 
+-    throw v2
++    move-object/from16 v0, p1
++
++    invoke-direct {v3, v0, v5}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    move-object/from16 v0, p0
++
++    iput-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_104
++
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity: Obtained privacy service"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    :goto_91
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_a1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
++
++    move-result v3
++
++    if-nez v3, :cond_137
++
++    :cond_a1
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity: Privacy service not available: rejecting call attempt"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x0
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v6, 0x1
++
++    const-string/jumbo v7, "phoneCall"
+ 
+-    :cond_87
+     const/4 v8, 0x0
+ 
+-    goto :goto_6c
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    :try_end_ba
++    .catch Ljava/lang/Exception; {:try_start_6 .. :try_end_ba} :catch_10c
+ 
+-    :catch_89
+-    move-exception v2
++    :cond_ba
++    :goto_ba
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    if-eqz v3, :cond_207
++
++    move-object/from16 v0, p0
++
++    iget-object v5, v0, Landroid/app/Instrumentation;->mSync:Ljava/lang/Object;
++
++    monitor-enter v5
++
++    :try_start_c5
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    invoke-interface {v3}, Ljava/util/List;->size()I
++
++    move-result v15
++
++    const/16 v19, 0x0
++
++    :goto_cf
++    move/from16 v0, v19
++
++    if-ge v0, v15, :cond_206
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    move/from16 v0, v19
++
++    invoke-interface {v3, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
++
++    move-result-object v17
++
++    check-cast v17, Landroid/app/Instrumentation$ActivityMonitor;
++
++    const/4 v3, 0x0
++
++    move-object/from16 v0, v17
++
++    move-object/from16 v1, p1
++
++    move-object/from16 v2, p5
++
++    invoke-virtual {v0, v1, v3, v2}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++
++    move-result v3
++
++    if-eqz v3, :cond_202
++
++    move-object/from16 v0, v17
++
++    iget v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++
++    add-int/lit8 v3, v3, 0x1
++
++    move-object/from16 v0, v17
++
++    iput v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++
++    invoke-virtual/range {v17 .. v17}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++
++    move-result v3
++
++    if-eqz v3, :cond_206
++
++    if-ltz p6, :cond_1ff
++
++    invoke-virtual/range {v17 .. v17}, Landroid/app/Instrumentation$ActivityMonitor;->getResult()Landroid/app/Instrumentation$ActivityResult;
++
++    move-result-object v3
++
++    :goto_102
++    monitor-exit v5
++    :try_end_103
++    .catchall {:try_start_c5 .. :try_end_103} :catchall_221
++
++    :goto_103
++    return-object v3
++
++    :cond_104
++    :try_start_104
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity: Privacy service not obtained"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_10b
++    .catch Ljava/lang/Exception; {:try_start_104 .. :try_end_10b} :catch_10c
++
++    goto :goto_91
++
++    :catch_10c
++    move-exception v18
++
++    if-eqz p1, :cond_1f4
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity: Exception occurred handling intent for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v18
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_ba
++
++    :cond_12e
++    :try_start_12e
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity: Already had privacy service"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    goto/16 :goto_91
++
++    :cond_137
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v3, v5}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++
++    move-result-object v20
++
++    if-nez v20, :cond_175
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity: Call allowed: No settings for package: "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v6, 0x0
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_ba
++
++    :cond_175
++    invoke-virtual/range {v20 .. v20}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v3
++
++    if-nez v3, :cond_1ae
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity: Call allowed: Settings permit "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v20 .. v20}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v6
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_ba
++
++    :cond_1ae
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity: Call denied: Settings deny "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x0
++
++    move-object/from16 v22, p1
++
++    new-instance v3, Ljava/lang/Thread;
++
++    new-instance v5, Landroid/app/Instrumentation$1;
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v22
++
++    invoke-direct {v5, v0, v1}, Landroid/app/Instrumentation$1;-><init>(Landroid/app/Instrumentation;Landroid/content/Context;)V
++
++    invoke-direct {v3, v5}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
++
++    invoke-virtual {v3}, Ljava/lang/Thread;->start()V
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v20 .. v20}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v6
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    :try_end_1f2
++    .catch Ljava/lang/Exception; {:try_start_12e .. :try_end_1f2} :catch_10c
++
++    goto/16 :goto_ba
++
++    :cond_1f4
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity: Exception occurred handling intent for unknown package"
++
++    move-object/from16 v0, v18
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto/16 :goto_ba
++
++    :cond_1ff
++    const/4 v3, 0x0
++
++    goto/16 :goto_102
++
++    :cond_202
++    add-int/lit8 v19, v19, 0x1
++
++    goto/16 :goto_cf
++
++    :cond_206
++    :try_start_206
++    monitor-exit v5
++    :try_end_207
++    .catchall {:try_start_206 .. :try_end_207} :catchall_221
++
++    :cond_207
++    if-nez v16, :cond_224
++
++    :try_start_209
++    new-instance v3, Landroid/app/Instrumentation$ActivityResult;
++
++    move/from16 v0, p6
++
++    move-object/from16 v1, p5
++
++    invoke-direct {v3, v0, v1}, Landroid/app/Instrumentation$ActivityResult;-><init>(ILandroid/content/Intent;)V
++    :try_end_212
++    .catch Ljava/lang/Exception; {:try_start_209 .. :try_end_212} :catch_214
++
++    goto/16 :goto_103
++
++    :catch_214
++    move-exception v18
++
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity: Exception occurred while trying to create ActivityResult"
++
++    move-object/from16 v0, v18
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    const/4 v3, 0x0
++
++    goto/16 :goto_103
++
++    :catchall_221
++    move-exception v3
++
++    :try_start_222
++    monitor-exit v5
++    :try_end_223
++    .catchall {:try_start_222 .. :try_end_223} :catchall_221
++
++    throw v3
++
++    :cond_224
++    :try_start_224
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->prepareToLeaveProcess()V
++
++    invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
++
++    move-result-object v3
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getBasePackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v6
++
++    move-object/from16 v0, p5
++
++    invoke-virtual {v0, v6}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++
++    move-result-object v7
++
++    if-eqz p4, :cond_25b
++
++    move-object/from16 v0, p4
++
++    iget-object v9, v0, Landroid/app/Activity;->mEmbeddedID:Ljava/lang/String;
++
++    :goto_242
++    const/4 v11, 0x0
++
++    const/4 v12, 0x0
++
++    const/4 v13, 0x0
++
++    move-object/from16 v6, p5
++
++    move-object/from16 v8, p3
++
++    move/from16 v10, p6
++
++    move-object/from16 v14, p7
++
++    invoke-interface/range {v3 .. v14}, Landroid/app/IActivityManager;->startActivity(Landroid/app/IApplicationThread;Ljava/lang/String;Landroid/content/Intent;Ljava/lang/String;Landroid/os/IBinder;Ljava/lang/String;IILjava/lang/String;Landroid/os/ParcelFileDescriptor;Landroid/os/Bundle;)I
++
++    move-result v21
++
++    move/from16 v0, v21
++
++    move-object/from16 v1, p5
++
++    invoke-static {v0, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
++    :try_end_258
++    .catch Landroid/os/RemoteException; {:try_start_224 .. :try_end_258} :catch_25d
++
++    :goto_258
++    const/4 v3, 0x0
++
++    goto/16 :goto_103
++
++    :cond_25b
++    const/4 v9, 0x0
++
++    goto :goto_242
++
++    :catch_25d
++    move-exception v3
++
++    goto :goto_258
++.end method
++
++.method public execStartActivity(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Activity;Landroid/content/Intent;ILandroid/os/Bundle;Landroid/os/UserHandle;)Landroid/app/Instrumentation$ActivityResult;
++    .registers 33
++    .param p1    # Landroid/content/Context;
++    .param p2    # Landroid/os/IBinder;
++    .param p3    # Landroid/os/IBinder;
++    .param p4    # Landroid/app/Activity;
++    .param p5    # Landroid/content/Intent;
++    .param p6    # I
++    .param p7    # Landroid/os/Bundle;
++    .param p8    # Landroid/os/UserHandle;
++
++    move-object/from16 v4, p2
++
++    check-cast v4, Landroid/app/IApplicationThread;
++
++    const/16 v17, 0x1
++
++    :try_start_6
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with UserHandle): execStartActivity for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    if-eqz v3, :cond_ba
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    const-string v5, "android.intent.action.CALL"
++
++    invoke-virtual {v3, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v3
++
++    if-nez v3, :cond_40
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    const-string v5, "android.intent.action.DIAL"
++
++    invoke-virtual {v3, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v3
++
++    if-eqz v3, :cond_ba
++
++    :cond_40
++    const/16 v17, 0x0
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with UserHandle): Intent action = Intent.ACTION_CALL or Intent.ACTION_DIAL for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_6e
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
++
++    move-result v3
++
++    if-nez v3, :cond_130
++
++    :cond_6e
++    new-instance v3, Landroid/privacy/PrivacySettingsManager;
++
++    const-string/jumbo v5, "privacy"
++
++    invoke-static {v5}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v5
++
++    invoke-static {v5}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v5
++
++    move-object/from16 v0, p1
++
++    invoke-direct {v3, v0, v5}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    move-object/from16 v0, p0
++
++    iput-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_106
++
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with UserHandle): Obtained privacy service"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    :goto_91
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_a1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
++
++    move-result v3
++
++    if-nez v3, :cond_139
++
++    :cond_a1
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with UserHandle): Privacy service not available: rejecting call attempt"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v17, 0x0
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v6, 0x1
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    :try_end_ba
++    .catch Ljava/lang/Exception; {:try_start_6 .. :try_end_ba} :catch_10e
++
++    :cond_ba
++    :goto_ba
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    if-eqz v3, :cond_209
++
++    move-object/from16 v0, p0
++
++    iget-object v5, v0, Landroid/app/Instrumentation;->mSync:Ljava/lang/Object;
++
++    monitor-enter v5
++
++    :try_start_c5
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    invoke-interface {v3}, Ljava/util/List;->size()I
++
++    move-result v16
++
++    const/16 v20, 0x0
++
++    :goto_cf
++    move/from16 v0, v20
++
++    move/from16 v1, v16
++
++    if-ge v0, v1, :cond_208
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    move/from16 v0, v20
++
++    invoke-interface {v3, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
++
++    move-result-object v18
++
++    check-cast v18, Landroid/app/Instrumentation$ActivityMonitor;
++
++    const/4 v3, 0x0
++
++    move-object/from16 v0, v18
++
++    move-object/from16 v1, p1
++
++    move-object/from16 v2, p5
++
++    invoke-virtual {v0, v1, v3, v2}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++
++    move-result v3
++
++    if-eqz v3, :cond_204
++
++    move-object/from16 v0, v18
++
++    iget v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++
++    add-int/lit8 v3, v3, 0x1
++
++    move-object/from16 v0, v18
++
++    iput v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++
++    invoke-virtual/range {v18 .. v18}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++
++    move-result v3
++
++    if-eqz v3, :cond_208
++
++    if-ltz p6, :cond_201
++
++    invoke-virtual/range {v18 .. v18}, Landroid/app/Instrumentation$ActivityMonitor;->getResult()Landroid/app/Instrumentation$ActivityResult;
++
++    move-result-object v3
++
++    :goto_104
++    monitor-exit v5
++    :try_end_105
++    .catchall {:try_start_c5 .. :try_end_105} :catchall_223
++
++    :goto_105
++    return-object v3
++
++    :cond_106
++    :try_start_106
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with UserHandle): Privacy service not obtained"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_10d
++    .catch Ljava/lang/Exception; {:try_start_106 .. :try_end_10d} :catch_10e
++
++    goto :goto_91
++
++    :catch_10e
++    move-exception v19
++
++    if-eqz p1, :cond_1f6
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with UserHandle): Exception occurred handling intent for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v19
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_ba
++
++    :cond_130
++    :try_start_130
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with UserHandle): Already had privacy service"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    goto/16 :goto_91
++
++    :cond_139
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v3, v5}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++
++    move-result-object v21
++
++    if-nez v21, :cond_177
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with UserHandle): Call allowed: No settings for package: "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v17, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v6, 0x0
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_ba
++
++    :cond_177
++    invoke-virtual/range {v21 .. v21}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v3
++
++    if-nez v3, :cond_1b0
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with UserHandle): Call allowed: Settings permit "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v17, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v21 .. v21}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v6
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_ba
++
++    :cond_1b0
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with UserHandle): Call denied: Settings deny "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    move-object/from16 v23, p1
++
++    const/16 v17, 0x0
++
++    new-instance v3, Ljava/lang/Thread;
++
++    new-instance v5, Landroid/app/Instrumentation$4;
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v23
++
++    invoke-direct {v5, v0, v1}, Landroid/app/Instrumentation$4;-><init>(Landroid/app/Instrumentation;Landroid/content/Context;)V
++
++    invoke-direct {v3, v5}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
++
++    invoke-virtual {v3}, Ljava/lang/Thread;->start()V
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v21 .. v21}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v6
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    :try_end_1f4
++    .catch Ljava/lang/Exception; {:try_start_130 .. :try_end_1f4} :catch_10e
++
++    goto/16 :goto_ba
++
++    :cond_1f6
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with UserHandle): Exception occurred handling intent for unknown package"
++
++    move-object/from16 v0, v19
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto/16 :goto_ba
++
++    :cond_201
++    const/4 v3, 0x0
++
++    goto/16 :goto_104
++
++    :cond_204
++    add-int/lit8 v20, v20, 0x1
++
++    goto/16 :goto_cf
++
++    :cond_208
++    :try_start_208
++    monitor-exit v5
++    :try_end_209
++    .catchall {:try_start_208 .. :try_end_209} :catchall_223
++
++    :cond_209
++    if-nez v17, :cond_226
++
++    :try_start_20b
++    new-instance v3, Landroid/app/Instrumentation$ActivityResult;
++
++    move/from16 v0, p6
++
++    move-object/from16 v1, p5
++
++    invoke-direct {v3, v0, v1}, Landroid/app/Instrumentation$ActivityResult;-><init>(ILandroid/content/Intent;)V
++    :try_end_214
++    .catch Ljava/lang/Exception; {:try_start_20b .. :try_end_214} :catch_216
++
++    goto/16 :goto_105
++
++    :catch_216
++    move-exception v19
++
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with UserHandle): Exception occurred while trying to create ActivityResult"
++
++    move-object/from16 v0, v19
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    const/4 v3, 0x0
++
++    goto/16 :goto_105
++
++    :catchall_223
++    move-exception v3
++
++    :try_start_224
++    monitor-exit v5
++    :try_end_225
++    .catchall {:try_start_224 .. :try_end_225} :catchall_223
++
++    throw v3
++
++    :cond_226
++    :try_start_226
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->prepareToLeaveProcess()V
++
++    invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
++
++    move-result-object v3
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getBasePackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v6
++
++    move-object/from16 v0, p5
++
++    invoke-virtual {v0, v6}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++
++    move-result-object v7
++
++    if-eqz p4, :cond_261
++
++    move-object/from16 v0, p4
++
++    iget-object v9, v0, Landroid/app/Activity;->mEmbeddedID:Ljava/lang/String;
++
++    :goto_244
++    const/4 v11, 0x0
++
++    const/4 v12, 0x0
++
++    const/4 v13, 0x0
++
++    invoke-virtual/range {p8 .. p8}, Landroid/os/UserHandle;->getIdentifier()I
++
++    move-result v15
++
++    move-object/from16 v6, p5
++
++    move-object/from16 v8, p3
++
++    move/from16 v10, p6
++
++    move-object/from16 v14, p7
++
++    invoke-interface/range {v3 .. v15}, Landroid/app/IActivityManager;->startActivityAsUser(Landroid/app/IApplicationThread;Ljava/lang/String;Landroid/content/Intent;Ljava/lang/String;Landroid/os/IBinder;Ljava/lang/String;IILjava/lang/String;Landroid/os/ParcelFileDescriptor;Landroid/os/Bundle;I)I
++
++    move-result v22
++
++    move/from16 v0, v22
++
++    move-object/from16 v1, p5
++
++    invoke-static {v0, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
++    :try_end_25e
++    .catch Landroid/os/RemoteException; {:try_start_226 .. :try_end_25e} :catch_263
++
++    :goto_25e
++    const/4 v3, 0x0
++
++    goto/16 :goto_105
++
++    :cond_261
++    const/4 v9, 0x0
++
++    goto :goto_244
++
++    :catch_263
++    move-exception v3
++
++    goto :goto_25e
++.end method
++
++.method public execStartActivity(Landroid/content/Context;Landroid/os/IBinder;Landroid/os/IBinder;Landroid/app/Fragment;Landroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/Instrumentation$ActivityResult;
++    .registers 31
++    .param p1    # Landroid/content/Context;
++    .param p2    # Landroid/os/IBinder;
++    .param p3    # Landroid/os/IBinder;
++    .param p4    # Landroid/app/Fragment;
++    .param p5    # Landroid/content/Intent;
++    .param p6    # I
++    .param p7    # Landroid/os/Bundle;
++
++    move-object/from16 v4, p2
++
++    check-cast v4, Landroid/app/IApplicationThread;
++
++    const/16 v16, 0x1
++
++    :try_start_6
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with Fragments): execStartActivity for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    if-eqz v3, :cond_ba
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    const-string v5, "android.intent.action.CALL"
++
++    invoke-virtual {v3, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v3
++
++    if-nez v3, :cond_40
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->getAction()Ljava/lang/String;
++
++    move-result-object v3
++
++    const-string v5, "android.intent.action.DIAL"
++
++    invoke-virtual {v3, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v3
++
++    if-eqz v3, :cond_ba
++
++    :cond_40
++    const/16 v16, 0x0
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with Fragments): Intent action = Intent.ACTION_CALL or Intent.ACTION_DIAL for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_6e
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
++
++    move-result v3
++
++    if-nez v3, :cond_12e
++
++    :cond_6e
++    new-instance v3, Landroid/privacy/PrivacySettingsManager;
++
++    const-string/jumbo v5, "privacy"
++
++    invoke-static {v5}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v5
++
++    invoke-static {v5}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
++
++    move-result-object v5
++
++    move-object/from16 v0, p1
++
++    invoke-direct {v3, v0, v5}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++
++    move-object/from16 v0, p0
++
++    iput-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_104
++
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with Fragments): Obtained privacy service"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    :goto_91
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    if-eqz v3, :cond_a1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettingsManager;->isServiceAvailable()Z
++
++    move-result v3
++
++    if-nez v3, :cond_137
++
++    :cond_a1
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with Fragments): Privacy service not available: rejecting call attempt"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x0
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v6, 0x1
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    :try_end_ba
++    .catch Ljava/lang/Exception; {:try_start_6 .. :try_end_ba} :catch_10c
++
++    :cond_ba
++    :goto_ba
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    if-eqz v3, :cond_207
++
++    move-object/from16 v0, p0
++
++    iget-object v5, v0, Landroid/app/Instrumentation;->mSync:Ljava/lang/Object;
++
++    monitor-enter v5
++
++    :try_start_c5
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    invoke-interface {v3}, Ljava/util/List;->size()I
++
++    move-result v15
++
++    const/16 v19, 0x0
++
++    :goto_cf
++    move/from16 v0, v19
++
++    if-ge v0, v15, :cond_206
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mActivityMonitors:Ljava/util/List;
++
++    move/from16 v0, v19
++
++    invoke-interface {v3, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
++
++    move-result-object v17
++
++    check-cast v17, Landroid/app/Instrumentation$ActivityMonitor;
++
++    const/4 v3, 0x0
++
++    move-object/from16 v0, v17
++
++    move-object/from16 v1, p1
++
++    move-object/from16 v2, p5
++
++    invoke-virtual {v0, v1, v3, v2}, Landroid/app/Instrumentation$ActivityMonitor;->match(Landroid/content/Context;Landroid/app/Activity;Landroid/content/Intent;)Z
++
++    move-result v3
++
++    if-eqz v3, :cond_202
++
++    move-object/from16 v0, v17
++
++    iget v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++
++    add-int/lit8 v3, v3, 0x1
++
++    move-object/from16 v0, v17
++
++    iput v3, v0, Landroid/app/Instrumentation$ActivityMonitor;->mHits:I
++
++    invoke-virtual/range {v17 .. v17}, Landroid/app/Instrumentation$ActivityMonitor;->isBlocking()Z
++
++    move-result v3
++
++    if-eqz v3, :cond_206
++
++    if-ltz p6, :cond_1ff
++
++    invoke-virtual/range {v17 .. v17}, Landroid/app/Instrumentation$ActivityMonitor;->getResult()Landroid/app/Instrumentation$ActivityResult;
++
++    move-result-object v3
++
++    :goto_102
++    monitor-exit v5
++    :try_end_103
++    .catchall {:try_start_c5 .. :try_end_103} :catchall_221
++
++    :goto_103
++    return-object v3
++
++    :cond_104
++    :try_start_104
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with Fragments): Privacy service not obtained"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_10b
++    .catch Ljava/lang/Exception; {:try_start_104 .. :try_end_10b} :catch_10c
++
++    goto :goto_91
++
++    :catch_10c
++    move-exception v18
++
++    if-eqz p1, :cond_1f4
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with Fragments): Exception occurred handling intent for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v18
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_ba
++
++    :cond_12e
++    :try_start_12e
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with Fragments): Already had privacy service"
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    goto/16 :goto_91
++
++    :cond_137
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v3, v5}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++
++    move-result-object v20
++
++    if-nez v20, :cond_175
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with Fragments): Call allowed: No settings for package: "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v6, 0x0
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_ba
++
++    :cond_175
++    invoke-virtual/range {v20 .. v20}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v3
++
++    if-nez v3, :cond_1ae
++
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with Fragments): Call allowed: Settings permit "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/16 v16, 0x1
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v20 .. v20}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v6
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    goto/16 :goto_ba
++
++    :cond_1ae
++    const-string v3, "Instrumentation"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PDroid:Instrumentation:execStartActivity (with Fragments): Call denied: Settings deny "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v3, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++
++    move-object/from16 v22, p1
++
++    const/16 v16, 0x0
++
++    new-instance v3, Ljava/lang/Thread;
++
++    new-instance v5, Landroid/app/Instrumentation$3;
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v22
++
++    invoke-direct {v5, v0, v1}, Landroid/app/Instrumentation$3;-><init>(Landroid/app/Instrumentation;Landroid/content/Context;)V
++
++    invoke-direct {v3, v5}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
++
++    invoke-virtual {v3}, Ljava/lang/Thread;->start()V
++
++    move-object/from16 v0, p0
++
++    iget-object v3, v0, Landroid/app/Instrumentation;->mPrvSvc:Landroid/privacy/PrivacySettingsManager;
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {v20 .. v20}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v6
++
++    const-string/jumbo v7, "phoneCall"
++
++    const/4 v8, 0x0
++
++    invoke-virtual {v3, v5, v6, v7, v8}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    :try_end_1f2
++    .catch Ljava/lang/Exception; {:try_start_12e .. :try_end_1f2} :catch_10c
++
++    goto/16 :goto_ba
++
++    :cond_1f4
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with Fragments): Exception occurred handling intent for unknown package"
++
++    move-object/from16 v0, v18
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto/16 :goto_ba
++
++    :cond_1ff
++    const/4 v3, 0x0
++
++    goto/16 :goto_102
++
++    :cond_202
++    add-int/lit8 v19, v19, 0x1
++
++    goto/16 :goto_cf
++
++    :cond_206
++    :try_start_206
++    monitor-exit v5
++    :try_end_207
++    .catchall {:try_start_206 .. :try_end_207} :catchall_221
++
++    :cond_207
++    if-nez v16, :cond_224
++
++    :try_start_209
++    new-instance v3, Landroid/app/Instrumentation$ActivityResult;
++
++    move/from16 v0, p6
++
++    move-object/from16 v1, p5
++
++    invoke-direct {v3, v0, v1}, Landroid/app/Instrumentation$ActivityResult;-><init>(ILandroid/content/Intent;)V
++    :try_end_212
++    .catch Ljava/lang/Exception; {:try_start_209 .. :try_end_212} :catch_214
++
++    goto/16 :goto_103
++
++    :catch_214
++    move-exception v18
++
++    const-string v3, "Instrumentation"
++
++    const-string v5, "PDroid:Instrumentation:execStartActivity (with Fragments): Exception occurred while trying to create ActivityResult"
++
++    move-object/from16 v0, v18
++
++    invoke-static {v3, v5, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    const/4 v3, 0x0
++
++    goto/16 :goto_103
++
++    :catchall_221
++    move-exception v3
++
++    :try_start_222
++    monitor-exit v5
++    :try_end_223
++    .catchall {:try_start_222 .. :try_end_223} :catchall_221
++
++    throw v3
++
++    :cond_224
++    :try_start_224
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->migrateExtraStreamToClipData()Z
++
++    invoke-virtual/range {p5 .. p5}, Landroid/content/Intent;->prepareToLeaveProcess()V
++
++    invoke-static {}, Landroid/app/ActivityManagerNative;->getDefault()Landroid/app/IActivityManager;
++
++    move-result-object v3
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getBasePackageName()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual/range {p1 .. p1}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v6
++
++    move-object/from16 v0, p5
++
++    invoke-virtual {v0, v6}, Landroid/content/Intent;->resolveTypeIfNeeded(Landroid/content/ContentResolver;)Ljava/lang/String;
++
++    move-result-object v7
++
++    if-eqz p4, :cond_25b
++
++    move-object/from16 v0, p4
++
++    iget-object v9, v0, Landroid/app/Fragment;->mWho:Ljava/lang/String;
++
++    :goto_242
++    const/4 v11, 0x0
++
++    const/4 v12, 0x0
++
++    const/4 v13, 0x0
++
++    move-object/from16 v6, p5
++
++    move-object/from16 v8, p3
++
++    move/from16 v10, p6
++
++    move-object/from16 v14, p7
++
++    invoke-interface/range {v3 .. v14}, Landroid/app/IActivityManager;->startActivity(Landroid/app/IApplicationThread;Ljava/lang/String;Landroid/content/Intent;Ljava/lang/String;Landroid/os/IBinder;Ljava/lang/String;IILjava/lang/String;Landroid/os/ParcelFileDescriptor;Landroid/os/Bundle;)I
++
++    move-result v21
++
++    move/from16 v0, v21
++
++    move-object/from16 v1, p5
++
++    invoke-static {v0, v1}, Landroid/app/Instrumentation;->checkStartActivityResult(ILjava/lang/Object;)V
++    :try_end_258
++    .catch Landroid/os/RemoteException; {:try_start_224 .. :try_end_258} :catch_25d
++
++    :goto_258
++    const/4 v3, 0x0
++
++    goto/16 :goto_103
++
++    :cond_25b
++    const/4 v9, 0x0
++
++    goto :goto_242
++
++    :catch_25d
++    move-exception v3
+ 
+-    goto :goto_82
++    goto :goto_258
+ .end method
+ 
+ .method public finish(ILandroid/os/Bundle;)V
