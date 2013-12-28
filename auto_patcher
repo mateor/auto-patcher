@@ -1241,21 +1241,20 @@ context_editor (){
      if ( [[ ${#CORRECT_CONTEXT_MATCH[@]} -gt 0 ]] ); then
           for context_match in ${CORRECT_CONTEXT_MATCH[@]}; do
                # strips file name to return path
-               POSSIBLE_CONTEXT_DIR=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
-               break
+               context_match=$(echo $context_match | sed 's|\(.*\)/.*|\1|')
+               POSSIBLE_CONTEXT_DIR=( ${POSSIBLE_CONTEXT_DIR[@]} $context_match  )
           done
-     else
-          print_error "This rom needs updated patches! Please post log on github.com/mateor/auto-patcher" # ( NOT READY I DON"T GUESS) or look at mateor/patchScripts to create your own"
      fi
+     [[ ${#POSSIBLE_CONTEXT_DIR[@]} == 0 ]] && print_error "This rom needs updated patches!\n \t\t Please open an issue at github.com/mateor/auto-patcher!"
 
      # Remove the, unlikely but possibly, mismatched ContextImpl patches from all Queues
      FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//*'ContextImpl'*} )
      PATCH_QUEUE=( ${PATCH_QUEUE[@]//*'ContextImpl'*} )
 
      # Add the proper ContextImpl patches to the PATCH_QUEUE
-     print_to_log "There are ${#CORRECT_CONTEXT_MATCH[@]} Context match; Using: $POSSIBLE_CONTEXT_DIR"
+     print_to_log "We found ${#POSSIBLE_CONTEXT_DIR[@]} Context match: Using: ${POSSIBLE_CONTEXT_DIR[0]}"
      print_to_log ""
-     CONTEXT_PATCHES=($POSSIBLE_CONTEXT_DIR/*ContextImpl*)
+     CONTEXT_PATCHES=( ${POSSIBLE_CONTEXT_DIR[0]}/*ContextImpl* )
      for C in ${CONTEXT_PATCHES[@]}; do
           PATCH_QUEUE+=($C)
      done
