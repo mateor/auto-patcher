@@ -194,6 +194,7 @@
 # 2013.12.20. (v3.6.8) Fix problems created by 3.6.71 and remove a bunch of old patches
 # 2013.12.20. (v3.7.0) Fix autopatcher to work with Android 2.3 again.
 # 2013.12.20. (v3.7.2) Update slimrom, Cm for OpD
+# 2013.12.27. (v3.7.5) Add error catch for interactive patch failures; fix up CONTEXT_EDITOR function some.
 
 
 
@@ -201,9 +202,9 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.7.25"
+VERSION="v3.7.5"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20131226"
+PATCHES_VERSION="20131227"
 CURRENT_ANDROID="4.4.2"
 
 # pass variables to children
@@ -1991,7 +1992,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                print_to_log " ...applying ${INCREMENTAL[$k]} ..."
                $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${INCREMENTAL[$k]} >> ${JAR}.log 2>&1
           done
-          [[ $(grep FAILED ${JAR}.log) != "" ]] && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
+          ( [[ $(grep FAILED ${JAR}.log) != "" ]] || [[ $(grep "The text leading up to this was:" ${JAR}.log) != "" ]] ) && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
           cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
 
