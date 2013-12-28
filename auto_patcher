@@ -1222,18 +1222,18 @@ fi
 
 context_editor (){
      # This manages a troublesome class for OpD, ContextImpl. We create a new floating subclass, with
-     #   a different file name for different roms ($ContextImpl$45, or $46 or $41, etc).
+     #   a different index number for different roms ($ContextImpl$45, or $46 or $41, etc).
 
-     # Counts the number of ContextImpl patches in the decompiled stock jar. Easy enough.
-     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/ContextImpl*)
+     # Counts the number of ContextImpl$[0-9] patches in the decompiled stock jar. Easy enough.
+     CONTEXT_FILES=(tmp/system/framework/framework.jar.out/smali/android/app/*ContextImpl\$[0-9]*)
 
-     # NUMBER will become the OpD-added new subclass
-     CONTEXT_NUMBER=$((${#CONTEXT_FILES[@]} - 3))
-     print_to_log "Matching the created file: ContextImpl\$$CONTEXT_NUMBER"
+     # NUMBER+1 will become the OpD-added new subclass
+     CONTEXT_NUMBER=$((${#CONTEXT_FILES[@]} + 1))
+     print_to_log "Matching the created file: ContextImpl\$$CONTEXT_NUMBER for $P/$A/$RID"
 
-     # Only returns patches that create new files- it only matches patches with zero subtracted lines
-     CORRECT_CONTEXT_MATCH=( $(find patches/$P/$A/$RID -type f -name *ContextImpl* -and -name *"$CONTEXT_NUMBER"*) )
-     for c in ${CONTEXT_MATCH[@]}; do
+     # Only returns patches that create new files- This only matches patches with zero subtracted lines
+     FIRST_CONTEXT_MATCH=( $(find patches/$P/$A/$RID -type f -name *ContextImpl* -and -name *"$CONTEXT_NUMBER"*) )
+     for c in ${FIRST_CONTEXT_MATCH[@]}; do
           CORRECT_CONTEXT_MATCH=( ${CORRECT_CONTEXT_MATCH[@]} $(grep -HL '^-    ' $c) )
      done
 
@@ -1285,7 +1285,7 @@ patch_matcher () {
           $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < $p 2>&1 > MATCH.log
           if ( [[ $(grep FAILED MATCH.log) = "" ]] ); then
                     # This below is temporary debug logging.
-                    print_to_log "Succesful match found! Swapping $p for $FAILED_PATCH!!"
+                    print_to_log "Succesful match found! Swapping $p for $FAILED_FILE!!"
                     PATCH_QUEUE=( ${PATCH_QUEUE[@]//$FAILED_PATCH} )
                     PATCH_QUEUE+=( "$p" )
                     FAILED_PATCH_QUEUE=( ${FAILED_PATCH_QUEUE[@]//$FAILED_PATCH} )
@@ -1975,7 +1975,7 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                          print_error $MATCH_PATTERN"patch in $JAR cannot be remedied"
                     else
                          print_to_log "We are substituting a patchable version of ${MATCH_PATTERN}smali"
-                         \mv -v  "$PROVISIONAL" tmp/${FILE}.out/${PROVISIONAL##*.out/} >> "$LOG" 2>&1 && print_to_log "... failed patch sucessfully resolved ..."
+                         \mv "$PROVISIONAL" tmp/${FILE}.out/${PROVISIONAL##*.out/} >> "$LOG" 2>&1 && print_to_log "... failed patch sucessfully resolved ..."
                          patch_matcher
                     fi
                done
