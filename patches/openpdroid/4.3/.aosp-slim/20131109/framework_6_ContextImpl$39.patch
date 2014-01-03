@@ -1,0 +1,50 @@
+diff -Npruw stock-framework/smali/android/app/ContextImpl$39.smali pdroid-framework/smali/android/app/ContextImpl$39.smali
+--- stock-framework/smali/android/app/ContextImpl$39.smali	2014-01-02 21:10:17.684311321 -0600
++++ pdroid-framework/smali/android/app/ContextImpl$39.smali	2014-01-02 21:10:32.768310926 -0600
+@@ -25,22 +25,38 @@
+ 
+ 
+ # virtual methods
+-.method public createService(Landroid/app/ContextImpl;)Ljava/lang/Object;
+-    .registers 5
++.method public getService(Landroid/app/ContextImpl;)Ljava/lang/Object;
++    .registers 6
+ 
+-    const-string/jumbo v2, "user"
+-
+-    invoke-static {v2}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
++    #getter for: Landroid/app/ContextImpl;->mDisplay:Landroid/view/Display;
++    invoke-static {p1}, Landroid/app/ContextImpl;->access$100(Landroid/app/ContextImpl;)Landroid/view/Display;
+ 
+     move-result-object v0
+ 
+-    invoke-static {v0}, Landroid/os/IUserManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/os/IUserManager;
++    if-nez v0, :cond_17
++
++    invoke-virtual {p1}, Landroid/app/ContextImpl;->getOuterContext()Landroid/content/Context;
++
++    move-result-object v2
++
++    const-string v3, "display"
++
++    invoke-virtual {v2, v3}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+ 
+     move-result-object v1
+ 
+-    new-instance v2, Landroid/os/UserManager;
++    check-cast v1, Landroid/hardware/display/DisplayManager;
++
++    const/4 v2, 0x0
++
++    invoke-virtual {v1, v2}, Landroid/hardware/display/DisplayManager;->getDisplay(I)Landroid/view/Display;
++
++    move-result-object v0
++
++    :cond_17
++    new-instance v2, Landroid/view/WindowManagerImpl;
+ 
+-    invoke-direct {v2, p1, v1}, Landroid/os/UserManager;-><init>(Landroid/content/Context;Landroid/os/IUserManager;)V
++    invoke-direct {v2, v0}, Landroid/view/WindowManagerImpl;-><init>(Landroid/view/Display;)V
+ 
+     return-object v2
+ .end method
