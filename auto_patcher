@@ -203,9 +203,9 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.7.63"
+VERSION="v3.7.67"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20140104"
+PATCHES_VERSION="20140108"
 CURRENT_ANDROID="4.4.2"
 
 # pass variables to children
@@ -215,7 +215,7 @@ set -a
 LANG=C
 CYGWIN=false
 
-# unused for now...for experiments with "-s" flag and also to test various smali binaries.
+# we use baksmali-2.0 for Android 4.4 and greater- see proberom funtion.
 BAKSMALI_BINARY=baksmali.jar
 SMALI_BINARY=smali.jar
 declare -a MODS_LIST
@@ -229,6 +229,7 @@ declare -a PATCH_DATE_LIST
 # @.aosp-slim: SlimRom             @.aosp-pac: PAC-man
 # @.aosp-ever: Evervolv            @pa: ParanoidAndroid (official jellybean branch only for now)
 # @.aosp-root: RootBox             @aosp-oni: OmniRom
+# @.aosp-vanir: VanirAOSP
 declare -a AVAILABLE_ROMTYPES=('aokp' 'aosp' 'cm' 'pa' '.aosp-slim' '.aosp-pac' '.aosp-ever' '.aosp-vanir' '.aosp-root' '.aosp-omni')
 
 # Config file: For now hosting AUTO_UPDATE and PRODUCTION(currently unused). Not under version control.
@@ -1392,7 +1393,7 @@ echo "ROM=  $ROM" >> "$LOG"
 echo "ROMX= $ROMX" >> "$LOG"
 
 
-# Auto-Update                           # excluding ApG/cygwin for now until I talk with kobik.
+# Auto-Update
 # To turn off auto updating, set AUTO_UPDATE in .config to false
 
 
@@ -1453,7 +1454,6 @@ if ( [[ -n "$AUTO_PATCHER_WAS_UPDATED" ]] || [ -f *".updated.log" ] ); then
           sh batch.sh >> /dev/null 2>> "$LOG"
      fi
 fi
-
 
 
 # If program was updated, merge the logs
