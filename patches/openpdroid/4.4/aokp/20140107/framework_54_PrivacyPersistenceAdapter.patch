@@ -1,0 +1,5166 @@
+diff -Npruw stock-framework/smali/android/privacy/PrivacyPersistenceAdapter.smali pdroid-framework/smali/android/privacy/PrivacyPersistenceAdapter.smali
+--- stock-framework/smali/android/privacy/PrivacyPersistenceAdapter.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-framework/smali/android/privacy/PrivacyPersistenceAdapter.smali	2014-01-07 12:34:39.619024287 -0600
+@@ -0,0 +1,5162 @@
++.class public final Landroid/privacy/PrivacyPersistenceAdapter;
++.super Ljava/lang/Object;
++.source "PrivacyPersistenceAdapter.java"
++
++
++# static fields
++.field private static final CREATE_TABLE_ALLOWED_CONTACTS:Ljava/lang/String; = "CREATE TABLE IF NOT EXISTS allowed_contacts ( settings_id, contact_id, PRIMARY KEY(settings_id, contact_id) );"
++
++.field private static final CREATE_TABLE_MAP:Ljava/lang/String; = "CREATE TABLE IF NOT EXISTS map ( name TEXT PRIMARY KEY, value TEXT );"
++
++.field private static final CREATE_TABLE_SETTINGS:Ljava/lang/String; = "CREATE TABLE IF NOT EXISTS settings (  _id INTEGER PRIMARY KEY AUTOINCREMENT,  packageName TEXT,  uid INTEGER,  deviceIdSetting INTEGER,  deviceId TEXT,  line1NumberSetting INTEGER,  line1Number TEXT,  locationGpsSetting INTEGER,  locationGpsLat TEXT,  locationGpsLon TEXT,  locationNetworkSetting INTEGER,  locationNetworkLat TEXT,  locationNetworkLon TEXT,  networkInfoSetting INTEGER,  simInfoSetting INTEGER,  simSerialNumberSetting INTEGER,  simSerialNumber TEXT,  subscriberIdSetting INTEGER,  subscriberId TEXT,  accountsSetting INTEGER,  accountsAuthTokensSetting INTEGER,  outgoingCallsSetting INTEGER,  incomingCallsSetting INTEGER,  contactsSetting INTEGER,  calendarSetting INTEGER,  mmsSetting INTEGER,  smsSetting INTEGER,  callLogSetting INTEGER,  bookmarksSetting INTEGER,  systemLogsSetting INTEGER,  externalStorageSetting INTEGER,  cameraSetting INTEGER,  recordAudioSetting INTEGER,  notificationSetting INTEGER,  intentBootCompletedSetting INTEGER, smsSendSetting INTEGER, phoneCallSetting INTEGER, ipTableProtectSetting INTEGER, iccAccessSetting INTEGER, addOnManagementSetting INTEGER, androidIdSetting INTEGER, androidId TEXT, wifiInfoSetting INTEGER, switchConnectivitySetting INTEGER, sendMmsSetting INTEGER, forceOnlineState INTEGER, switchWifiStateSetting INTEGER);"
++
++.field private static final DATABASE_FIELDS:[Ljava/lang/String;
++
++.field private static final DATABASE_FILE:Ljava/lang/String; = "/data/system/privacy.db"
++
++.field private static final DATABASE_VERSION:I = 0x4
++
++.field private static final DEFAULT_CACHE_ENTRIES:I = 0x14
++
++.field public static final DUMMY_UID:I = -0x1
++
++.field private static final INSERT_ENABLED:Ljava/lang/String; = "INSERT OR REPLACE INTO map (name, value) VALUES (\"enabled\", \"1\");"
++
++.field private static final INSERT_NOTIFICATIONS_ENABLED:Ljava/lang/String; = "INSERT OR REPLACE INTO map (name, value) VALUES (\"notifications_enabled\", \"1\");"
++
++.field private static final INSERT_VERSION:Ljava/lang/String; = "INSERT OR REPLACE INTO map (name, value) VALUES (\"db_version\", 4);"
++
++.field private static final LOG_CACHE:Z = false
++
++.field private static final LOG_LOCKING:Z = false
++
++.field private static final LOG_OPEN_AND_CLOSE:Z = false
++
++.field private static final MINIMUM_CACHE_ENTRIES:I = 0x0
++
++.field private static final RETRY_QUERY_COUNT:I = 0x5
++
++.field public static final SETTINGS_DIRECTORY:Ljava/lang/String; = "/data/system/privacy"
++
++.field public static final SETTING_DB_VERSION:Ljava/lang/String; = "db_version"
++
++.field public static final SETTING_ENABLED:Ljava/lang/String; = "enabled"
++
++.field public static final SETTING_NOTIFICATIONS_ENABLED:Ljava/lang/String; = "notifications_enabled"
++
++.field private static final TABLE_ALLOWED_CONTACTS:Ljava/lang/String; = "allowed_contacts"
++
++.field private static final TABLE_MAP:Ljava/lang/String; = "map"
++
++.field private static final TABLE_SETTINGS:Ljava/lang/String; = "settings"
++
++.field private static final TABLE_VERSION:Ljava/lang/String; = "version"
++
++.field private static final TAG:Ljava/lang/String; = "PrivacyPersistenceAdapter"
++
++.field public static final VALUE_FALSE:Ljava/lang/String; = "0"
++
++.field public static final VALUE_TRUE:Ljava/lang/String; = "1"
++
++.field private static final autoCloseDb:Z = false
++
++.field public static volatile sDbAccessThreads:Ljava/lang/Integer; = null
++
++.field private static sDbLock:Ljava/util/concurrent/locks/ReadWriteLock; = null
++
++.field public static volatile sDbVersion:I = 0x0
++
++.field private static settingsCache:Landroid/util/LruCache; = null
++    .annotation system Ldalvik/annotation/Signature;
++        value = {
++            "Landroid/util/LruCache",
++            "<",
++            "Ljava/lang/String;",
++            "Landroid/privacy/PrivacySettingsStub;",
++            ">;"
++        }
++    .end annotation
++.end field
++
++.field private static final useCache:Z = true
++
++
++# instance fields
++.field private mContext:Landroid/content/Context;
++
++.field private mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++
++# direct methods
++.method static constructor <clinit>()V
++    .registers 4
++
++    const/16 v3, 0x14
++
++    const/4 v2, 0x0
++
++    invoke-static {v2}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v0
++
++    sput-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    new-instance v0, Ljava/util/concurrent/locks/ReentrantReadWriteLock;
++
++    invoke-direct {v0}, Ljava/util/concurrent/locks/ReentrantReadWriteLock;-><init>()V
++
++    sput-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    new-instance v0, Landroid/util/LruCache;
++
++    invoke-direct {v0, v3}, Landroid/util/LruCache;-><init>(I)V
++
++    sput-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->settingsCache:Landroid/util/LruCache;
++
++    const/16 v0, 0x2f
++
++    new-array v0, v0, [Ljava/lang/String;
++
++    const-string v1, "_id"
++
++    aput-object v1, v0, v2
++
++    const/4 v1, 0x1
++
++    const-string/jumbo v2, "packageName"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x2
++
++    const-string/jumbo v2, "uid"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x3
++
++    const-string v2, "deviceIdSetting"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x4
++
++    const-string v2, "deviceId"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x5
++
++    const-string v2, "line1NumberSetting"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x6
++
++    const-string v2, "line1Number"
++
++    aput-object v2, v0, v1
++
++    const/4 v1, 0x7
++
++    const-string v2, "locationGpsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x8
++
++    const-string v2, "locationGpsLat"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x9
++
++    const-string v2, "locationGpsLon"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xa
++
++    const-string v2, "locationNetworkSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xb
++
++    const-string v2, "locationNetworkLat"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xc
++
++    const-string v2, "locationNetworkLon"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xd
++
++    const-string/jumbo v2, "networkInfoSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xe
++
++    const-string/jumbo v2, "simInfoSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0xf
++
++    const-string/jumbo v2, "simSerialNumberSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x10
++
++    const-string/jumbo v2, "simSerialNumber"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x11
++
++    const-string/jumbo v2, "subscriberIdSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x12
++
++    const-string/jumbo v2, "subscriberId"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x13
++
++    const-string v2, "accountsSetting"
++
++    aput-object v2, v0, v1
++
++    const-string v1, "accountsAuthTokensSetting"
++
++    aput-object v1, v0, v3
++
++    const/16 v1, 0x15
++
++    const-string/jumbo v2, "outgoingCallsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x16
++
++    const-string v2, "incomingCallsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x17
++
++    const-string v2, "contactsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x18
++
++    const-string v2, "calendarSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x19
++
++    const-string v2, "mmsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x1a
++
++    const-string/jumbo v2, "smsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x1b
++
++    const-string v2, "callLogSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x1c
++
++    const-string v2, "bookmarksSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x1d
++
++    const-string/jumbo v2, "systemLogsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x1e
++
++    const-string v2, "externalStorageSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x1f
++
++    const-string v2, "cameraSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x20
++
++    const-string/jumbo v2, "recordAudioSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x21
++
++    const-string/jumbo v2, "notificationSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x22
++
++    const-string v2, "intentBootCompletedSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x23
++
++    const-string/jumbo v2, "smsSendSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x24
++
++    const-string/jumbo v2, "phoneCallSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x25
++
++    const-string v2, "ipTableProtectSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x26
++
++    const-string v2, "iccAccessSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x27
++
++    const-string v2, "addOnManagementSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x28
++
++    const-string v2, "androidIdSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x29
++
++    const-string v2, "androidId"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x2a
++
++    const-string/jumbo v2, "wifiInfoSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x2b
++
++    const-string/jumbo v2, "switchConnectivitySetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x2c
++
++    const-string/jumbo v2, "sendMmsSetting"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x2d
++
++    const-string v2, "forceOnlineState"
++
++    aput-object v2, v0, v1
++
++    const/16 v1, 0x2e
++
++    const-string/jumbo v2, "switchWifiStateSetting"
++
++    aput-object v2, v0, v1
++
++    sput-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->DATABASE_FIELDS:[Ljava/lang/String;
++
++    return-void
++.end method
++
++.method public constructor <init>(Landroid/content/Context;)V
++    .registers 4
++    .param p1    # Landroid/content/Context;
++
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++
++    iput-object p1, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mContext:Landroid/content/Context;
++
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/data/system/"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->canWrite()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_6c
++
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/data/system/privacy.db"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->exists()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_2c
++
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/data/system/privacy"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->exists()Z
++
++    move-result v0
++
++    if-nez v0, :cond_5e
++
++    :cond_2c
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->lock()V
++
++    :try_start_35
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/data/system/privacy.db"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->exists()Z
++
++    move-result v0
++
++    if-nez v0, :cond_45
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->createDatabase()V
++
++    :cond_45
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/data/system/privacy"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->exists()Z
++
++    move-result v0
++
++    if-nez v0, :cond_55
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->createSettingsDir()V
++    :try_end_55
++    .catchall {:try_start_35 .. :try_end_55} :catchall_6d
++
++    :cond_55
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    :cond_5e
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDbVersion()I
++
++    move-result v0
++
++    sput v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++
++    sget v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++
++    const/4 v1, 0x4
++
++    if-ge v0, v1, :cond_6c
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->upgradeDatabase()V
++
++    :cond_6c
++    return-void
++
++    :catchall_6d
++    move-exception v0
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v1
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v0
++.end method
++
++.method private closeIdleDatabase()V
++    .registers 3
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v1
++
++    :try_start_3
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v0}, Ljava/lang/Integer;->intValue()I
++
++    move-result v0
++
++    add-int/lit8 v0, v0, -0x1
++
++    invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v0
++
++    sput-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v0}, Ljava/lang/Integer;->intValue()I
++
++    move-result v0
++
++    if-nez v0, :cond_27
++
++    iget-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++    if-eqz v0, :cond_27
++
++    iget-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_27
++
++    :cond_27
++    monitor-exit v1
++
++    return-void
++
++    :catchall_29
++    move-exception v0
++
++    monitor-exit v1
++    :try_end_2b
++    .catchall {:try_start_3 .. :try_end_2b} :catchall_29
++
++    throw v0
++.end method
++
++.method private createDatabase()V
++    .registers 6
++
++    const-string v2, "PrivacyPersistenceAdapter"
++
++    const-string v3, "createDatabase - creating privacy database file"
++
++    invoke-static {v2, v3}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
++
++    :try_start_7
++    const-string v2, "/data/system/privacy.db"
++
++    const/4 v3, 0x0
++
++    const/high16 v4, 0x10000000
++
++    invoke-static {v2, v3, v4}, Landroid/database/sqlite/SQLiteDatabase;->openDatabase(Ljava/lang/String;Landroid/database/sqlite/SQLiteDatabase$CursorFactory;I)Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v0
++
++    const-string v2, "PrivacyPersistenceAdapter"
++
++    const-string v3, "createDatabase - creating privacy database"
++
++    invoke-static {v2, v3}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
++
++    const-string v2, "CREATE TABLE IF NOT EXISTS settings (  _id INTEGER PRIMARY KEY AUTOINCREMENT,  packageName TEXT,  uid INTEGER,  deviceIdSetting INTEGER,  deviceId TEXT,  line1NumberSetting INTEGER,  line1Number TEXT,  locationGpsSetting INTEGER,  locationGpsLat TEXT,  locationGpsLon TEXT,  locationNetworkSetting INTEGER,  locationNetworkLat TEXT,  locationNetworkLon TEXT,  networkInfoSetting INTEGER,  simInfoSetting INTEGER,  simSerialNumberSetting INTEGER,  simSerialNumber TEXT,  subscriberIdSetting INTEGER,  subscriberId TEXT,  accountsSetting INTEGER,  accountsAuthTokensSetting INTEGER,  outgoingCallsSetting INTEGER,  incomingCallsSetting INTEGER,  contactsSetting INTEGER,  calendarSetting INTEGER,  mmsSetting INTEGER,  smsSetting INTEGER,  callLogSetting INTEGER,  bookmarksSetting INTEGER,  systemLogsSetting INTEGER,  externalStorageSetting INTEGER,  cameraSetting INTEGER,  recordAudioSetting INTEGER,  notificationSetting INTEGER,  intentBootCompletedSetting INTEGER, smsSendSetting INTEGER, phoneCallSetting INTEGER, ipTableProtectSetting INTEGER, iccAccessSetting INTEGER, addOnManagementSetting INTEGER, androidIdSetting INTEGER, androidId TEXT, wifiInfoSetting INTEGER, switchConnectivitySetting INTEGER, sendMmsSetting INTEGER, forceOnlineState INTEGER, switchWifiStateSetting INTEGER);"
++
++    invoke-virtual {v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v2, "CREATE TABLE IF NOT EXISTS allowed_contacts ( settings_id, contact_id, PRIMARY KEY(settings_id, contact_id) );"
++
++    invoke-virtual {v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v2, "CREATE TABLE IF NOT EXISTS map ( name TEXT PRIMARY KEY, value TEXT );"
++
++    invoke-virtual {v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v2, "INSERT OR REPLACE INTO map (name, value) VALUES (\"db_version\", 4);"
++
++    invoke-virtual {v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v2, "INSERT OR REPLACE INTO map (name, value) VALUES (\"enabled\", \"1\");"
++
++    invoke-virtual {v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v2, "INSERT OR REPLACE INTO map (name, value) VALUES (\"notifications_enabled\", \"1\");"
++
++    invoke-virtual {v0, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    if-eqz v0, :cond_40
++
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v2
++
++    if-eqz v2, :cond_40
++
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->close()V
++    :try_end_40
++    .catch Landroid/database/SQLException; {:try_start_7 .. :try_end_40} :catch_41
++
++    :cond_40
++    :goto_40
++    return-void
++
++    :catch_41
++    move-exception v1
++
++    const-string v2, "PrivacyPersistenceAdapter"
++
++    const-string v3, "createDatabase - failed to create privacy database"
++
++    invoke-static {v2, v3, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_40
++.end method
++
++.method private createSettingsDir()V
++    .registers 5
++
++    const/4 v3, 0x1
++
++    const/4 v2, 0x0
++
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/data/system/privacy/"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
++
++    invoke-virtual {v0, v3, v2}, Ljava/io/File;->setReadable(ZZ)Z
++
++    invoke-virtual {v0, v3, v2}, Ljava/io/File;->setExecutable(ZZ)Z
++
++    return-void
++.end method
++
++.method private deleteRecursive(Ljava/io/File;)V
++    .registers 7
++    .param p1    # Ljava/io/File;
++
++    invoke-virtual {p1}, Ljava/io/File;->isDirectory()Z
++
++    move-result v4
++
++    if-eqz v4, :cond_16
++
++    invoke-virtual {p1}, Ljava/io/File;->listFiles()[Ljava/io/File;
++
++    move-result-object v0
++
++    array-length v3, v0
++
++    const/4 v2, 0x0
++
++    :goto_c
++    if-ge v2, v3, :cond_16
++
++    aget-object v1, v0, v2
++
++    invoke-direct {p0, v1}, Landroid/privacy/PrivacyPersistenceAdapter;->deleteRecursive(Ljava/io/File;)V
++
++    add-int/lit8 v2, v2, 0x1
++
++    goto :goto_c
++
++    :cond_16
++    invoke-virtual {p1}, Ljava/io/File;->delete()Z
++
++    return-void
++.end method
++
++.method private declared-synchronized getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++    .registers 4
++
++    monitor-enter p0
++
++    :try_start_1
++    iget-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++    if-eqz v0, :cond_15
++
++    iget-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_15
++
++    iget-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->isReadOnly()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_1f
++
++    :cond_15
++    const-string v0, "/data/system/privacy.db"
++
++    const/4 v1, 0x0
++
++    const/4 v2, 0x0
++
++    invoke-static {v0, v1, v2}, Landroid/database/sqlite/SQLiteDatabase;->openDatabase(Ljava/lang/String;Landroid/database/sqlite/SQLiteDatabase$CursorFactory;I)Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v0
++
++    iput-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++
++    :cond_1f
++    iget-object v0, p0, Landroid/privacy/PrivacyPersistenceAdapter;->mDb:Landroid/database/sqlite/SQLiteDatabase;
++    :try_end_21
++    .catchall {:try_start_1 .. :try_end_21} :catchall_23
++
++    monitor-exit p0
++
++    return-object v0
++
++    :catchall_23
++    move-exception v0
++
++    monitor-exit p0
++
++    throw v0
++.end method
++
++.method private getDbVersion()I
++    .registers 6
++
++    const/4 v2, 0x1
++
++    const-string v3, "db_version"
++
++    invoke-virtual {p0, v3}, Landroid/privacy/PrivacyPersistenceAdapter;->getValue(Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v1
++
++    if-nez v1, :cond_11
++
++    const-string v3, "PrivacyPersistenceAdapter"
++
++    const-string v4, "PrivacyPersistenceAdapter:getDbVersion: getValue returned null; assuming version = 1"
++
++    invoke-static {v3, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    :goto_10
++    return v2
++
++    :cond_11
++    :try_start_11
++    invoke-static {v1}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
++    :try_end_14
++    .catch Ljava/lang/Exception; {:try_start_11 .. :try_end_14} :catch_16
++
++    move-result v2
++
++    goto :goto_10
++
++    :catch_16
++    move-exception v0
++
++    const-string v3, "PrivacyPersistenceAdapter"
++
++    const-string v4, "PrivacyPersistenceAdapter:getDbVersion: failed to parse database version; returning 1"
++
++    invoke-static {v3, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    goto :goto_10
++.end method
++
++.method private query(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++    .registers 16
++    .param p1    # Landroid/database/sqlite/SQLiteDatabase;
++    .param p2    # Ljava/lang/String;
++    .param p3    # [Ljava/lang/String;
++    .param p4    # Ljava/lang/String;
++    .param p5    # [Ljava/lang/String;
++    .param p6    # Ljava/lang/String;
++    .param p7    # Ljava/lang/String;
++    .param p8    # Ljava/lang/String;
++    .param p9    # Ljava/lang/String;
++    .annotation system Ldalvik/annotation/Throws;
++        value = {
++            Ljava/lang/Exception;
++        }
++    .end annotation
++
++    const/4 v0, 0x0
++
++    const/4 v3, 0x0
++
++    const/4 v2, 0x0
++
++    :goto_3
++    if-nez v3, :cond_27
++
++    const/4 v4, 0x5
++
++    if-ge v2, v4, :cond_27
++
++    if-eqz v0, :cond_d
++
++    :try_start_a
++    invoke-interface {v0}, Landroid/database/Cursor;->close()V
++
++    :cond_d
++    invoke-virtual/range {p1 .. p9}, Landroid/database/sqlite/SQLiteDatabase;->query(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++    :try_end_10
++    .catch Ljava/lang/IllegalStateException; {:try_start_a .. :try_end_10} :catch_15
++
++    move-result-object v0
++
++    const/4 v3, 0x1
++
++    :goto_12
++    add-int/lit8 v2, v2, 0x1
++
++    goto :goto_3
++
++    :catch_15
++    move-exception v1
++
++    const/4 v3, 0x0
++
++    if-eqz p1, :cond_22
++
++    invoke-virtual {p1}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v4
++
++    if-eqz v4, :cond_22
++
++    invoke-virtual {p1}, Landroid/database/sqlite/SQLiteDatabase;->close()V
++
++    :cond_22
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object p1
++
++    goto :goto_12
++
++    :cond_27
++    if-nez v3, :cond_32
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string/jumbo v5, "query - failed to execute query on the DB"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_32
++    return-object v0
++.end method
++
++.method private rawQuery(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;)Landroid/database/Cursor;
++    .registers 9
++    .param p1    # Landroid/database/sqlite/SQLiteDatabase;
++    .param p2    # Ljava/lang/String;
++    .annotation system Ldalvik/annotation/Throws;
++        value = {
++            Ljava/lang/Exception;
++        }
++    .end annotation
++
++    const/4 v0, 0x0
++
++    const/4 v3, 0x0
++
++    const/4 v2, 0x0
++
++    :goto_3
++    if-nez v3, :cond_28
++
++    const/4 v4, 0x5
++
++    if-ge v2, v4, :cond_28
++
++    if-eqz v0, :cond_d
++
++    :try_start_a
++    invoke-interface {v0}, Landroid/database/Cursor;->close()V
++
++    :cond_d
++    const/4 v4, 0x0
++
++    invoke-virtual {p1, p2, v4}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;
++    :try_end_11
++    .catch Ljava/lang/IllegalStateException; {:try_start_a .. :try_end_11} :catch_16
++
++    move-result-object v0
++
++    const/4 v3, 0x1
++
++    :goto_13
++    add-int/lit8 v2, v2, 0x1
++
++    goto :goto_3
++
++    :catch_16
++    move-exception v1
++
++    const/4 v3, 0x0
++
++    if-eqz p1, :cond_23
++
++    invoke-virtual {p1}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v4
++
++    if-eqz v4, :cond_23
++
++    invoke-virtual {p1}, Landroid/database/sqlite/SQLiteDatabase;->close()V
++
++    :cond_23
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object p1
++
++    goto :goto_13
++
++    :cond_28
++    if-nez v3, :cond_33
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string/jumbo v5, "query - failed to execute query on the DB"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_33
++    return-object v0
++.end method
++
++.method private upgradeDatabase()V
++    .registers 18
++
++    sget v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++
++    const/4 v15, 0x4
++
++    if-ge v14, v15, :cond_31
++
++    const-string v14, "PrivacyPersistenceAdapter"
++
++    new-instance v15, Ljava/lang/StringBuilder;
++
++    invoke-direct {v15}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v16, "PrivacyPersistenceAdapter:upgradeDatabase - upgrading DB from version "
++
++    invoke-virtual/range {v15 .. v16}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v15
++
++    sget v16, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++
++    invoke-virtual/range {v15 .. v16}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v15
++
++    const-string v16, " to "
++
++    invoke-virtual/range {v15 .. v16}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v15
++
++    const/16 v16, 0x4
++
++    invoke-virtual/range {v15 .. v16}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v15
++
++    invoke-virtual {v15}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v15
++
++    invoke-static {v14, v15}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v3, 0x0
++
++    sget v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++
++    packed-switch v14, :pswitch_data_12c
++
++    :cond_31
++    :goto_31
++    return-void
++
++    :pswitch_32
++    :try_start_32
++    sget-object v15, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v15
++    :try_end_35
++    .catch Landroid/database/SQLException; {:try_start_32 .. :try_end_35} :catch_e6
++    .catchall {:try_start_32 .. :try_end_35} :catchall_11e
++
++    :try_start_35
++    sget-object v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v14}, Ljava/lang/Integer;->intValue()I
++
++    move-result v14
++
++    add-int/lit8 v14, v14, 0x1
++
++    invoke-static {v14}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v14
++
++    sput-object v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v15
++    :try_end_46
++    .catchall {:try_start_35 .. :try_end_46} :catchall_e3
++
++    :try_start_46
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v3
++
++    if-eqz v3, :cond_109
++
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v14
++
++    if-eqz v14, :cond_109
++
++    sget-object v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v14}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v14
++
++    invoke-interface {v14}, Ljava/util/concurrent/locks/Lock;->lock()V
++    :try_end_5b
++    .catch Landroid/database/SQLException; {:try_start_46 .. :try_end_5b} :catch_e6
++    .catchall {:try_start_46 .. :try_end_5b} :catchall_11e
++
++    :try_start_5b
++    sget v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++
++    const/4 v15, 0x4
++
++    if-ge v14, v15, :cond_100
++
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->beginTransaction()V
++    :try_end_63
++    .catchall {:try_start_5b .. :try_end_63} :catchall_113
++
++    :try_start_63
++    const-string v14, "DROP TABLE IF EXISTS version;"
++
++    invoke-virtual {v3, v14}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v14, "CREATE TABLE IF NOT EXISTS allowed_contacts ( settings_id, contact_id, PRIMARY KEY(settings_id, contact_id) );"
++
++    invoke-virtual {v3, v14}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v14, "CREATE TABLE IF NOT EXISTS map ( name TEXT PRIMARY KEY, value TEXT );"
++
++    invoke-virtual {v3, v14}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v14, "INSERT OR REPLACE INTO map (name, value) VALUES (\"db_version\", 4);"
++
++    invoke-virtual {v3, v14}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v14, "INSERT OR REPLACE INTO map (name, value) VALUES (\"enabled\", \"1\");"
++
++    invoke-virtual {v3, v14}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    const-string v14, "INSERT OR REPLACE INTO map (name, value) VALUES (\"notifications_enabled\", \"1\");"
++
++    invoke-virtual {v3, v14}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V
++
++    invoke-virtual/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->purgeSettings()Z
++
++    new-instance v11, Ljava/io/File;
++
++    const-string v14, "/data/system/privacy"
++
++    invoke-direct {v11, v14}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v11}, Ljava/io/File;->listFiles()[Ljava/io/File;
++
++    move-result-object v1
++
++    array-length v7, v1
++
++    const/4 v5, 0x0
++
++    move v6, v5
++
++    :goto_92
++    if-ge v6, v7, :cond_f7
++
++    aget-object v10, v1, v6
++
++    invoke-virtual {v10}, Ljava/io/File;->listFiles()[Ljava/io/File;
++
++    move-result-object v2
++
++    array-length v8, v2
++
++    const/4 v5, 0x0
++
++    :goto_9c
++    if-ge v5, v8, :cond_f3
++
++    aget-object v13, v2, v5
++
++    invoke-virtual {v13}, Ljava/io/File;->isDirectory()Z
++
++    move-result v14
++
++    if-eqz v14, :cond_e0
++
++    invoke-virtual {v13}, Ljava/io/File;->listFiles()[Ljava/io/File;
++
++    move-result-object v12
++
++    const/4 v14, 0x0
++
++    aget-object v14, v12, v14
++
++    if-eqz v14, :cond_e0
++
++    new-instance v9, Ljava/io/File;
++
++    new-instance v14, Ljava/lang/StringBuilder;
++
++    invoke-direct {v14}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {v14, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
++
++    move-result-object v14
++
++    const-string v15, "/"
++
++    invoke-virtual {v14, v15}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v14
++
++    const/4 v15, 0x0
++
++    aget-object v15, v12, v15
++
++    invoke-virtual {v15}, Ljava/io/File;->getName()Ljava/lang/String;
++
++    move-result-object v15
++
++    invoke-virtual {v14, v15}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v14
++
++    invoke-virtual {v14}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v14
++
++    invoke-direct {v9, v14}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v9}, Ljava/io/File;->delete()Z
++
++    const/4 v14, 0x0
++
++    aget-object v14, v12, v14
++
++    invoke-virtual {v14, v9}, Ljava/io/File;->renameTo(Ljava/io/File;)Z
++
++    move-object/from16 v0, p0
++
++    invoke-direct {v0, v13}, Landroid/privacy/PrivacyPersistenceAdapter;->deleteRecursive(Ljava/io/File;)V
++    :try_end_e0
++    .catchall {:try_start_63 .. :try_end_e0} :catchall_10e
++
++    :cond_e0
++    add-int/lit8 v5, v5, 0x1
++
++    goto :goto_9c
++
++    :catchall_e3
++    move-exception v14
++
++    :try_start_e4
++    monitor-exit v15
++    :try_end_e5
++    .catchall {:try_start_e4 .. :try_end_e5} :catchall_e3
++
++    :try_start_e5
++    throw v14
++    :try_end_e6
++    .catch Landroid/database/SQLException; {:try_start_e5 .. :try_end_e6} :catch_e6
++    .catchall {:try_start_e5 .. :try_end_e6} :catchall_11e
++
++    :catch_e6
++    move-exception v4
++
++    :try_start_e7
++    const-string v14, "PrivacyPersistenceAdapter"
++
++    const-string v15, "PrivacyPersistenceAdapter:upgradeDatabase: SQLException occurred performing database upgrade"
++
++    invoke-static {v14, v15, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_ee
++    .catchall {:try_start_e7 .. :try_end_ee} :catchall_11e
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto/16 :goto_31
++
++    :cond_f3
++    add-int/lit8 v5, v6, 0x1
++
++    move v6, v5
++
++    goto :goto_92
++
++    :cond_f7
++    :try_start_f7
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->setTransactionSuccessful()V
++
++    const/4 v14, 0x4
++
++    sput v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbVersion:I
++    :try_end_fd
++    .catchall {:try_start_f7 .. :try_end_fd} :catchall_10e
++
++    :try_start_fd
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++    :try_end_100
++    .catchall {:try_start_fd .. :try_end_100} :catchall_113
++
++    :cond_100
++    :try_start_100
++    sget-object v14, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v14}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v14
++
++    invoke-interface {v14}, Ljava/util/concurrent/locks/Lock;->unlock()V
++    :try_end_109
++    .catch Landroid/database/SQLException; {:try_start_100 .. :try_end_109} :catch_e6
++    .catchall {:try_start_100 .. :try_end_109} :catchall_11e
++
++    :cond_109
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto/16 :goto_31
++
++    :catchall_10e
++    move-exception v14
++
++    :try_start_10f
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++
++    throw v14
++    :try_end_113
++    .catchall {:try_start_10f .. :try_end_113} :catchall_113
++
++    :catchall_113
++    move-exception v14
++
++    :try_start_114
++    sget-object v15, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v15}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v15
++
++    invoke-interface {v15}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v14
++    :try_end_11e
++    .catch Landroid/database/SQLException; {:try_start_114 .. :try_end_11e} :catch_e6
++    .catchall {:try_start_114 .. :try_end_11e} :catchall_11e
++
++    :catchall_11e
++    move-exception v14
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v14
++
++    :pswitch_123
++    const-string v14, "PrivacyPersistenceAdapter"
++
++    const-string v15, "PrivacyPersistenceAdapter:upgradeDatabase: Database is already at the most recent version"
++
++    invoke-static {v14, v15}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
++
++    goto/16 :goto_31
++
++    :pswitch_data_12c
++    .packed-switch 0x1
++        :pswitch_32
++        :pswitch_32
++        :pswitch_32
++        :pswitch_123
++    .end packed-switch
++.end method
++
++.method private writeExternalSettings(Ljava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)Z
++    .registers 12
++    .param p1    # Ljava/lang/String;
++    .param p2    # Ljava/lang/String;
++    .param p3    # Landroid/privacy/PrivacySettings;
++    .annotation system Ldalvik/annotation/Throws;
++        value = {
++            Ljava/lang/Exception;
++        }
++    .end annotation
++
++    const/4 v7, 0x1
++
++    new-instance v2, Ljava/io/File;
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "/data/system/privacy/"
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5, p2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, "/"
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-direct {v2, v5}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    new-instance v3, Ljava/io/File;
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "/data/system/privacy/"
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5, p2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, "/"
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, "/"
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-direct {v3, v5}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    const/4 v1, 0x0
++
++    sget-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v5}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v5
++
++    invoke-interface {v5}, Ljava/util/concurrent/locks/Lock;->lock()V
++
++    :try_start_51
++    invoke-virtual {v2}, Ljava/io/File;->mkdirs()Z
++
++    const/4 v5, 0x1
++
++    const/4 v6, 0x0
++
++    invoke-virtual {v2, v5, v6}, Ljava/io/File;->setReadable(ZZ)Z
++
++    const/4 v5, 0x1
++
++    const/4 v6, 0x0
++
++    invoke-virtual {v2, v5, v6}, Ljava/io/File;->setExecutable(ZZ)Z
++
++    invoke-virtual {v3}, Ljava/io/File;->createNewFile()Z
++
++    const/4 v5, 0x1
++
++    const/4 v6, 0x0
++
++    invoke-virtual {v3, v5, v6}, Ljava/io/File;->setReadable(ZZ)Z
++
++    new-instance v4, Ljava/io/OutputStreamWriter;
++
++    new-instance v5, Ljava/io/FileOutputStream;
++
++    invoke-direct {v5, v3}, Ljava/io/FileOutputStream;-><init>(Ljava/io/File;)V
++
++    invoke-direct {v4, v5}, Ljava/io/OutputStreamWriter;-><init>(Ljava/io/OutputStream;)V
++
++    const-string/jumbo v5, "systemLogsSetting"
++
++    invoke-virtual {p1, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v5
++
++    if-eqz v5, :cond_a4
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {p3}, Landroid/privacy/PrivacySettings;->getSystemLogsSetting()B
++
++    move-result v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, ""
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v4, v5}, Ljava/io/OutputStreamWriter;->append(Ljava/lang/CharSequence;)Ljava/io/Writer;
++
++    :cond_93
++    :goto_93
++    invoke-virtual {v4}, Ljava/io/OutputStreamWriter;->flush()V
++
++    invoke-virtual {v4}, Ljava/io/OutputStreamWriter;->close()V
++    :try_end_99
++    .catch Ljava/io/IOException; {:try_start_51 .. :try_end_99} :catch_c7
++    .catchall {:try_start_51 .. :try_end_99} :catchall_d1
++
++    const/4 v1, 0x1
++
++    sget-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v5}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v5
++
++    invoke-interface {v5}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    return v7
++
++    :cond_a4
++    :try_start_a4
++    const-string v5, "ipTableProtectSetting"
++
++    invoke-virtual {p1, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v5
++
++    if-eqz v5, :cond_93
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    invoke-virtual {p3}, Landroid/privacy/PrivacySettings;->getIpTableProtectSetting()B
++
++    move-result v6
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, ""
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-virtual {v4, v5}, Ljava/io/OutputStreamWriter;->append(Ljava/lang/CharSequence;)Ljava/io/Writer;
++    :try_end_c6
++    .catch Ljava/io/IOException; {:try_start_a4 .. :try_end_c6} :catch_c7
++    .catchall {:try_start_a4 .. :try_end_c6} :catchall_d1
++
++    goto :goto_93
++
++    :catch_c7
++    move-exception v0
++
++    :try_start_c8
++    new-instance v5, Ljava/lang/Exception;
++
++    const-string/jumbo v6, "saveSettings - could not write settings to file"
++
++    invoke-direct {v5, v6, v0}, Ljava/lang/Exception;-><init>(Ljava/lang/String;Ljava/lang/Throwable;)V
++
++    throw v5
++    :try_end_d1
++    .catchall {:try_start_c8 .. :try_end_d1} :catchall_d1
++
++    :catchall_d1
++    move-exception v5
++
++    sget-object v6, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v6}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v6
++
++    invoke-interface {v6}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v5
++.end method
++
++
++# virtual methods
++.method public deleteSettings(Ljava/lang/String;)Z
++    .registers 16
++    .param p1    # Ljava/lang/String;
++
++    const/4 v11, 0x1
++
++    const/4 v0, 0x0
++
++    :try_start_2
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v2
++    :try_end_5
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_2 .. :try_end_5} :catch_103
++    .catch Ljava/lang/Exception; {:try_start_2 .. :try_end_5} :catch_140
++    .catchall {:try_start_2 .. :try_end_5} :catchall_14d
++
++    :try_start_5
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v1}, Ljava/lang/Integer;->intValue()I
++
++    move-result v1
++
++    add-int/lit8 v1, v1, 0x1
++
++    invoke-static {v1}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v1
++
++    sput-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v2
++    :try_end_16
++    .catchall {:try_start_5 .. :try_end_16} :catchall_100
++
++    :try_start_16
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v0
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v1
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->lock()V
++    :try_end_23
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_16 .. :try_end_23} :catch_103
++    .catch Ljava/lang/Exception; {:try_start_16 .. :try_end_23} :catch_140
++    .catchall {:try_start_16 .. :try_end_23} :catchall_14d
++
++    :try_start_23
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->beginTransaction()V
++    :try_end_26
++    .catchall {:try_start_23 .. :try_end_26} :catchall_135
++
++    :try_start_26
++    const-string/jumbo v1, "settings"
++
++    const/4 v2, 0x1
++
++    new-array v2, v2, [Ljava/lang/String;
++
++    const/4 v3, 0x0
++
++    const-string v4, "_id"
++
++    aput-object v4, v2, v3
++
++    const-string/jumbo v3, "packageName=?"
++
++    const/4 v4, 0x1
++
++    new-array v4, v4, [Ljava/lang/String;
++
++    const/4 v5, 0x0
++
++    aput-object p1, v4, v5
++
++    const/4 v5, 0x0
++
++    const/4 v6, 0x0
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v0 .. v7}, Landroid/database/sqlite/SQLiteDatabase;->query(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v8
++
++    if-eqz v8, :cond_110
++
++    invoke-interface {v8}, Landroid/database/Cursor;->getCount()I
++
++    move-result v1
++
++    if-lez v1, :cond_110
++
++    invoke-interface {v8}, Landroid/database/Cursor;->moveToFirst()Z
++
++    move-result v1
++
++    if-eqz v1, :cond_110
++
++    const/4 v1, 0x0
++
++    invoke-interface {v8, v1}, Landroid/database/Cursor;->getInt(I)I
++
++    move-result v10
++
++    const-string v1, "allowed_contacts"
++
++    const-string/jumbo v2, "settings_id=?"
++
++    const/4 v3, 0x1
++
++    new-array v3, v3, [Ljava/lang/String;
++
++    const/4 v4, 0x0
++
++    invoke-static {v10}, Ljava/lang/Integer;->toString(I)Ljava/lang/String;
++
++    move-result-object v5
++
++    aput-object v5, v3, v4
++
++    invoke-virtual {v0, v1, v2, v3}, Landroid/database/sqlite/SQLiteDatabase;->delete(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I
++
++    invoke-interface {v8}, Landroid/database/Cursor;->close()V
++
++    :goto_69
++    const-string/jumbo v1, "settings"
++
++    const-string/jumbo v2, "packageName=?"
++
++    const/4 v3, 0x1
++
++    new-array v3, v3, [Ljava/lang/String;
++
++    const/4 v4, 0x0
++
++    aput-object p1, v3, v4
++
++    invoke-virtual {v0, v1, v2, v3}, Landroid/database/sqlite/SQLiteDatabase;->delete(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I
++
++    move-result v1
++
++    if-nez v1, :cond_99
++
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    new-instance v2, Ljava/lang/StringBuilder;
++
++    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v3, "deleteSettings - database entry for "
++
++    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    const-string v3, " not found"
++
++    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    :cond_99
++    new-instance v12, Ljava/io/File;
++
++    new-instance v1, Ljava/lang/StringBuilder;
++
++    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v2, "/data/system/privacy/"
++
++    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    invoke-virtual {v1, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    const-string v2, "/"
++
++    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-direct {v12, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    new-instance v13, Ljava/io/File;
++
++    new-instance v1, Ljava/lang/StringBuilder;
++
++    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v2, "/data/system/privacy/"
++
++    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    invoke-virtual {v1, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    const-string v2, "/systemLogsSetting"
++
++    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v1
++
++    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-direct {v13, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v13}, Ljava/io/File;->delete()Z
++
++    invoke-virtual {v12}, Ljava/io/File;->list()[Ljava/lang/String;
++
++    move-result-object v1
++
++    if-eqz v1, :cond_e5
++
++    invoke-virtual {v12}, Ljava/io/File;->list()[Ljava/lang/String;
++
++    move-result-object v1
++
++    array-length v1, v1
++
++    if-nez v1, :cond_e8
++
++    :cond_e5
++    invoke-virtual {v12}, Ljava/io/File;->delete()Z
++
++    :cond_e8
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->setTransactionSuccessful()V
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->settingsCache:Landroid/util/LruCache;
++
++    invoke-virtual {v1, p1}, Landroid/util/LruCache;->remove(Ljava/lang/Object;)Ljava/lang/Object;
++    :try_end_f0
++    .catchall {:try_start_26 .. :try_end_f0} :catchall_130
++
++    :try_start_f0
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++    :try_end_f3
++    .catchall {:try_start_f0 .. :try_end_f3} :catchall_135
++
++    :try_start_f3
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v1
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->unlock()V
++    :try_end_fc
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_f3 .. :try_end_fc} :catch_103
++    .catch Ljava/lang/Exception; {:try_start_f3 .. :try_end_fc} :catch_140
++    .catchall {:try_start_f3 .. :try_end_fc} :catchall_14d
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_ff
++    return v11
++
++    :catchall_100
++    move-exception v1
++
++    :try_start_101
++    monitor-exit v2
++    :try_end_102
++    .catchall {:try_start_101 .. :try_end_102} :catchall_100
++
++    :try_start_102
++    throw v1
++    :try_end_103
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_102 .. :try_end_103} :catch_103
++    .catch Ljava/lang/Exception; {:try_start_102 .. :try_end_103} :catch_140
++    .catchall {:try_start_102 .. :try_end_103} :catchall_14d
++
++    :catch_103
++    move-exception v9
++
++    const/4 v11, 0x0
++
++    :try_start_105
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    const-string v2, "PrivacyPersistenceAdapter:deleteSettings: failed to open the database, or open a transaction"
++
++    invoke-static {v1, v2, v9}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_10c
++    .catchall {:try_start_105 .. :try_end_10c} :catchall_14d
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto :goto_ff
++
++    :cond_110
++    :try_start_110
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    new-instance v2, Ljava/lang/StringBuilder;
++
++    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v3, "deleteSettings - database entry for "
++
++    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    const-string v3, " not found"
++
++    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_12e
++    .catchall {:try_start_110 .. :try_end_12e} :catchall_130
++
++    goto/16 :goto_69
++
++    :catchall_130
++    move-exception v1
++
++    :try_start_131
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++
++    throw v1
++    :try_end_135
++    .catchall {:try_start_131 .. :try_end_135} :catchall_135
++
++    :catchall_135
++    move-exception v1
++
++    :try_start_136
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v2
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v1
++    :try_end_140
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_136 .. :try_end_140} :catch_103
++    .catch Ljava/lang/Exception; {:try_start_136 .. :try_end_140} :catch_140
++    .catchall {:try_start_136 .. :try_end_140} :catchall_14d
++
++    :catch_140
++    move-exception v9
++
++    const/4 v11, 0x0
++
++    :try_start_142
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    const-string v2, "PrivacyPersistenceAdapter:deleteSettings - could not delete settings"
++
++    invoke-static {v1, v2, v9}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_149
++    .catchall {:try_start_142 .. :try_end_149} :catchall_14d
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto :goto_ff
++
++    :catchall_14d
++    move-exception v1
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v1
++.end method
++
++.method public getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++    .registers 59
++    .param p1    # Ljava/lang/String;
++
++    const/16 v56, 0x0
++
++    if-nez p1, :cond_c
++
++    new-instance v1, Ljava/security/InvalidParameterException;
++
++    const-string v4, "PrivacyPersistenceAdapter:getSettings:insufficient application identifier - package name is required"
++
++    invoke-direct {v1, v4}, Ljava/security/InvalidParameterException;-><init>(Ljava/lang/String;)V
++
++    throw v1
++
++    :cond_c
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->settingsCache:Landroid/util/LruCache;
++
++    move-object/from16 v0, p1
++
++    invoke-virtual {v1, v0}, Landroid/util/LruCache;->get(Ljava/lang/Object;)Ljava/lang/Object;
++
++    move-result-object v53
++
++    check-cast v53, Landroid/privacy/PrivacySettingsStub;
++
++    if-eqz v53, :cond_28
++
++    move-object/from16 v0, v53
++
++    instance-of v1, v0, Landroid/privacy/PrivacySettings;
++
++    if-eqz v1, :cond_23
++
++    check-cast v53, Landroid/privacy/PrivacySettings;
++
++    move-object/from16 v3, v56
++
++    :goto_22
++    return-object v53
++
++    :cond_23
++    const/16 v53, 0x0
++
++    move-object/from16 v3, v56
++
++    goto :goto_22
++
++    :cond_28
++    :try_start_28
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v4
++    :try_end_2b
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_28 .. :try_end_2b} :catch_a8
++
++    :try_start_2b
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v1}, Ljava/lang/Integer;->intValue()I
++
++    move-result v1
++
++    add-int/lit8 v1, v1, 0x1
++
++    invoke-static {v1}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v1
++
++    sput-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v4
++    :try_end_3c
++    .catchall {:try_start_2b .. :try_end_3c} :catchall_a5
++
++    :try_start_3c
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++    :try_end_3f
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_3c .. :try_end_3f} :catch_a8
++
++    move-result-object v2
++
++    const/16 v54, 0x0
++
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v1
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->lock()V
++
++    :try_start_4b
++    const-string/jumbo v3, "settings"
++
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->DATABASE_FIELDS:[Ljava/lang/String;
++
++    const-string/jumbo v5, "packageName=?"
++
++    const/4 v1, 0x1
++
++    new-array v6, v1, [Ljava/lang/String;
++
++    const/4 v1, 0x0
++
++    aput-object p1, v6, v1
++
++    const/4 v7, 0x0
++
++    const/4 v8, 0x0
++
++    const/4 v9, 0x0
++
++    const/4 v10, 0x0
++
++    move-object/from16 v1, p0
++
++    invoke-direct/range {v1 .. v10}, Landroid/privacy/PrivacyPersistenceAdapter;->query(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v54
++
++    if-eqz v54, :cond_367
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->getCount()I
++
++    move-result v1
++
++    if-nez v1, :cond_b6
++
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    new-instance v4, Ljava/lang/StringBuilder;
++
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v5, "PrivacyPersistenceAdapter:getSettingsfound for package "
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    move-object/from16 v0, p1
++
++    invoke-virtual {v4, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v4
++
++    invoke-static {v1, v4}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_85
++    .catch Ljava/lang/Exception; {:try_start_4b .. :try_end_85} :catch_363
++    .catchall {:try_start_4b .. :try_end_85} :catchall_35f
++
++    move-object/from16 v3, v56
++
++    :cond_87
++    :goto_87
++    if-eqz v3, :cond_351
++
++    :try_start_89
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->settingsCache:Landroid/util/LruCache;
++
++    move-object/from16 v0, p1
++
++    invoke-virtual {v1, v0, v3}, Landroid/util/LruCache;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
++    :try_end_90
++    .catch Ljava/lang/Exception; {:try_start_89 .. :try_end_90} :catch_307
++    .catchall {:try_start_89 .. :try_end_90} :catchall_33e
++
++    :goto_90
++    if-eqz v54, :cond_95
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->close()V
++
++    :cond_95
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v1
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_a1
++    move-object/from16 v53, v3
++
++    goto/16 :goto_22
++
++    :catchall_a5
++    move-exception v1
++
++    :try_start_a6
++    monitor-exit v4
++    :try_end_a7
++    .catchall {:try_start_a6 .. :try_end_a7} :catchall_a5
++
++    :try_start_a7
++    throw v1
++    :try_end_a8
++    .catch Landroid/database/sqlite/SQLiteException; {:try_start_a7 .. :try_end_a8} :catch_a8
++
++    :catch_a8
++    move-exception v55
++
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    const-string v4, "getSettings - database could not be opened"
++
++    move-object/from16 v0, v55
++
++    invoke-static {v1, v4, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v55
++
++    :cond_b6
++    :try_start_b6
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->getCount()I
++
++    move-result v1
++
++    const/4 v4, 0x1
++
++    if-le v1, v4, :cond_d7
++
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    new-instance v4, Ljava/lang/StringBuilder;
++
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v5, "Multiple privacy settings found for package "
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    move-object/from16 v0, p1
++
++    invoke-virtual {v4, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v4
++
++    invoke-static {v1, v4}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
++
++    :cond_d7
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->moveToFirst()Z
++
++    move-result v1
++
++    if-eqz v1, :cond_367
++
++    new-instance v3, Landroid/privacy/PrivacySettings;
++
++    const/4 v1, 0x0
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getInt(I)I
++
++    move-result v1
++
++    invoke-static {v1}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v4
++
++    const/4 v1, 0x1
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v5
++
++    const/4 v1, 0x2
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getInt(I)I
++
++    move-result v6
++
++    const/4 v1, 0x3
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v7, v1
++
++    const/4 v1, 0x4
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v8
++
++    const/4 v1, 0x5
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v9, v1
++
++    const/4 v1, 0x6
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v10
++
++    const/4 v1, 0x7
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v11, v1
++
++    const/16 v1, 0x8
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v12
++
++    const/16 v1, 0x9
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v13
++
++    const/16 v1, 0xa
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v14, v1
++
++    const/16 v1, 0xb
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v15
++
++    const/16 v1, 0xc
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v16
++
++    const/16 v1, 0xd
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v17, v0
++
++    const/16 v1, 0xe
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v18, v0
++
++    const/16 v1, 0xf
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v19, v0
++
++    const/16 v1, 0x10
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v20
++
++    const/16 v1, 0x11
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v21, v0
++
++    const/16 v1, 0x12
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v22
++
++    const/16 v1, 0x13
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v23, v0
++
++    const/16 v1, 0x14
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v24, v0
++
++    const/16 v1, 0x15
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v25, v0
++
++    const/16 v1, 0x16
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v26, v0
++
++    const/16 v1, 0x17
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v27, v0
++
++    const/16 v1, 0x18
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v28, v0
++
++    const/16 v1, 0x19
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v29, v0
++
++    const/16 v1, 0x1a
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v30, v0
++
++    const/16 v1, 0x1b
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v31, v0
++
++    const/16 v1, 0x1c
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v32, v0
++
++    const/16 v1, 0x1d
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v33, v0
++
++    const/16 v1, 0x1e
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v34, v0
++
++    const/16 v1, 0x1f
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v35, v0
++
++    const/16 v1, 0x20
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v36, v0
++
++    const/16 v1, 0x21
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v37, v0
++
++    const/16 v1, 0x22
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v38, v0
++
++    const/16 v39, 0x0
++
++    const/16 v1, 0x23
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v40, v0
++
++    const/16 v1, 0x24
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v41, v0
++
++    const/16 v1, 0x25
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v42, v0
++
++    const/16 v1, 0x26
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v43, v0
++
++    const/16 v1, 0x27
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v44, v0
++
++    const/16 v1, 0x28
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v45, v0
++
++    const/16 v1, 0x29
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v46
++
++    const/16 v1, 0x2a
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v47, v0
++
++    const/16 v1, 0x2b
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v48, v0
++
++    const/16 v1, 0x2c
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v49, v0
++
++    const/16 v1, 0x2d
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v50, v0
++
++    const/16 v1, 0x2e
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v1}, Landroid/database/Cursor;->getShort(I)S
++
++    move-result v1
++
++    int-to-byte v0, v1
++
++    move/from16 v51, v0
++
++    invoke-direct/range {v3 .. v51}, Landroid/privacy/PrivacySettings;-><init>(Ljava/lang/Integer;Ljava/lang/String;IBLjava/lang/String;BLjava/lang/String;BLjava/lang/String;Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;BBBLjava/lang/String;BLjava/lang/String;BBBBBBBBBBBBBBBB[IBBBBBBLjava/lang/String;BBBBB)V
++    :try_end_2b9
++    .catch Ljava/lang/Exception; {:try_start_b6 .. :try_end_2b9} :catch_363
++    .catchall {:try_start_b6 .. :try_end_2b9} :catchall_35f
++
++    :try_start_2b9
++    const-string v6, "allowed_contacts"
++
++    const/4 v1, 0x1
++
++    new-array v7, v1, [Ljava/lang/String;
++
++    const/4 v1, 0x0
++
++    const-string v4, "contact_id"
++
++    aput-object v4, v7, v1
++
++    const-string/jumbo v8, "settings_id=?"
++
++    const/4 v1, 0x1
++
++    new-array v9, v1, [Ljava/lang/String;
++
++    const/4 v1, 0x0
++
++    invoke-virtual {v3}, Landroid/privacy/PrivacySettings;->get_id()Ljava/lang/Integer;
++
++    move-result-object v4
++
++    invoke-virtual {v4}, Ljava/lang/Integer;->intValue()I
++
++    move-result v4
++
++    invoke-static {v4}, Ljava/lang/Integer;->toString(I)Ljava/lang/String;
++
++    move-result-object v4
++
++    aput-object v4, v9, v1
++
++    const/4 v10, 0x0
++
++    const/4 v11, 0x0
++
++    const/4 v12, 0x0
++
++    const/4 v13, 0x0
++
++    move-object/from16 v4, p0
++
++    move-object v5, v2
++
++    invoke-direct/range {v4 .. v13}, Landroid/privacy/PrivacyPersistenceAdapter;->query(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v54
++
++    if-eqz v54, :cond_87
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->getCount()I
++
++    move-result v1
++
++    if-lez v1, :cond_87
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->getCount()I
++
++    move-result v1
++
++    new-array v0, v1, [I
++
++    move-object/from16 v52, v0
++
++    :goto_2f3
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->moveToNext()Z
++
++    move-result v1
++
++    if-eqz v1, :cond_337
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->getPosition()I
++
++    move-result v1
++
++    const/4 v4, 0x0
++
++    move-object/from16 v0, v54
++
++    invoke-interface {v0, v4}, Landroid/database/Cursor;->getInt(I)I
++
++    move-result v4
++
++    aput v4, v52, v1
++    :try_end_306
++    .catch Ljava/lang/Exception; {:try_start_2b9 .. :try_end_306} :catch_307
++    .catchall {:try_start_2b9 .. :try_end_306} :catchall_33e
++
++    goto :goto_2f3
++
++    :catch_307
++    move-exception v55
++
++    :goto_308
++    :try_start_308
++    const-string v1, "PrivacyPersistenceAdapter"
++
++    new-instance v4, Ljava/lang/StringBuilder;
++
++    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v5, "getSettings - failed to get settings for package: "
++
++    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    move-object/from16 v0, p1
++
++    invoke-virtual {v4, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v4
++
++    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v4
++
++    move-object/from16 v0, v55
++
++    invoke-static {v1, v4, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_324
++    .catchall {:try_start_308 .. :try_end_324} :catchall_33e
++
++    if-eqz v54, :cond_329
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->close()V
++
++    :cond_329
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v1
++
++    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto/16 :goto_a1
++
++    :cond_337
++    :try_start_337
++    move-object/from16 v0, v52
++
++    invoke-virtual {v3, v0}, Landroid/privacy/PrivacySettings;->setAllowedContacts([I)V
++    :try_end_33c
++    .catch Ljava/lang/Exception; {:try_start_337 .. :try_end_33c} :catch_307
++    .catchall {:try_start_337 .. :try_end_33c} :catchall_33e
++
++    goto/16 :goto_87
++
++    :catchall_33e
++    move-exception v1
++
++    :goto_33f
++    if-eqz v54, :cond_344
++
++    invoke-interface/range {v54 .. v54}, Landroid/database/Cursor;->close()V
++
++    :cond_344
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v4
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v1
++
++    :cond_351
++    :try_start_351
++    sget-object v1, Landroid/privacy/PrivacyPersistenceAdapter;->settingsCache:Landroid/util/LruCache;
++
++    new-instance v4, Landroid/privacy/PrivacySettingsStub;
++
++    invoke-direct {v4}, Landroid/privacy/PrivacySettingsStub;-><init>()V
++
++    move-object/from16 v0, p1
++
++    invoke-virtual {v1, v0, v4}, Landroid/util/LruCache;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
++    :try_end_35d
++    .catch Ljava/lang/Exception; {:try_start_351 .. :try_end_35d} :catch_307
++    .catchall {:try_start_351 .. :try_end_35d} :catchall_33e
++
++    goto/16 :goto_90
++
++    :catchall_35f
++    move-exception v1
++
++    move-object/from16 v3, v56
++
++    goto :goto_33f
++
++    :catch_363
++    move-exception v55
++
++    move-object/from16 v3, v56
++
++    goto :goto_308
++
++    :cond_367
++    move-object/from16 v3, v56
++
++    goto/16 :goto_87
++.end method
++
++.method public getValue(Ljava/lang/String;)Ljava/lang/String;
++    .registers 15
++    .param p1    # Ljava/lang/String;
++
++    const/4 v0, 0x0
++
++    const/4 v12, 0x0
++
++    :try_start_2
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v2
++    :try_end_5
++    .catchall {:try_start_2 .. :try_end_5} :catchall_41
++
++    :try_start_5
++    sget-object v3, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v3, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v3}, Ljava/lang/Integer;->intValue()I
++
++    move-result v3
++
++    add-int/lit8 v3, v3, 0x1
++
++    invoke-static {v3}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v3
++
++    sput-object v3, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v2
++    :try_end_16
++    .catchall {:try_start_5 .. :try_end_16} :catchall_3e
++
++    :try_start_16
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v1
++
++    if-eqz v1, :cond_22
++
++    invoke-virtual {v1}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v2
++
++    if-nez v2, :cond_46
++
++    :cond_22
++    const-string v2, "PrivacyPersistenceAdapter"
++
++    new-instance v3, Ljava/lang/StringBuilder;
++
++    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v4, "PrivacyPersistenceAdapter:getValue: Database not obtained while getting value for name: "
++
++    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v3
++
++    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v3
++
++    invoke-static {v2, v3}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_3a
++    .catchall {:try_start_16 .. :try_end_3a} :catchall_41
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_3d
++    return-object v0
++
++    :catchall_3e
++    move-exception v0
++
++    :try_start_3f
++    monitor-exit v2
++    :try_end_40
++    .catchall {:try_start_3f .. :try_end_40} :catchall_3e
++
++    :try_start_40
++    throw v0
++    :try_end_41
++    .catchall {:try_start_40 .. :try_end_41} :catchall_41
++
++    :catchall_41
++    move-exception v0
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v0
++
++    :cond_46
++    :try_start_46
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->lock()V
++    :try_end_4f
++    .catchall {:try_start_46 .. :try_end_4f} :catchall_41
++
++    :try_start_4f
++    const-string v2, "map"
++
++    const/4 v0, 0x1
++
++    new-array v3, v0, [Ljava/lang/String;
++
++    const/4 v0, 0x0
++
++    const-string/jumbo v4, "value"
++
++    aput-object v4, v3, v0
++
++    const-string/jumbo v4, "name=?"
++
++    const/4 v0, 0x1
++
++    new-array v5, v0, [Ljava/lang/String;
++
++    const/4 v0, 0x0
++
++    aput-object p1, v5, v0
++
++    const/4 v6, 0x0
++
++    const/4 v7, 0x0
++
++    const/4 v8, 0x0
++
++    const/4 v9, 0x0
++
++    move-object v0, p0
++
++    invoke-direct/range {v0 .. v9}, Landroid/privacy/PrivacyPersistenceAdapter;->query(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v10
++
++    if-eqz v10, :cond_96
++
++    invoke-interface {v10}, Landroid/database/Cursor;->getCount()I
++
++    move-result v0
++
++    if-lez v0, :cond_96
++
++    invoke-interface {v10}, Landroid/database/Cursor;->moveToFirst()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_96
++
++    const-string/jumbo v0, "value"
++
++    invoke-interface {v10, v0}, Landroid/database/Cursor;->getColumnIndex(Ljava/lang/String;)I
++
++    move-result v0
++
++    invoke-interface {v10, v0}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v12
++
++    invoke-interface {v10}, Landroid/database/Cursor;->close()V
++    :try_end_88
++    .catch Ljava/lang/Exception; {:try_start_4f .. :try_end_88} :catch_af
++    .catchall {:try_start_4f .. :try_end_88} :catchall_d2
++
++    :goto_88
++    :try_start_88
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->unlock()V
++    :try_end_91
++    .catchall {:try_start_88 .. :try_end_91} :catchall_41
++
++    :goto_91
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    move-object v0, v12
++
++    goto :goto_3d
++
++    :cond_96
++    :try_start_96
++    const-string v0, "PrivacyPersistenceAdapter"
++
++    new-instance v2, Ljava/lang/StringBuilder;
++
++    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v3, "PrivacyPersistenceAdapter:getValue: Could not get value for name: "
++
++    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v0, v2}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_ae
++    .catch Ljava/lang/Exception; {:try_start_96 .. :try_end_ae} :catch_af
++    .catchall {:try_start_96 .. :try_end_ae} :catchall_d2
++
++    goto :goto_88
++
++    :catch_af
++    move-exception v11
++
++    :try_start_b0
++    const-string v0, "PrivacyPersistenceAdapter"
++
++    new-instance v2, Ljava/lang/StringBuilder;
++
++    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v3, "PrivacyPersistenceAdapter:getValue: Exception occurred while getting value for name: "
++
++    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-static {v0, v2, v11}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_c8
++    .catchall {:try_start_b0 .. :try_end_c8} :catchall_d2
++
++    :try_start_c8
++    sget-object v0, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    goto :goto_91
++
++    :catchall_d2
++    move-exception v0
++
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/ReadWriteLock;->readLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v2
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v0
++    :try_end_dd
++    .catchall {:try_start_c8 .. :try_end_dd} :catchall_41
++.end method
++
++.method public purgeSettings()Z
++    .registers 26
++
++    const/16 v23, 0x1
++
++    new-instance v13, Ljava/util/HashSet;
++
++    invoke-direct {v13}, Ljava/util/HashSet;-><init>()V
++
++    move-object/from16 v0, p0
++
++    iget-object v2, v0, Landroid/privacy/PrivacyPersistenceAdapter;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v2}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
++
++    move-result-object v20
++
++    const/4 v2, 0x0
++
++    move-object/from16 v0, v20
++
++    invoke-virtual {v0, v2}, Landroid/content/pm/PackageManager;->getInstalledApplications(I)Ljava/util/List;
++
++    move-result-object v18
++
++    invoke-interface/range {v18 .. v18}, Ljava/util/List;->iterator()Ljava/util/Iterator;
++
++    move-result-object v17
++
++    :goto_1a
++    invoke-interface/range {v17 .. v17}, Ljava/util/Iterator;->hasNext()Z
++
++    move-result v2
++
++    if-eqz v2, :cond_2c
++
++    invoke-interface/range {v17 .. v17}, Ljava/util/Iterator;->next()Ljava/lang/Object;
++
++    move-result-object v12
++
++    check-cast v12, Landroid/content/pm/ApplicationInfo;
++
++    iget-object v2, v12, Landroid/content/pm/ApplicationInfo;->packageName:Ljava/lang/String;
++
++    invoke-interface {v13, v2}, Ljava/util/Set;->add(Ljava/lang/Object;)Z
++
++    goto :goto_1a
++
++    :cond_2c
++    const/4 v3, 0x0
++
++    :try_start_2d
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v4
++    :try_end_30
++    .catch Ljava/lang/Exception; {:try_start_2d .. :try_end_30} :catch_56
++    .catchall {:try_start_2d .. :try_end_30} :catchall_11b
++
++    :try_start_30
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v2}, Ljava/lang/Integer;->intValue()I
++
++    move-result v2
++
++    add-int/lit8 v2, v2, 0x1
++
++    invoke-static {v2}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v2
++
++    sput-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v4
++    :try_end_41
++    .catchall {:try_start_30 .. :try_end_41} :catchall_53
++
++    :try_start_41
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v3
++
++    if-nez v3, :cond_68
++
++    const-string v2, "PrivacyPersistenceAdapter"
++
++    const-string v4, "PrivacyPersistenceAdapter:purgeSettings: db could not be obtained"
++
++    invoke-static {v2, v4}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_4e
++    .catch Ljava/lang/Exception; {:try_start_41 .. :try_end_4e} :catch_56
++    .catchall {:try_start_41 .. :try_end_4e} :catchall_11b
++
++    const/4 v2, 0x0
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_52
++    return v2
++
++    :catchall_53
++    move-exception v2
++
++    :try_start_54
++    monitor-exit v4
++    :try_end_55
++    .catchall {:try_start_54 .. :try_end_55} :catchall_53
++
++    :try_start_55
++    throw v2
++    :try_end_56
++    .catch Ljava/lang/Exception; {:try_start_55 .. :try_end_56} :catch_56
++    .catchall {:try_start_55 .. :try_end_56} :catchall_11b
++
++    :catch_56
++    move-exception v16
++
++    :try_start_57
++    const-string v2, "PrivacyPersistenceAdapter"
++
++    const-string v4, "PrivacyPersistenceAdapter:purgeSettings - purging DB failed"
++
++    move-object/from16 v0, v16
++
++    invoke-static {v2, v4, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_60
++    .catchall {:try_start_57 .. :try_end_60} :catchall_11b
++
++    const/16 v23, 0x0
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_65
++    move/from16 v2, v23
++
++    goto :goto_52
++
++    :cond_68
++    :try_start_68
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v2
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/Lock;->lock()V
++    :try_end_71
++    .catch Ljava/lang/Exception; {:try_start_68 .. :try_end_71} :catch_56
++    .catchall {:try_start_68 .. :try_end_71} :catchall_11b
++
++    const/4 v15, 0x0
++
++    :try_start_72
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->beginTransaction()V
++    :try_end_75
++    .catchall {:try_start_72 .. :try_end_75} :catchall_110
++
++    :try_start_75
++    const-string/jumbo v4, "settings"
++
++    const/4 v2, 0x1
++
++    new-array v5, v2, [Ljava/lang/String;
++
++    const/4 v2, 0x0
++
++    const-string/jumbo v6, "packageName"
++
++    aput-object v6, v5, v2
++
++    const/4 v6, 0x0
++
++    const/4 v7, 0x0
++
++    const/4 v8, 0x0
++
++    const/4 v9, 0x0
++
++    const/4 v10, 0x0
++
++    const/4 v11, 0x0
++
++    move-object/from16 v2, p0
++
++    invoke-direct/range {v2 .. v11}, Landroid/privacy/PrivacyPersistenceAdapter;->query(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v15
++
++    if-eqz v15, :cond_bd
++
++    invoke-interface {v15}, Landroid/database/Cursor;->getCount()I
++
++    move-result v2
++
++    if-lez v2, :cond_bd
++
++    invoke-interface {v15}, Landroid/database/Cursor;->moveToFirst()Z
++
++    move-result v2
++
++    if-eqz v2, :cond_bd
++
++    :cond_9b
++    const/4 v2, 0x0
++
++    invoke-interface {v15, v2}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v22
++
++    move-object/from16 v0, v22
++
++    invoke-interface {v13, v0}, Ljava/util/Set;->contains(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-nez v2, :cond_b7
++
++    const-string/jumbo v2, "settings"
++
++    const-string/jumbo v4, "packageName = ?"
++
++    const/4 v5, 0x1
++
++    new-array v5, v5, [Ljava/lang/String;
++
++    const/4 v6, 0x0
++
++    aput-object v22, v5, v6
++
++    invoke-virtual {v3, v2, v4, v5}, Landroid/database/sqlite/SQLiteDatabase;->delete(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I
++
++    :cond_b7
++    invoke-interface {v15}, Landroid/database/Cursor;->moveToNext()Z
++
++    move-result v2
++
++    if-nez v2, :cond_9b
++
++    :cond_bd
++    new-instance v24, Ljava/io/File;
++
++    const-string v2, "/data/system/privacy"
++
++    move-object/from16 v0, v24
++
++    invoke-direct {v0, v2}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual/range {v24 .. v24}, Ljava/io/File;->listFiles()[Ljava/io/File;
++
++    move-result-object v14
++
++    array-length v0, v14
++
++    move/from16 v19, v0
++
++    const/16 v17, 0x0
++
++    :goto_cf
++    move/from16 v0, v17
++
++    move/from16 v1, v19
++
++    if-ge v0, v1, :cond_ed
++
++    aget-object v21, v14, v17
++
++    invoke-virtual/range {v21 .. v21}, Ljava/io/File;->getName()Ljava/lang/String;
++
++    move-result-object v22
++
++    move-object/from16 v0, v22
++
++    invoke-interface {v13, v0}, Ljava/util/Set;->contains(Ljava/lang/Object;)Z
++
++    move-result v2
++
++    if-nez v2, :cond_ea
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v21
++
++    invoke-direct {v0, v1}, Landroid/privacy/PrivacyPersistenceAdapter;->deleteRecursive(Ljava/io/File;)V
++
++    :cond_ea
++    add-int/lit8 v17, v17, 0x1
++
++    goto :goto_cf
++
++    :cond_ed
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->setTransactionSuccessful()V
++    :try_end_f0
++    .catchall {:try_start_75 .. :try_end_f0} :catchall_106
++
++    if-eqz v15, :cond_f5
++
++    :try_start_f2
++    invoke-interface {v15}, Landroid/database/Cursor;->close()V
++
++    :cond_f5
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++    :try_end_f8
++    .catchall {:try_start_f2 .. :try_end_f8} :catchall_110
++
++    :try_start_f8
++    sget-object v2, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v2
++
++    invoke-interface {v2}, Ljava/util/concurrent/locks/Lock;->unlock()V
++    :try_end_101
++    .catch Ljava/lang/Exception; {:try_start_f8 .. :try_end_101} :catch_56
++    .catchall {:try_start_f8 .. :try_end_101} :catchall_11b
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto/16 :goto_65
++
++    :catchall_106
++    move-exception v2
++
++    if-eqz v15, :cond_10c
++
++    :try_start_109
++    invoke-interface {v15}, Landroid/database/Cursor;->close()V
++
++    :cond_10c
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++
++    throw v2
++    :try_end_110
++    .catchall {:try_start_109 .. :try_end_110} :catchall_110
++
++    :catchall_110
++    move-exception v2
++
++    :try_start_111
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v4
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v2
++    :try_end_11b
++    .catch Ljava/lang/Exception; {:try_start_111 .. :try_end_11b} :catch_56
++    .catchall {:try_start_111 .. :try_end_11b} :catchall_11b
++
++    :catchall_11b
++    move-exception v2
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v2
++.end method
++
++.method public saveSettings(Landroid/privacy/PrivacySettings;)Z
++    .registers 25
++    .param p1    # Landroid/privacy/PrivacySettings;
++
++    const/16 v19, 0x0
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getPackageName()Ljava/lang/String;
++
++    move-result-object v18
++
++    if-eqz v18, :cond_e
++
++    invoke-virtual/range {v18 .. v18}, Ljava/lang/String;->isEmpty()Z
++
++    move-result v4
++
++    if-eqz v4, :cond_18
++
++    :cond_e
++    const-string v4, "PrivacyPersistenceAdapter"
++
++    const-string/jumbo v5, "saveSettings - either package name is missing"
++
++    invoke-static {v4, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v4, 0x0
++
++    :goto_17
++    return v4
++
++    :cond_18
++    new-instance v22, Landroid/content/ContentValues;
++
++    invoke-direct/range {v22 .. v22}, Landroid/content/ContentValues;-><init>()V
++
++    const-string/jumbo v4, "packageName"
++
++    move-object/from16 v0, v22
++
++    move-object/from16 v1, v18
++
++    invoke-virtual {v0, v4, v1}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string/jumbo v4, "uid"
++
++    const/4 v5, -0x1
++
++    invoke-static {v5}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Integer;)V
++
++    const-string v4, "deviceIdSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getDeviceIdSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "deviceId"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getDeviceId()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string v4, "line1NumberSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLine1NumberSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "line1Number"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLine1Number()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string v4, "locationGpsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLocationGpsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "locationGpsLat"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLocationGpsLat()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string v4, "locationGpsLon"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLocationGpsLon()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string v4, "locationNetworkSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLocationNetworkSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "locationNetworkLat"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLocationNetworkLat()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string v4, "locationNetworkLon"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getLocationNetworkLon()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string/jumbo v4, "networkInfoSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getNetworkInfoSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "simInfoSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSimInfoSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "simSerialNumberSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSimSerialNumberSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "simSerialNumber"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSimSerialNumber()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string/jumbo v4, "subscriberIdSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSubscriberIdSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "subscriberId"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSubscriberId()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string v4, "accountsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAccountsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "accountsAuthTokensSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAccountsAuthTokensSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "outgoingCallsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getOutgoingCallsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "incomingCallsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getIncomingCallsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "contactsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getContactsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "calendarSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getCalendarSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "mmsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getMmsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "smsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSmsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "callLogSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getCallLogSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "bookmarksSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getBookmarksSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "systemLogsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSystemLogsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "notificationSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getNotificationSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "intentBootCompletedSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getIntentBootCompletedSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "cameraSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getCameraSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "recordAudioSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getRecordAudioSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "smsSendSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSmsSendSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "phoneCallSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getPhoneCallSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "ipTableProtectSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getIpTableProtectSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "iccAccessSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getIccAccessSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "addOnManagementSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAddOnManagementSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "androidIdSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAndroidIdSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "androidId"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAndroidID()Ljava/lang/String;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string/jumbo v4, "wifiInfoSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getWifiInfoSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "switchConnectivitySetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSwitchConnectivitySetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "sendMmsSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSendMmsSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string v4, "forceOnlineState"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getForceOnlineState()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const-string/jumbo v4, "switchWifiStateSetting"
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getSwitchWifiStateSetting()B
++
++    move-result v5
++
++    invoke-static {v5}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v5
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v0, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Byte;)V
++
++    const/4 v3, 0x0
++
++    const/4 v13, 0x0
++
++    :try_start_2a8
++    sget-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v5
++    :try_end_2ab
++    .catch Ljava/lang/Exception; {:try_start_2a8 .. :try_end_2ab} :catch_310
++    .catchall {:try_start_2a8 .. :try_end_2ab} :catchall_33b
++
++    :try_start_2ab
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v4}, Ljava/lang/Integer;->intValue()I
++
++    move-result v4
++
++    add-int/lit8 v4, v4, 0x1
++
++    invoke-static {v4}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v4
++
++    sput-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v5
++    :try_end_2bc
++    .catchall {:try_start_2ab .. :try_end_2bc} :catchall_338
++
++    :try_start_2bc
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v3
++
++    if-eqz v3, :cond_4f8
++
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v4
++
++    if-eqz v4, :cond_4f8
++
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v4
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->lock()V
++    :try_end_2d1
++    .catch Ljava/lang/Exception; {:try_start_2bc .. :try_end_2d1} :catch_310
++    .catchall {:try_start_2bc .. :try_end_2d1} :catchall_33b
++
++    :try_start_2d1
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->beginTransaction()V
++    :try_end_2d4
++    .catchall {:try_start_2d1 .. :try_end_2d4} :catchall_305
++
++    :try_start_2d4
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->get_id()Ljava/lang/Integer;
++
++    move-result-object v16
++
++    if-eqz v16, :cond_38c
++
++    const-string/jumbo v4, "settings"
++
++    const-string v5, "_id=?"
++
++    const/4 v6, 0x1
++
++    new-array v6, v6, [Ljava/lang/String;
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v16 .. v16}, Ljava/lang/Integer;->toString()Ljava/lang/String;
++
++    move-result-object v8
++
++    aput-object v8, v6, v7
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v3, v4, v0, v5, v6}, Landroid/database/sqlite/SQLiteDatabase;->update(Ljava/lang/String;Landroid/content/ContentValues;Ljava/lang/String;[Ljava/lang/String;)I
++
++    move-result v4
++
++    const/4 v5, 0x1
++
++    if-ge v4, v5, :cond_340
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string/jumbo v5, "saveSettings - failed to update database entry"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++    :try_end_2fb
++    .catchall {:try_start_2d4 .. :try_end_2fb} :catchall_2fb
++
++    :catchall_2fb
++    move-exception v4
++
++    :try_start_2fc
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++
++    if-eqz v13, :cond_304
++
++    invoke-interface {v13}, Landroid/database/Cursor;->close()V
++
++    :cond_304
++    throw v4
++    :try_end_305
++    .catchall {:try_start_2fc .. :try_end_305} :catchall_305
++
++    :catchall_305
++    move-exception v4
++
++    :try_start_306
++    sget-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v5}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v5
++
++    invoke-interface {v5}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v4
++    :try_end_310
++    .catch Ljava/lang/Exception; {:try_start_306 .. :try_end_310} :catch_310
++    .catchall {:try_start_306 .. :try_end_310} :catchall_33b
++
++    :catch_310
++    move-exception v14
++
++    :try_start_311
++    const-string v4, "PrivacyPersistenceAdapter"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PrivacyPersistenceAdapter:saveSettings: saving for "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    move-object/from16 v0, v18
++
++    invoke-virtual {v5, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, " failed"
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v4, v5, v14}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++    :try_end_331
++    .catchall {:try_start_311 .. :try_end_331} :catchall_33b
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_334
++    move/from16 v4, v19
++
++    goto/16 :goto_17
++
++    :catchall_338
++    move-exception v4
++
++    :try_start_339
++    monitor-exit v5
++    :try_end_33a
++    .catchall {:try_start_339 .. :try_end_33a} :catchall_338
++
++    :try_start_33a
++    throw v4
++    :try_end_33b
++    .catch Ljava/lang/Exception; {:try_start_33a .. :try_end_33b} :catch_310
++    .catchall {:try_start_33a .. :try_end_33b} :catchall_33b
++
++    :catchall_33b
++    move-exception v4
++
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v4
++
++    :cond_340
++    :try_start_340
++    const-string v4, "allowed_contacts"
++
++    const-string/jumbo v5, "settings_id=?"
++
++    const/4 v6, 0x1
++
++    new-array v6, v6, [Ljava/lang/String;
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v16 .. v16}, Ljava/lang/Integer;->toString()Ljava/lang/String;
++
++    move-result-object v8
++
++    aput-object v8, v6, v7
++
++    invoke-virtual {v3, v4, v5, v6}, Landroid/database/sqlite/SQLiteDatabase;->delete(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAllowedContacts()[I
++
++    move-result-object v11
++
++    if-eqz v11, :cond_4ae
++
++    new-instance v12, Landroid/content/ContentValues;
++
++    invoke-direct {v12}, Landroid/content/ContentValues;-><init>()V
++
++    const/4 v15, 0x0
++
++    :goto_35e
++    array-length v4, v11
++
++    if-ge v15, v4, :cond_4ae
++
++    const-string/jumbo v4, "settings_id"
++
++    move-object/from16 v0, v16
++
++    invoke-virtual {v12, v4, v0}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Integer;)V
++
++    const-string v4, "contact_id"
++
++    aget v5, v11, v15
++
++    invoke-static {v5}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v5
++
++    invoke-virtual {v12, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Integer;)V
++
++    const-string v4, "allowed_contacts"
++
++    const/4 v5, 0x0
++
++    invoke-virtual {v3, v4, v5, v12}, Landroid/database/sqlite/SQLiteDatabase;->insert(Ljava/lang/String;Ljava/lang/String;Landroid/content/ContentValues;)J
++
++    move-result-wide v4
++
++    const-wide/16 v6, -0x1
++
++    cmp-long v4, v4, v6
++
++    if-nez v4, :cond_389
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings: failed to update database entry (contacts)"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_389
++    add-int/lit8 v15, v15, 0x1
++
++    goto :goto_35e
++
++    :cond_38c
++    const-string/jumbo v4, "settings"
++
++    const/4 v5, 0x1
++
++    new-array v5, v5, [Ljava/lang/String;
++
++    const/4 v6, 0x0
++
++    const-string v7, "_id"
++
++    aput-object v7, v5, v6
++
++    const-string/jumbo v6, "packageName=?"
++
++    const/4 v7, 0x1
++
++    new-array v7, v7, [Ljava/lang/String;
++
++    const/4 v8, 0x0
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getPackageName()Ljava/lang/String;
++
++    move-result-object v9
++
++    aput-object v9, v7, v8
++
++    const/4 v8, 0x0
++
++    const/4 v9, 0x0
++
++    const/4 v10, 0x0
++
++    invoke-virtual/range {v3 .. v10}, Landroid/database/sqlite/SQLiteDatabase;->query(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v13
++
++    if-eqz v13, :cond_4a6
++
++    invoke-interface {v13}, Landroid/database/Cursor;->getCount()I
++
++    move-result v4
++
++    const/4 v5, 0x1
++
++    if-ne v4, v5, :cond_432
++
++    const-string/jumbo v4, "settings"
++
++    const-string/jumbo v5, "packageName=?"
++
++    const/4 v6, 0x1
++
++    new-array v6, v6, [Ljava/lang/String;
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getPackageName()Ljava/lang/String;
++
++    move-result-object v8
++
++    aput-object v8, v6, v7
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v3, v4, v0, v5, v6}, Landroid/database/sqlite/SQLiteDatabase;->update(Ljava/lang/String;Landroid/content/ContentValues;Ljava/lang/String;[Ljava/lang/String;)I
++
++    move-result v4
++
++    const/4 v5, 0x1
++
++    if-ge v4, v5, :cond_3d6
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string/jumbo v5, "saveSettings - failed to update database entry"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_3d6
++    invoke-interface {v13}, Landroid/database/Cursor;->moveToFirst()Z
++
++    move-result v4
++
++    if-eqz v4, :cond_4ae
++
++    const/4 v4, 0x0
++
++    invoke-interface {v13, v4}, Landroid/database/Cursor;->getInt(I)I
++
++    move-result v4
++
++    invoke-static {v4}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v17
++
++    const-string v4, "allowed_contacts"
++
++    const-string/jumbo v5, "settings_id=?"
++
++    const/4 v6, 0x1
++
++    new-array v6, v6, [Ljava/lang/String;
++
++    const/4 v7, 0x0
++
++    invoke-virtual/range {v17 .. v17}, Ljava/lang/Integer;->toString()Ljava/lang/String;
++
++    move-result-object v8
++
++    aput-object v8, v6, v7
++
++    invoke-virtual {v3, v4, v5, v6}, Landroid/database/sqlite/SQLiteDatabase;->delete(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAllowedContacts()[I
++
++    move-result-object v11
++
++    if-eqz v11, :cond_4ae
++
++    new-instance v12, Landroid/content/ContentValues;
++
++    invoke-direct {v12}, Landroid/content/ContentValues;-><init>()V
++
++    const/4 v15, 0x0
++
++    :goto_403
++    array-length v4, v11
++
++    if-ge v15, v4, :cond_4ae
++
++    const-string/jumbo v4, "settings_id"
++
++    move-object/from16 v0, v17
++
++    invoke-virtual {v12, v4, v0}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Integer;)V
++
++    const-string v4, "contact_id"
++
++    aget v5, v11, v15
++
++    invoke-static {v5}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v5
++
++    invoke-virtual {v12, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Integer;)V
++
++    const-string v4, "allowed_contacts"
++
++    const/4 v5, 0x0
++
++    invoke-virtual {v3, v4, v5, v12}, Landroid/database/sqlite/SQLiteDatabase;->insert(Ljava/lang/String;Ljava/lang/String;Landroid/content/ContentValues;)J
++
++    move-result-wide v4
++
++    const-wide/16 v6, -0x1
++
++    cmp-long v4, v4, v6
++
++    if-nez v4, :cond_42f
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string/jumbo v5, "saveSettings - failed to update database entry (contacts)"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_42f
++    add-int/lit8 v15, v15, 0x1
++
++    goto :goto_403
++
++    :cond_432
++    invoke-interface {v13}, Landroid/database/Cursor;->getCount()I
++
++    move-result v4
++
++    if-nez v4, :cond_49e
++
++    const-string/jumbo v4, "settings"
++
++    const/4 v5, 0x0
++
++    move-object/from16 v0, v22
++
++    invoke-virtual {v3, v4, v5, v0}, Landroid/database/sqlite/SQLiteDatabase;->insert(Ljava/lang/String;Ljava/lang/String;Landroid/content/ContentValues;)J
++
++    move-result-wide v20
++
++    const-wide/16 v4, -0x1
++
++    cmp-long v4, v20, v4
++
++    if-nez v4, :cond_450
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings - failed to insert new record into DB"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_450
++    const-string v4, "allowed_contacts"
++
++    const-string/jumbo v5, "settings_id=?"
++
++    const/4 v6, 0x1
++
++    new-array v6, v6, [Ljava/lang/String;
++
++    const/4 v7, 0x0
++
++    invoke-static/range {v20 .. v21}, Ljava/lang/Long;->toString(J)Ljava/lang/String;
++
++    move-result-object v8
++
++    aput-object v8, v6, v7
++
++    invoke-virtual {v3, v4, v5, v6}, Landroid/database/sqlite/SQLiteDatabase;->delete(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I
++
++    invoke-virtual/range {p1 .. p1}, Landroid/privacy/PrivacySettings;->getAllowedContacts()[I
++
++    move-result-object v11
++
++    if-eqz v11, :cond_4ae
++
++    new-instance v12, Landroid/content/ContentValues;
++
++    invoke-direct {v12}, Landroid/content/ContentValues;-><init>()V
++
++    const/4 v15, 0x0
++
++    :goto_46e
++    array-length v4, v11
++
++    if-ge v15, v4, :cond_4ae
++
++    const-string/jumbo v4, "settings_id"
++
++    invoke-static/range {v20 .. v21}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
++
++    move-result-object v5
++
++    invoke-virtual {v12, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Long;)V
++
++    const-string v4, "contact_id"
++
++    aget v5, v11, v15
++
++    invoke-static {v5}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v5
++
++    invoke-virtual {v12, v4, v5}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/Integer;)V
++
++    const-string v4, "allowed_contacts"
++
++    const/4 v5, 0x0
++
++    invoke-virtual {v3, v4, v5, v12}, Landroid/database/sqlite/SQLiteDatabase;->insert(Ljava/lang/String;Ljava/lang/String;Landroid/content/ContentValues;)J
++
++    move-result-wide v4
++
++    const-wide/16 v6, -0x1
++
++    cmp-long v4, v4, v6
++
++    if-nez v4, :cond_49b
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings:failed to update database entry (contacts)"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_49b
++    add-int/lit8 v15, v15, 0x1
++
++    goto :goto_46e
++
++    :cond_49e
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings:duplicate entries in the privacy.db"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_4a6
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings:cursor is null, database access failed"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_4ae
++    const-string/jumbo v4, "systemLogsSetting"
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v18
++
++    move-object/from16 v2, p1
++
++    invoke-direct {v0, v4, v1, v2}, Landroid/privacy/PrivacyPersistenceAdapter;->writeExternalSettings(Ljava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)Z
++
++    move-result v4
++
++    if-nez v4, :cond_4c5
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings:failed to write systemLogsSettings file"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_4c5
++    const-string v4, "ipTableProtectSetting"
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, v18
++
++    move-object/from16 v2, p1
++
++    invoke-direct {v0, v4, v1, v2}, Landroid/privacy/PrivacyPersistenceAdapter;->writeExternalSettings(Ljava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)Z
++
++    move-result v4
++
++    if-nez v4, :cond_4db
++
++    new-instance v4, Ljava/lang/Exception;
++
++    const-string v5, "PrivacyPersistenceAdapter:saveSettings:failed to write ipTableProtectSetting file"
++
++    invoke-direct {v4, v5}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    throw v4
++
++    :cond_4db
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->setTransactionSuccessful()V
++
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->settingsCache:Landroid/util/LruCache;
++
++    move-object/from16 v0, v18
++
++    invoke-virtual {v4, v0}, Landroid/util/LruCache;->remove(Ljava/lang/Object;)Ljava/lang/Object;
++    :try_end_4e5
++    .catchall {:try_start_340 .. :try_end_4e5} :catchall_2fb
++
++    :try_start_4e5
++    invoke-virtual {v3}, Landroid/database/sqlite/SQLiteDatabase;->endTransaction()V
++
++    if-eqz v13, :cond_4ed
++
++    invoke-interface {v13}, Landroid/database/Cursor;->close()V
++    :try_end_4ed
++    .catchall {:try_start_4e5 .. :try_end_4ed} :catchall_305
++
++    :cond_4ed
++    :try_start_4ed
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v4
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->unlock()V
++    :try_end_4f6
++    .catch Ljava/lang/Exception; {:try_start_4ed .. :try_end_4f6} :catch_310
++    .catchall {:try_start_4ed .. :try_end_4f6} :catchall_33b
++
++    const/16 v19, 0x1
++
++    :cond_4f8
++    invoke-direct/range {p0 .. p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    goto/16 :goto_334
++.end method
++
++.method public setValue(Ljava/lang/String;Ljava/lang/String;)Z
++    .registers 11
++    .param p1    # Ljava/lang/String;
++    .param p2    # Ljava/lang/String;
++
++    const/4 v3, 0x0
++
++    const-string v4, "PrivacyPersistenceAdapter"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string/jumbo v6, "setValue - name "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    const-string v6, " value "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5, p2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v4, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    new-instance v2, Landroid/content/ContentValues;
++
++    invoke-direct {v2}, Landroid/content/ContentValues;-><init>()V
++
++    const-string/jumbo v4, "name"
++
++    invoke-virtual {v2, v4, p1}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const-string/jumbo v4, "value"
++
++    invoke-virtual {v2, v4, p2}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
++
++    const/4 v1, 0x0
++
++    :try_start_36
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-enter v4
++    :try_end_39
++    .catchall {:try_start_36 .. :try_end_39} :catchall_75
++
++    :try_start_39
++    sget-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    sget-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    invoke-virtual {v5}, Ljava/lang/Integer;->intValue()I
++
++    move-result v5
++
++    add-int/lit8 v5, v5, 0x1
++
++    invoke-static {v5}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v5
++
++    sput-object v5, Landroid/privacy/PrivacyPersistenceAdapter;->sDbAccessThreads:Ljava/lang/Integer;
++
++    monitor-exit v4
++    :try_end_4a
++    .catchall {:try_start_39 .. :try_end_4a} :catchall_72
++
++    :try_start_4a
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->getDatabase()Landroid/database/sqlite/SQLiteDatabase;
++
++    move-result-object v0
++
++    if-eqz v0, :cond_56
++
++    invoke-virtual {v0}, Landroid/database/sqlite/SQLiteDatabase;->isOpen()Z
++
++    move-result v4
++
++    if-nez v4, :cond_7a
++
++    :cond_56
++    const-string v4, "PrivacyPersistenceAdapter"
++
++    new-instance v5, Ljava/lang/StringBuilder;
++
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v6, "PrivacyPersistenceAdapter:setValue: Database not obtained while setting value for name: "
++
++    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v5
++
++    invoke-static {v4, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_6e
++    .catchall {:try_start_4a .. :try_end_6e} :catchall_75
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    :goto_71
++    return v3
++
++    :catchall_72
++    move-exception v3
++
++    :try_start_73
++    monitor-exit v4
++    :try_end_74
++    .catchall {:try_start_73 .. :try_end_74} :catchall_72
++
++    :try_start_74
++    throw v3
++    :try_end_75
++    .catchall {:try_start_74 .. :try_end_75} :catchall_75
++
++    :catchall_75
++    move-exception v3
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    throw v3
++
++    :cond_7a
++    :try_start_7a
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v4
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->lock()V
++    :try_end_83
++    .catchall {:try_start_7a .. :try_end_83} :catchall_75
++
++    :try_start_83
++    const-string v4, "map"
++
++    const/4 v5, 0x0
++
++    invoke-virtual {v0, v4, v5, v2}, Landroid/database/sqlite/SQLiteDatabase;->replace(Ljava/lang/String;Ljava/lang/String;Landroid/content/ContentValues;)J
++    :try_end_89
++    .catchall {:try_start_83 .. :try_end_89} :catchall_a1
++
++    move-result-wide v4
++
++    const-wide/16 v6, -0x1
++
++    cmp-long v4, v4, v6
++
++    if-eqz v4, :cond_9f
++
++    const/4 v1, 0x1
++
++    :goto_91
++    :try_start_91
++    sget-object v3, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v3}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v3
++
++    invoke-interface {v3}, Ljava/util/concurrent/locks/Lock;->unlock()V
++    :try_end_9a
++    .catchall {:try_start_91 .. :try_end_9a} :catchall_75
++
++    invoke-direct {p0}, Landroid/privacy/PrivacyPersistenceAdapter;->closeIdleDatabase()V
++
++    move v3, v1
++
++    goto :goto_71
++
++    :cond_9f
++    move v1, v3
++
++    goto :goto_91
++
++    :catchall_a1
++    move-exception v3
++
++    :try_start_a2
++    sget-object v4, Landroid/privacy/PrivacyPersistenceAdapter;->sDbLock:Ljava/util/concurrent/locks/ReadWriteLock;
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/ReadWriteLock;->writeLock()Ljava/util/concurrent/locks/Lock;
++
++    move-result-object v4
++
++    invoke-interface {v4}, Ljava/util/concurrent/locks/Lock;->unlock()V
++
++    throw v3
++    :try_end_ac
++    .catchall {:try_start_a2 .. :try_end_ac} :catchall_75
++.end method
