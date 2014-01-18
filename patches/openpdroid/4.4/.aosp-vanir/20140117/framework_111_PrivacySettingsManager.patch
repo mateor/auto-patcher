@@ -1,0 +1,559 @@
+diff -Npruw stock-framework/smali/android/privacy/PrivacySettingsManager.smali pdroid-framework/smali/android/privacy/PrivacySettingsManager.smali
+--- stock-framework/smali/android/privacy/PrivacySettingsManager.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-framework/smali/android/privacy/PrivacySettingsManager.smali	2014-01-17 22:11:14.304168152 -0600
+@@ -0,0 +1,555 @@
++.class public final Landroid/privacy/PrivacySettingsManager;
++.super Ljava/lang/Object;
++.source "PrivacySettingsManager.java"
++
++
++# static fields
++.field public static final ACTION_PRIVACY_NOTIFICATION:Ljava/lang/String; = "com.privacy.pdroid.PRIVACY_NOTIFICATION"
++
++.field public static final ACTION_PRIVACY_NOTIFICATION_ADDON:Ljava/lang/String; = "com.privacy.pdroid.PRIVACY_NOTIFICATION_ADDON"
++
++.field private static final TAG:Ljava/lang/String; = "PrivacySettingsManager"
++
++
++# instance fields
++.field private service:Landroid/privacy/IPrivacySettingsManager;
++
++
++# direct methods
++.method public constructor <init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
++    .registers 3
++    .param p1    # Landroid/content/Context;
++    .param p2    # Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++
++    iput-object p2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    return-void
++.end method
++
++
++# virtual methods
++.method public addObserver(Ljava/lang/String;)V
++    .registers 5
++    .param p1    # Ljava/lang/String;
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_a
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1, p1}, Landroid/privacy/IPrivacySettingsManager;->addObserver(Ljava/lang/String;)V
++
++    :goto_9
++    return-void
++
++    :cond_a
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:addObserver: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_11
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_11} :catch_12
++
++    goto :goto_9
++
++    :catch_12
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in addObserver: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_9
++.end method
++
++.method public deleteSettings(Ljava/lang/String;)Z
++    .registers 6
++    .param p1    # Ljava/lang/String;
++
++    const/4 v1, 0x0
++
++    :try_start_1
++    iget-object v2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v2, :cond_c
++
++    iget-object v2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v2, p1}, Landroid/privacy/IPrivacySettingsManager;->deleteSettings(Ljava/lang/String;)Z
++
++    move-result v1
++
++    :goto_b
++    return v1
++
++    :cond_c
++    const-string v2, "PrivacySettingsManager"
++
++    const-string v3, "PrivacySettingsManager:deleteSettings: PrivacySettingsManagerService is null"
++
++    invoke-static {v2, v3}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_13
++    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_13} :catch_14
++
++    goto :goto_b
++
++    :catch_14
++    move-exception v0
++
++    const-string v2, "PrivacySettingsManager"
++
++    const-string v3, "RemoteException in deleteSettings: "
++
++    invoke-static {v2, v3, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_b
++.end method
++
++.method public deleteSettings(Ljava/lang/String;I)Z
++    .registers 4
++    .param p1    # Ljava/lang/String;
++    .param p2    # I
++    .annotation runtime Ljava/lang/Deprecated;
++    .end annotation
++
++    invoke-virtual {p0, p1}, Landroid/privacy/PrivacySettingsManager;->deleteSettings(Ljava/lang/String;)Z
++
++    move-result v0
++
++    return v0
++.end method
++
++.method public getApiVersion()D
++    .registers 3
++
++    const-wide v0, 0x3ff828f5c28f5c29L
++
++    return-wide v0
++.end method
++
++.method public getModDetails()Ljava/lang/String;
++    .registers 2
++
++    const-string v0, "OpenPDroid 1.0 by FFU5y, Mateor, wbedard; forked from PDroid 2.0\nPDroid 2.0 by CollegeDev; forked from PDroid\nPDroid by Syvat\'s\nAdditional contributions by Pastime1971"
++
++    return-object v0
++.end method
++
++.method public getModVersion()D
++    .registers 3
++
++    const-wide/high16 v0, 0x3ff0000000000000L
++
++    return-wide v0
++.end method
++
++.method public getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++    .registers 6
++    .param p1    # Ljava/lang/String;
++
++    const/4 v1, 0x0
++
++    :try_start_1
++    iget-object v2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v2, :cond_c
++
++    iget-object v2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v2, p1}, Landroid/privacy/IPrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++
++    move-result-object v1
++
++    :goto_b
++    return-object v1
++
++    :cond_c
++    const-string v2, "PrivacySettingsManager"
++
++    const-string v3, "getSettings - PrivacySettingsManagerService is null"
++
++    invoke-static {v2, v3}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_13
++    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_13} :catch_14
++
++    goto :goto_b
++
++    :catch_14
++    move-exception v0
++
++    invoke-virtual {v0}, Landroid/os/RemoteException;->printStackTrace()V
++
++    goto :goto_b
++.end method
++
++.method public getSettings(Ljava/lang/String;I)Landroid/privacy/PrivacySettings;
++    .registers 4
++    .param p1    # Ljava/lang/String;
++    .param p2    # I
++    .annotation runtime Ljava/lang/Deprecated;
++    .end annotation
++
++    invoke-virtual {p0, p1}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
++
++    move-result-object v0
++
++    return-object v0
++.end method
++
++.method public getVersion()D
++    .registers 3
++    .annotation runtime Ljava/lang/Deprecated;
++    .end annotation
++
++    const-wide v0, 0x3ff828f5c28f5c29L
++
++    return-wide v0
++.end method
++
++.method public isServiceAvailable()Z
++    .registers 2
++
++    iget-object v0, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v0, :cond_6
++
++    const/4 v0, 0x1
++
++    :goto_5
++    return v0
++
++    :cond_6
++    const/4 v0, 0x0
++
++    goto :goto_5
++.end method
++
++.method public notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++    .registers 8
++    .param p1    # Ljava/lang/String;
++    .param p2    # B
++    .param p3    # Ljava/lang/String;
++    .param p4    # Ljava/lang/String;
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_a
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1, p1, p2, p3, p4}, Landroid/privacy/IPrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    :goto_9
++    return-void
++
++    :cond_a
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:notification: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_11
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_11} :catch_12
++
++    goto :goto_9
++
++    :catch_12
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in notification: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_9
++.end method
++
++.method public notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    .registers 6
++    .param p1    # Ljava/lang/String;
++    .param p2    # B
++    .param p3    # Ljava/lang/String;
++    .param p4    # Ljava/lang/String;
++    .param p5    # Landroid/privacy/PrivacySettings;
++    .annotation runtime Ljava/lang/Deprecated;
++    .end annotation
++
++    invoke-virtual {p0, p1, p2, p3, p4}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    return-void
++.end method
++
++.method public notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
++    .registers 7
++    .param p1    # Ljava/lang/String;
++    .param p2    # I
++    .param p3    # B
++    .param p4    # Ljava/lang/String;
++    .param p5    # Ljava/lang/String;
++    .param p6    # Landroid/privacy/PrivacySettings;
++    .annotation runtime Ljava/lang/Deprecated;
++    .end annotation
++
++    invoke-virtual {p0, p1, p3, p4, p5}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;BLjava/lang/String;Ljava/lang/String;)V
++
++    return-void
++.end method
++
++.method public purgeSettings()Z
++    .registers 4
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_b
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1}, Landroid/privacy/IPrivacySettingsManager;->purgeSettings()Z
++
++    move-result v1
++
++    :goto_a
++    return v1
++
++    :cond_b
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:purgeSettings: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_12
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_12} :catch_14
++
++    :goto_12
++    const/4 v1, 0x0
++
++    goto :goto_a
++
++    :catch_14
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in purgeSettings: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_12
++.end method
++
++.method public registerObservers()V
++    .registers 4
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_a
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1}, Landroid/privacy/IPrivacySettingsManager;->registerObservers()V
++
++    :goto_9
++    return-void
++
++    :cond_a
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:registerObservers: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_11
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_11} :catch_12
++
++    goto :goto_9
++
++    :catch_12
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in registerObservers: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_9
++.end method
++
++.method public saveSettings(Landroid/privacy/PrivacySettings;)Z
++    .registers 6
++    .param p1    # Landroid/privacy/PrivacySettings;
++
++    const/4 v1, 0x0
++
++    :try_start_1
++    iget-object v2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v2, :cond_c
++
++    iget-object v2, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v2, p1}, Landroid/privacy/IPrivacySettingsManager;->saveSettings(Landroid/privacy/PrivacySettings;)Z
++
++    move-result v1
++
++    :goto_b
++    return v1
++
++    :cond_c
++    const-string v2, "PrivacySettingsManager"
++
++    const-string/jumbo v3, "saveSettings - PrivacySettingsManagerService is null"
++
++    invoke-static {v2, v3}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_14
++    .catch Landroid/os/RemoteException; {:try_start_1 .. :try_end_14} :catch_15
++
++    goto :goto_b
++
++    :catch_15
++    move-exception v0
++
++    const-string v2, "PrivacySettingsManager"
++
++    const-string v3, "RemoteException in saveSettings: "
++
++    invoke-static {v2, v3, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_b
++.end method
++
++.method public setBootCompleted()V
++    .registers 4
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_a
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1}, Landroid/privacy/IPrivacySettingsManager;->setBootCompleted()V
++
++    :goto_9
++    return-void
++
++    :cond_a
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:setBootCompleted: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_11
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_11} :catch_12
++
++    goto :goto_9
++
++    :catch_12
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in setBootCompleted: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_9
++.end method
++
++.method public setEnabled(Z)Z
++    .registers 5
++    .param p1    # Z
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_b
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1, p1}, Landroid/privacy/IPrivacySettingsManager;->setEnabled(Z)Z
++
++    move-result v1
++
++    :goto_a
++    return v1
++
++    :cond_b
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:setEnabled: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_12
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_12} :catch_14
++
++    :goto_12
++    const/4 v1, 0x0
++
++    goto :goto_a
++
++    :catch_14
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in setEnabled: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_12
++.end method
++
++.method public setNotificationsEnabled(Z)Z
++    .registers 5
++    .param p1    # Z
++
++    :try_start_0
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    if-eqz v1, :cond_b
++
++    iget-object v1, p0, Landroid/privacy/PrivacySettingsManager;->service:Landroid/privacy/IPrivacySettingsManager;
++
++    invoke-interface {v1, p1}, Landroid/privacy/IPrivacySettingsManager;->setNotificationsEnabled(Z)Z
++
++    move-result v1
++
++    :goto_a
++    return v1
++
++    :cond_b
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "PrivacySettingsManager:setNotificationsEnabled: PrivacySettingsManagerService is null"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_12
++    .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_12} :catch_14
++
++    :goto_12
++    const/4 v1, 0x0
++
++    goto :goto_a
++
++    :catch_14
++    move-exception v0
++
++    const-string v1, "PrivacySettingsManager"
++
++    const-string v2, "RemoteException in setNotificationsEnabled: "
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    goto :goto_12
++.end method

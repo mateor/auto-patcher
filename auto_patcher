@@ -205,9 +205,9 @@
 # [ -s FILE ]
 # [[ -n STRING ]] or [[ -z STRING ]]
 
-VERSION="v3.7.82"
+VERSION="v3.7.85"
 # PATCHES_VERSION needs to be incremented every time ANY changes occur to patches.
-PATCHES_VERSION="20140111"
+PATCHES_VERSION="20140117"
 CURRENT_ANDROID="4.4.2"
 
 # pass variables to children
@@ -217,7 +217,7 @@ set -a
 LANG=C
 CYGWIN=false
 
-# we use baksmali-2.0 for Android 4.4 and greater- see proberom funtion.
+# we use baksmali-2.0 for Android 4.4 and greater- see proberom function.
 BAKSMALI_BINARY=baksmali.jar
 SMALI_BINARY=smali.jar
 declare -a MODS_LIST
@@ -359,7 +359,8 @@ smali_error () {
           . patches/.common/framework.jar.sh 2>&1 > ${JAR}.log
           printtask "... rebuild framework.jar ..."
           java -Xmx512M -jar $SMALI_BINARY -a $API tmp/${FILE}.out/smali -o tmp/${FILE}.out/classes.dex >> "$LOG" 2>> "$LOG"
-          [ -f tmp/${FILE}.out/classes.dex ] || print_error "Could not resolve method cap issue- please submit log"
+          [ -f tmp/${FILE}.out/classes.dex ] || \
+                    print_error "Could not resolve method cap issue- please submit log"
      else
           printtask "!!! This error is generally due to an unknown bug in the smali binary!"
           echo "In our experience, it goes away if you run the patcher a second time."
@@ -1953,7 +1954,8 @@ for ((i=0; i < ${#PID[@]}; i++)); do
           # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
           rm -rf {JAR}.log # Needed since we append the patch output now
           for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
-               $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
+               $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} \
+                       2>&1 >> ${JAR}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
           done
 
           # For each failed patch, try all available patches-- think of it as 'exhaustive' patching
@@ -1978,7 +1980,8 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                          print_error $MATCH_PATTERN"patch in $JAR cannot be remedied"
                     else
                          print_to_log "We are substituting a patchable version of ${MATCH_PATTERN}smali"
-                         \mv "$PROVISIONAL" tmp/${FILE}.out/${PROVISIONAL##*.out/} >> "$LOG" 2>&1 && print_to_log "... failed patch sucessfully resolved ..."
+                         \mv "$PROVISIONAL" tmp/${FILE}.out/${PROVISIONAL##*.out/} >> "$LOG" 2>&1 \
+                                   && print_to_log "... failed patch sucessfully resolved ..."
                          patch_matcher
                     fi
                done
@@ -1990,16 +1993,19 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
                $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${JAR}.log 2>&1
           done
-          # Incremental--use patch_matcher? (how, b/c dry-run...should INCREMENTAL be optional or fail-possible?
+          # Incremental--use patch_matcher? (decision needed here)
           for ((k=0;k < ${#INCREMENTAL[@]}; k++)) do
                print_to_log " ...applying ${INCREMENTAL[$k]} ..."
                $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${INCREMENTAL[$k]} >> ${JAR}.log 2>&1
           done
-          ( [[ $(grep FAILED ${JAR}.log) != "" ]] || [[ $(grep "The text leading up to this was:" ${JAR}.log) != "" ]] ) && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
+          # If grep detects either failure, print the error to log and exit
+          ( [[ $(grep FAILED ${JAR}.log) != "" ]] \
+                    || [[ $(grep "The text leading up to this was:" ${JAR}.log) != "" ]] ) \
+                    && cat ${JAR}.log >> "$LOG" && print_error "failed $NAME.patch"
           cat ${JAR}.log >> "$LOG" # debug
           garbage tmp/${FILE}.out
 
-     # run special $JAR.sh scripts if any JAR needs special attention 
+          # run special $JAR.sh scripts if any JAR needs special attention 
           if [ -f patches/$P/$A/$R/$B/${JAR}.sh ]; then
                printtask "... apply $JAR.sh ..."
                . patches/$P/$A/$R/$B/${JAR}.sh 2>&1 > ${JAR}.log
@@ -2020,7 +2026,8 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                unset FAILED_PATCH_QUEUE
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     # dry-run until we build a completely succesful patch queue. Add $k to FAILED upon failure
-                    $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} 2>&1 >> ${APK}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
+                    $PATCH_BINARY --dry-run -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} \
+                             2>&1 >> ${APK}.log || FAILED_PATCH_QUEUE+=( ${PATCH_QUEUE[$k]} )
                done
                for FAILED_PATCH in ${FAILED_PATCH_QUEUE[@]}; do
                     patch_matcher
@@ -2030,7 +2037,8 @@ for ((i=0; i < ${#PID[@]}; i++)); do
                printtask "... apply $APK.patch ..."
                for ((k=0;k < ${#PATCH_QUEUE[@]}; k++)) do
                     print_to_log " ...applying ${PATCH_QUEUE[$k]} ..."
-                    $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} >> ${APK}.log 2>&1
+                    $PATCH_BINARY -Nls -p$STRIP_LEVEL -d tmp/${FILE}.out < ${PATCH_QUEUE[$k]} \
+                              >> ${APK}.log 2>&1
                done
                cat ${APK}.log >> "$LOG"
 
@@ -2138,7 +2146,10 @@ for FILE in ${IID[@]}; do
           echo "pagesize = $PGSIZE" >> "$LOG"
           echo "base = $BASE" >> "$LOG"
           printtask "... rebuilding boot.img ..."
-          ./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz --cmdline "no_console_suspend=1 console=null $CMDLINE" --base "$BASE" --pagesize "$PGSIZE" -o ../boot.img || print_error "failed building boot.img"
+          ./mkbootimg$EXE --kernel boot.img-zImage --ramdisk ramdisk-new.gz \
+                    --cmdline "no_console_suspend=1 console=null $CMDLINE" \
+                    --base "$BASE" --pagesize "$PGSIZE" \
+                    -o ../boot.img || print_error "failed building boot.img"
           cd ..
           ;;
      *)
