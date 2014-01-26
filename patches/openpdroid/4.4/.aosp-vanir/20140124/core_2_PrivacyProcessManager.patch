@@ -1,0 +1,486 @@
+diff -Npruw stock-core/smali/java/lang/PrivacyProcessManager.smali pdroid-core/smali/java/lang/PrivacyProcessManager.smali
+--- stock-core/smali/java/lang/PrivacyProcessManager.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-core/smali/java/lang/PrivacyProcessManager.smali	2014-01-25 12:10:19.882070163 -0600
+@@ -0,0 +1,482 @@
++.class public Ljava/lang/PrivacyProcessManager;
++.super Ljava/lang/Object;
++.source "PrivacyProcessManager.java"
++
++
++# annotations
++.annotation system Ldalvik/annotation/MemberClasses;
++    value = {
++        Ljava/lang/PrivacyProcessManager$PrivacyFileReader;
++    }
++.end annotation
++
++
++# static fields
++.field private static final GET_COMMAND_WAIT_MS:I = 0xa
++
++.field private static final GET_COMMAND_WAIT_STEP:I = 0x5
++
++
++# direct methods
++.method public constructor <init>()V
++    .registers 1
++
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++
++    return-void
++.end method
++
++.method private static getPackageName()Ljava/lang/String;
++    .registers 3
++    .annotation system Ldalvik/annotation/Throws;
++        value = {
++            Ljava/io/IOException;,
++            Ljava/io/FileNotFoundException;
++        }
++    .end annotation
++
++    new-instance v0, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;
++
++    const-string v2, "/proc/self/cmdline"
++
++    invoke-direct {v0, v2}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->readLine()Ljava/lang/String;
++
++    move-result-object v2
++
++    invoke-virtual {v2}, Ljava/lang/String;->trim()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-virtual {v0}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->close()V
++
++    return-object v1
++.end method
++
++.method public static hasPrivacyPermission(Ljava/lang/String;)Z
++    .registers 12
++    .param p0    # Ljava/lang/String;
++
++    const/4 v6, 0x0
++
++    const/4 v5, 0x1
++
++    :try_start_2
++    invoke-static {}, Ljava/lang/PrivacyProcessManager;->getPackageName()Ljava/lang/String;
++
++    move-result-object v6
++
++    sget-object v8, Ljava/lang/System;->out:Ljava/io/PrintStream;
++
++    new-instance v9, Ljava/lang/StringBuilder;
++
++    invoke-direct {v9}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v10, "PrivacyProcessManager: got package name: "
++
++    invoke-virtual {v9, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v9
++
++    invoke-virtual {v9, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v9
++
++    invoke-virtual {v9}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v8, v9}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
++    :try_end_1e
++    .catch Ljava/lang/Exception; {:try_start_2 .. :try_end_1e} :catch_57
++
++    :goto_1e
++    const/4 v2, 0x0
++
++    :try_start_1f
++    new-instance v8, Ljava/lang/StringBuilder;
++
++    invoke-direct {v8}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v9, "/data/system/privacy/"
++
++    invoke-virtual {v8, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v8
++
++    invoke-virtual {v8, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v8
++
++    const-string v9, "/"
++
++    invoke-virtual {v8, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v8
++
++    invoke-virtual {v8, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v8
++
++    invoke-virtual {v8}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v7
++
++    new-instance v3, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;
++
++    invoke-direct {v3, v7}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;-><init>(Ljava/lang/String;)V
++    :try_end_41
++    .catch Ljava/io/FileNotFoundException; {:try_start_1f .. :try_end_41} :catch_85
++    .catch Ljava/lang/Exception; {:try_start_1f .. :try_end_41} :catch_65
++
++    :try_start_41
++    invoke-virtual {v3}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->readLine()Ljava/lang/String;
++
++    move-result-object v4
++
++    if-eqz v4, :cond_63
++
++    invoke-virtual {v4}, Ljava/lang/String;->trim()Ljava/lang/String;
++
++    move-result-object v8
++
++    invoke-static {v8}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
++
++    move-result v0
++
++    :goto_4f
++    invoke-virtual {v3}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->close()V
++    :try_end_52
++    .catch Ljava/io/FileNotFoundException; {:try_start_41 .. :try_end_52} :catch_87
++    .catch Ljava/lang/Exception; {:try_start_41 .. :try_end_52} :catch_82
++
++    const/4 v8, 0x1
++
++    if-ne v0, v8, :cond_56
++
++    const/4 v5, 0x0
++
++    :cond_56
++    :goto_56
++    return v5
++
++    :catch_57
++    move-exception v1
++
++    sget-object v8, Ljava/lang/System;->err:Ljava/io/PrintStream;
++
++    const-string v9, "PrivacyProcessManager: could not find package name"
++
++    invoke-virtual {v8, v9}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
++
++    invoke-virtual {v1}, Ljava/lang/Exception;->printStackTrace()V
++
++    goto :goto_1e
++
++    :cond_63
++    const/4 v0, -0x1
++
++    goto :goto_4f
++
++    :catch_65
++    move-exception v1
++
++    :goto_66
++    sget-object v8, Ljava/lang/System;->err:Ljava/io/PrintStream;
++
++    new-instance v9, Ljava/lang/StringBuilder;
++
++    invoke-direct {v9}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v10, "PrivacyProcessManager: could not read privacy settings: "
++
++    invoke-virtual {v9, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v9
++
++    invoke-virtual {v9, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v9
++
++    invoke-virtual {v9}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v9
++
++    invoke-virtual {v8, v9}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
++
++    invoke-virtual {v1}, Ljava/lang/Exception;->printStackTrace()V
++
++    goto :goto_56
++
++    :catch_82
++    move-exception v1
++
++    move-object v2, v3
++
++    goto :goto_66
++
++    :catch_85
++    move-exception v8
++
++    goto :goto_56
++
++    :catch_87
++    move-exception v8
++
++    move-object v2, v3
++
++    goto :goto_56
++.end method
++
++.method public static hasPrivacyPermission(Ljava/lang/String;I)Z
++    .registers 16
++    .param p0    # Ljava/lang/String;
++    .param p1    # I
++
++    const/4 v7, 0x0
++
++    const/4 v6, 0x1
++
++    :try_start_2
++    invoke-static {}, Ljava/lang/PrivacyProcessManager;->getPackageName()Ljava/lang/String;
++    :try_end_5
++    .catch Ljava/lang/Exception; {:try_start_2 .. :try_end_5} :catch_39
++
++    move-result-object v7
++
++    :goto_6
++    const/4 v2, 0x0
++
++    :try_start_7
++    new-instance v11, Ljava/lang/StringBuilder;
++
++    invoke-direct {v11}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v12, "/proc/"
++
++    invoke-virtual {v11, v12}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    invoke-virtual {v11, p1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    const-string v12, "/cmdline"
++
++    invoke-virtual {v11, v12}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    invoke-virtual {v11}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v0
++
++    new-instance v3, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;
++
++    invoke-direct {v3, v0}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;-><init>(Ljava/lang/String;)V
++    :try_end_25
++    .catch Ljava/io/FileNotFoundException; {:try_start_7 .. :try_end_25} :catch_b9
++    .catch Ljava/lang/Exception; {:try_start_7 .. :try_end_25} :catch_97
++
++    :try_start_25
++    const-string v8, ""
++
++    const/16 v4, 0xa
++
++    :goto_29
++    invoke-virtual {v3}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->readLine()Ljava/lang/String;
++    :try_end_2c
++    .catch Ljava/io/FileNotFoundException; {:try_start_25 .. :try_end_2c} :catch_bb
++    .catch Ljava/lang/Exception; {:try_start_25 .. :try_end_2c} :catch_b6
++
++    move-result-object v8
++
++    if-nez v8, :cond_45
++
++    if-ltz v4, :cond_45
++
++    const-wide/16 v11, 0x5
++
++    :try_start_33
++    invoke-static {v11, v12}, Ljava/lang/Thread;->sleep(J)V
++    :try_end_36
++    .catch Ljava/lang/InterruptedException; {:try_start_33 .. :try_end_36} :catch_b4
++    .catch Ljava/io/FileNotFoundException; {:try_start_33 .. :try_end_36} :catch_bb
++    .catch Ljava/lang/Exception; {:try_start_33 .. :try_end_36} :catch_b6
++
++    :goto_36
++    add-int/lit8 v4, v4, -0x5
++
++    goto :goto_29
++
++    :catch_39
++    move-exception v1
++
++    sget-object v11, Ljava/lang/System;->err:Ljava/io/PrintStream;
++
++    const-string v12, "PrivacyProcessManager: could not find package name or UID"
++
++    invoke-virtual {v11, v12}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
++
++    invoke-virtual {v1}, Ljava/lang/Exception;->printStackTrace()V
++
++    goto :goto_6
++
++    :cond_45
++    :try_start_45
++    invoke-virtual {v3}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->close()V
++
++    if-eqz v8, :cond_be
++
++    invoke-virtual {v8}, Ljava/lang/String;->trim()Ljava/lang/String;
++
++    move-result-object v11
++
++    invoke-virtual {v11}, Ljava/lang/String;->length()I
++
++    move-result v11
++
++    const/4 v12, 0x5
++
++    if-le v11, v12, :cond_be
++
++    const-string v11, "logcat"
++
++    invoke-virtual {v8, v11}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v11
++
++    if-eqz v11, :cond_be
++
++    new-instance v11, Ljava/lang/StringBuilder;
++
++    invoke-direct {v11}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v12, "/data/system/privacy/"
++
++    invoke-virtual {v11, v12}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    invoke-virtual {v11, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    const-string v12, "/"
++
++    invoke-virtual {v11, v12}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    invoke-virtual {v11, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v11
++
++    invoke-virtual {v11}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v9
++
++    new-instance v2, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;
++
++    invoke-direct {v2, v9}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;-><init>(Ljava/lang/String;)V
++    :try_end_7f
++    .catch Ljava/io/FileNotFoundException; {:try_start_45 .. :try_end_7f} :catch_bb
++    .catch Ljava/lang/Exception; {:try_start_45 .. :try_end_7f} :catch_b6
++
++    :try_start_7f
++    invoke-virtual {v2}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->readLine()Ljava/lang/String;
++
++    move-result-object v5
++
++    if-eqz v5, :cond_95
++
++    invoke-virtual {v5}, Ljava/lang/String;->trim()Ljava/lang/String;
++
++    move-result-object v11
++
++    invoke-static {v11}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
++
++    move-result v10
++
++    :goto_8d
++    invoke-virtual {v2}, Ljava/lang/PrivacyProcessManager$PrivacyFileReader;->close()V
++    :try_end_90
++    .catch Ljava/io/FileNotFoundException; {:try_start_7f .. :try_end_90} :catch_b9
++    .catch Ljava/lang/Exception; {:try_start_7f .. :try_end_90} :catch_97
++
++    const/4 v11, 0x1
++
++    if-ne v10, v11, :cond_94
++
++    const/4 v6, 0x0
++
++    :cond_94
++    :goto_94
++    return v6
++
++    :cond_95
++    const/4 v10, -0x1
++
++    goto :goto_8d
++
++    :catch_97
++    move-exception v1
++
++    :goto_98
++    sget-object v11, Ljava/lang/System;->err:Ljava/io/PrintStream;
++
++    new-instance v12, Ljava/lang/StringBuilder;
++
++    invoke-direct {v12}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v13, "PrivacyProcessManager: could not read privacy settings: "
++
++    invoke-virtual {v12, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v12
++
++    invoke-virtual {v12, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v12
++
++    invoke-virtual {v12}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v12
++
++    invoke-virtual {v11, v12}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
++
++    invoke-virtual {v1}, Ljava/lang/Exception;->printStackTrace()V
++
++    goto :goto_94
++
++    :catch_b4
++    move-exception v11
++
++    goto :goto_36
++
++    :catch_b6
++    move-exception v1
++
++    move-object v2, v3
++
++    goto :goto_98
++
++    :catch_b9
++    move-exception v11
++
++    goto :goto_94
++
++    :catch_bb
++    move-exception v11
++
++    move-object v2, v3
++
++    goto :goto_94
++
++    :cond_be
++    move-object v2, v3
++
++    goto :goto_94
++.end method
