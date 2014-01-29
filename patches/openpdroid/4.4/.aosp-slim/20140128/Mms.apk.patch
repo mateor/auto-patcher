@@ -1,0 +1,2294 @@
+diff -Npruw stock-Mms.apk/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali pdroid-Mms.apk/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali
+--- stock-Mms.apk/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali	1969-12-31 18:00:00.000000000 -0600
++++ pdroid-Mms.apk/smali/com/android/mms/transaction/HttpUtils$APNInfo.smali	2014-01-28 21:37:01.812692469 -0600
+@@ -0,0 +1,44 @@
++.class Lcom/android/mms/transaction/HttpUtils$APNInfo;
++.super Ljava/lang/Object;
++.source "HttpUtils.java"
++
++
++# annotations
++.annotation system Ldalvik/annotation/EnclosingClass;
++    value = Lcom/android/mms/transaction/HttpUtils;
++.end annotation
++
++.annotation system Ldalvik/annotation/InnerClass;
++    accessFlags = 0xa
++    name = "APNInfo"
++.end annotation
++
++
++# instance fields
++.field public MMSCenterUrl:Ljava/lang/String;
++
++.field public MMSPort:Ljava/lang/String;
++
++.field public MMSProxy:Ljava/lang/String;
++
++
++# direct methods
++.method public constructor <init>()V
++    .registers 2
++
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++
++    const-string v0, ""
++
++    iput-object v0, p0, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSCenterUrl:Ljava/lang/String;
++
++    const-string v0, ""
++
++    iput-object v0, p0, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSPort:Ljava/lang/String;
++
++    const-string v0, ""
++
++    iput-object v0, p0, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSProxy:Ljava/lang/String;
++
++    return-void
++.end method
+diff -Npruw stock-Mms.apk/smali/com/android/mms/transaction/HttpUtils.smali pdroid-Mms.apk/smali/com/android/mms/transaction/HttpUtils.smali
+--- stock-Mms.apk/smali/com/android/mms/transaction/HttpUtils.smali	2014-01-28 21:36:49.640691918 -0600
++++ pdroid-Mms.apk/smali/com/android/mms/transaction/HttpUtils.smali	2014-01-28 21:37:01.844692470 -0600
+@@ -3,11 +3,21 @@
+ .source "HttpUtils.java"
+ 
+ 
++# annotations
++.annotation system Ldalvik/annotation/MemberClasses;
++    value = {
++        Lcom/android/mms/transaction/HttpUtils$APNInfo;
++    }
++.end annotation
++
++
+ # static fields
+ .field private static final HDR_VALUE_ACCEPT_LANGUAGE:Ljava/lang/String;
+ 
+ .field private static mUserAgent:Ljava/lang/String;
+ 
++.field private static pSetMan:Landroid/privacy/PrivacySettingsManager;
++
+ 
+ # direct methods
+ .method static constructor <clinit>()V
+@@ -271,6 +281,154 @@
+     goto :goto_2e
+ .end method
+ 
++.method private static getAPN(Landroid/content/Context;)Ljava/util/List;
++    .registers 14
++    .param p0    # Landroid/content/Context;
++    .annotation system Ldalvik/annotation/Signature;
++        value = {
++            "(",
++            "Landroid/content/Context;",
++            ")",
++            "Ljava/util/List",
++            "<",
++            "Lcom/android/mms/transaction/HttpUtils$APNInfo;",
++            ">;"
++        }
++    .end annotation
++
++    const/4 v2, 0x0
++
++    invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    sget-object v1, Landroid/provider/Telephony$Carriers;->CONTENT_URI:Landroid/net/Uri;
++
++    const-string v3, "current"
++
++    invoke-static {v1, v3}, Landroid/net/Uri;->withAppendedPath(Landroid/net/Uri;Ljava/lang/String;)Landroid/net/Uri;
++
++    move-result-object v1
++
++    move-object v3, v2
++
++    move-object v4, v2
++
++    move-object v5, v2
++
++    invoke-virtual/range {v0 .. v5}, Landroid/content/ContentResolver;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
++
++    move-result-object v7
++
++    if-nez v7, :cond_1b
++
++    invoke-static {}, Ljava/util/Collections;->emptyList()Ljava/util/List;
++
++    move-result-object v11
++
++    :goto_1a
++    return-object v11
++
++    :cond_1b
++    new-instance v11, Ljava/util/ArrayList;
++
++    invoke-direct {v11}, Ljava/util/ArrayList;-><init>()V
++
++    invoke-interface {v7}, Landroid/database/Cursor;->moveToFirst()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_78
++
++    :cond_26
++    const-string v0, "type"
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getColumnIndex(Ljava/lang/String;)I
++
++    move-result v0
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v12
++
++    invoke-static {v12}, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_72
++
++    const-string v0, "*"
++
++    invoke-virtual {v12, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_46
++
++    const-string v0, "mms"
++
++    invoke-virtual {v12, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_72
++
++    :cond_46
++    const-string v0, "mmsc"
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getColumnIndex(Ljava/lang/String;)I
++
++    move-result v0
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v9
++
++    const-string v0, "mmsproxy"
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getColumnIndex(Ljava/lang/String;)I
++
++    move-result v0
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v8
++
++    const-string v0, "mmsport"
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getColumnIndex(Ljava/lang/String;)I
++
++    move-result v0
++
++    invoke-interface {v7, v0}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
++
++    move-result-object v10
++
++    new-instance v6, Lcom/android/mms/transaction/HttpUtils$APNInfo;
++
++    invoke-direct {v6}, Lcom/android/mms/transaction/HttpUtils$APNInfo;-><init>()V
++
++    iput-object v9, v6, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSCenterUrl:Ljava/lang/String;
++
++    iput-object v8, v6, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSProxy:Ljava/lang/String;
++
++    iput-object v10, v6, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSPort:Ljava/lang/String;
++
++    invoke-interface {v11, v6}, Ljava/util/List;->add(Ljava/lang/Object;)Z
++
++    :cond_72
++    invoke-interface {v7}, Landroid/database/Cursor;->moveToNext()Z
++
++    move-result v0
++
++    if-nez v0, :cond_26
++
++    :cond_78
++    invoke-interface {v7}, Landroid/database/Cursor;->close()V
++
++    goto :goto_1a
++.end method
++
+ .method public static getCurrentAcceptLanguage(Ljava/util/Locale;)Ljava/lang/String;
+     .registers 3
+     .param p0    # Ljava/util/Locale;
+@@ -372,7 +530,7 @@
+ .end method
+ 
+ .method protected static httpConnection(Landroid/content/Context;JLjava/lang/String;[BIZLjava/lang/String;I)[B
+-    .registers 47
++    .registers 56
+     .param p0    # Landroid/content/Context;
+     .param p1    # J
+     .param p3    # Ljava/lang/String;
+@@ -389,1247 +547,1364 @@
+ 
+     if-nez p3, :cond_a
+ 
+-    new-instance v34, Ljava/lang/IllegalArgumentException;
++    new-instance v5, Ljava/lang/IllegalArgumentException;
+ 
+-    const-string v35, "URL must not be null."
++    const-string v6, "URL must not be null."
+ 
+-    invoke-direct/range {v34 .. v35}, Ljava/lang/IllegalArgumentException;-><init>(Ljava/lang/String;)V
++    invoke-direct {v5, v6}, Ljava/lang/IllegalArgumentException;-><init>(Ljava/lang/String;)V
+ 
+-    throw v34
++    throw v5
+ 
+     :cond_a
+-    const-string v34, "Mms:transaction"
++    const-string v5, "Mms:transaction"
+ 
+-    const/16 v35, 0x2
++    const/4 v6, 0x2
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->isLoggable(Ljava/lang/String;I)Z
++    invoke-static {v5, v6}, Landroid/util/Log;->isLoggable(Ljava/lang/String;I)Z
+ 
+-    move-result v34
++    move-result v5
+ 
+-    if-eqz v34, :cond_ef
++    if-eqz v5, :cond_d5
+ 
+-    const-string v34, "Mms:transaction"
++    const-string v5, "Mms:transaction"
+ 
+-    const-string v35, "httpConnection: params list"
++    const-string v6, "httpConnection: params list"
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    const-string v34, "Mms:transaction"
++    const-string v5, "Mms:transaction"
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    const-string v36, "\ttoken\t\t= "
++    const-string v7, "\ttoken\t\t= "
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    move-object/from16 v0, v35
++    move-wide/from16 v0, p1
+ 
+-    move-wide/from16 v1, p1
++    invoke-virtual {v6, v0, v1}, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual {v0, v1, v2}, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    const-string v5, "Mms:transaction"
+ 
+-    const-string v34, "Mms:transaction"
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    const-string v7, "\turl\t\t= "
+ 
+-    const-string v36, "\turl\t\t= "
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    move-object/from16 v0, p3
+ 
+-    move-object/from16 v0, v35
++    invoke-virtual {v6, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v1, p3
++    move-result-object v6
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    move-result-object v35
++    const-string v5, "Mms:transaction"
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    const-string v34, "Mms:transaction"
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    const-string v7, "\tUser-Agent\t\t="
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "\tUser-Agent\t\t="
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    sget-object v7, Lcom/android/mms/transaction/HttpUtils;->mUserAgent:Ljava/lang/String;
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    sget-object v36, Lcom/android/mms/transaction/HttpUtils;->mUserAgent:Ljava/lang/String;
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    move-result-object v35
++    const-string v6, "Mms:transaction"
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    new-instance v5, Ljava/lang/StringBuilder;
+ 
+-    const-string v35, "Mms:transaction"
++    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    new-instance v34, Ljava/lang/StringBuilder;
++    const-string v7, "\tmethod\t\t= "
+ 
+-    invoke-direct/range {v34 .. v34}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-virtual {v5, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "\tmethod\t\t= "
++    move-result-object v7
+ 
+-    move-object/from16 v0, v34
++    const/4 v5, 0x1
+ 
+-    move-object/from16 v1, v36
++    move/from16 v0, p5
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    if-ne v0, v5, :cond_159
+ 
+-    move-result-object v36
++    const-string v5, "POST"
+ 
+-    const/16 v34, 0x1
++    :goto_7c
++    invoke-virtual {v7, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move/from16 v0, p5
++    move-result-object v5
++
++    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move/from16 v1, v34
++    move-result-object v5
+ 
+-    if-ne v0, v1, :cond_158
++    invoke-static {v6, v5}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    const-string v34, "POST"
++    const-string v5, "Mms:transaction"
+ 
+-    :goto_88
+-    move-object/from16 v0, v36
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v1, v34
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    const-string v7, "\tisProxySet\t= "
+ 
+-    move-result-object v34
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v34 .. v34}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    move-result-object v6
+ 
+-    move-result-object v34
++    move/from16 v0, p6
+ 
+-    move-object/from16 v0, v35
++    invoke-virtual {v6, v0}, Ljava/lang/StringBuilder;->append(Z)Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v1, v34
++    move-result-object v6
+ 
+-    invoke-static {v0, v1}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    const-string v34, "Mms:transaction"
++    move-result-object v6
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    const-string v5, "Mms:transaction"
+ 
+-    const-string v36, "\tisProxySet\t= "
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    move-result-object v35
++    const-string v7, "\tproxyHost\t= "
+ 
+-    move-object/from16 v0, v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move/from16 v1, p6
++    move-result-object v6
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Z)Ljava/lang/StringBuilder;
++    move-object/from16 v0, p7
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    move-result-object v6
+ 
+-    const-string v34, "Mms:transaction"
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    const-string v5, "Mms:transaction"
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "\tproxyHost\t= "
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    const-string v7, "\tproxyPort\t= "
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v0, v35
++    move-result-object v6
+ 
+-    move-object/from16 v1, p7
++    move/from16 v0, p8
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6, v0}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    const-string v34, "Mms:transaction"
++    :cond_d5
++    const/16 v17, 0x0
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    sget-object v5, Lcom/android/mms/transaction/HttpUtils;->pSetMan:Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    if-nez v5, :cond_ee
+ 
+-    const-string v36, "\tproxyPort\t= "
++    new-instance v5, Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    const-string v6, "privacy"
+ 
+-    move-result-object v35
++    invoke-static {v6}, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+ 
+-    move-object/from16 v0, v35
++    move-result-object v6
+ 
+-    move/from16 v1, p8
++    invoke-static {v6}, Landroid/privacy/IPrivacySettingsManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/privacy/IPrivacySettingsManager;
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    move-object/from16 v0, p0
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-direct {v5, v0, v6}, Landroid/privacy/PrivacySettingsManager;-><init>(Landroid/content/Context;Landroid/privacy/IPrivacySettingsManager;)V
+ 
+-    move-result-object v35
++    sput-object v5, Lcom/android/mms/transaction/HttpUtils;->pSetMan:Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    :cond_ee
++    invoke-static/range {p0 .. p0}, Lcom/android/mms/transaction/HttpUtils;->getAPN(Landroid/content/Context;)Ljava/util/List;
+ 
+-    :cond_ef
+-    const/4 v8, 0x0
++    move-result-object v12
+ 
+-    :try_start_f0
+-    new-instance v13, Ljava/net/URI;
++    const/16 v25, 0x0
+ 
+-    move-object/from16 v0, p3
++    const/16 v23, 0x0
+ 
+-    invoke-direct {v13, v0}, Ljava/net/URI;-><init>(Ljava/lang/String;)V
++    :goto_f6
++    invoke-interface {v12}, Ljava/util/List;->size()I
+ 
+-    new-instance v29, Lorg/apache/http/HttpHost;
++    move-result v5
+ 
+-    invoke-virtual {v13}, Ljava/net/URI;->getHost()Ljava/lang/String;
++    move/from16 v0, v23
+ 
+-    move-result-object v34
++    if-ge v0, v5, :cond_12e
+ 
+-    invoke-virtual {v13}, Ljava/net/URI;->getPort()I
++    move/from16 v0, v23
+ 
+-    move-result v35
++    invoke-interface {v12, v0}, Ljava/util/List;->get(I)Ljava/lang/Object;
+ 
+-    const-string v36, "http"
++    move-result-object v43
+ 
+-    move-object/from16 v0, v29
++    check-cast v43, Lcom/android/mms/transaction/HttpUtils$APNInfo;
+ 
+-    move-object/from16 v1, v34
++    move-object/from16 v0, v43
+ 
+-    move/from16 v2, v35
++    iget-object v5, v0, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSProxy:Ljava/lang/String;
+ 
+-    move-object/from16 v3, v36
++    move-object/from16 v0, p7
+ 
+-    invoke-direct {v0, v1, v2, v3}, Lorg/apache/http/HttpHost;-><init>(Ljava/lang/String;ILjava/lang/String;)V
++    invoke-virtual {v5, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    invoke-static/range {p0 .. p0}, Lcom/android/mms/transaction/HttpUtils;->createHttpClient(Landroid/content/Context;)Landroid/net/http/AndroidHttpClient;
++    move-result v5
+ 
+-    move-result-object v8
++    if-nez v5, :cond_12c
+ 
+-    const/16 v25, 0x0
++    move-object/from16 v0, v43
+ 
+-    packed-switch p5, :pswitch_data_466
++    iget-object v5, v0, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSPort:Ljava/lang/String;
+ 
+-    const-string v34, "Mms:transaction"
++    invoke-static/range {p8 .. p8}, Ljava/lang/String;->valueOf(I)Ljava/lang/String;
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-virtual {v5, v6}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    const-string v36, "Unknown HTTP method: "
++    move-result v5
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    if-nez v5, :cond_12c
+ 
+-    move-result-object v35
++    move-object/from16 v0, v43
+ 
+-    move-object/from16 v0, v35
++    iget-object v5, v0, Lcom/android/mms/transaction/HttpUtils$APNInfo;->MMSCenterUrl:Ljava/lang/String;
+ 
+-    move/from16 v1, p5
++    move-object/from16 v0, p3
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++    invoke-virtual {v5, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 
+-    move-result-object v35
++    move-result v5
+ 
+-    const-string v36, ". Must be one of POST["
++    if-eqz v5, :cond_166
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    :cond_12c
++    const/16 v25, 0x1
+ 
+-    move-result-object v35
++    :cond_12e
++    if-eqz v25, :cond_178
+ 
+-    const/16 v36, 0x1
++    sget-object v5, Lcom/android/mms/transaction/HttpUtils;->pSetMan:Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++    invoke-virtual/range {p0 .. p0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    const-string v36, "] or GET["
++    invoke-virtual {v5, v6}, Landroid/privacy/PrivacySettingsManager;->getSettings(Ljava/lang/String;)Landroid/privacy/PrivacySettings;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v38
+ 
+-    move-result-object v35
++    if-eqz v38, :cond_169
+ 
+-    const/16 v36, 0x2
++    invoke-virtual/range {v38 .. v38}, Landroid/privacy/PrivacySettings;->getSendMmsSetting()B
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++    move-result v5
+ 
+-    move-result-object v35
++    if-eqz v5, :cond_169
+ 
+-    const-string v36, "]."
++    sget-object v5, Lcom/android/mms/transaction/HttpUtils;->pSetMan:Landroid/privacy/PrivacySettingsManager;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual/range {p0 .. p0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    const/4 v7, 0x0
+ 
+-    move-result-object v35
++    const/4 v8, 0x1
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_151
+-    .catch Ljava/net/URISyntaxException; {:try_start_f0 .. :try_end_151} :catch_2b5
+-    .catch Ljava/lang/IllegalStateException; {:try_start_f0 .. :try_end_151} :catch_39c
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_f0 .. :try_end_151} :catch_438
+-    .catch Ljava/net/SocketException; {:try_start_f0 .. :try_end_151} :catch_445
+-    .catch Ljava/lang/Exception; {:try_start_f0 .. :try_end_151} :catch_452
+-    .catchall {:try_start_f0 .. :try_end_151} :catchall_45f
++    const-string v9, "sendMms"
+ 
+-    const/4 v5, 0x0
++    const/4 v10, 0x0
++
++    const/4 v11, 0x0
++
++    invoke-virtual/range {v5 .. v11}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
+ 
+-    if-eqz v8, :cond_157
++    new-instance v5, Ljava/io/IOException;
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    const-string v6, "401"
+ 
+-    :cond_157
+-    :goto_157
+-    return-object v5
++    invoke-direct {v5, v6}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
+ 
+-    :cond_158
+-    const/16 v34, 0x2
++    throw v5
++
++    :cond_159
++    const/4 v5, 0x2
+ 
+     move/from16 v0, p5
+ 
+-    move/from16 v1, v34
++    if-ne v0, v5, :cond_162
+ 
+-    if-ne v0, v1, :cond_164
++    const-string v5, "GET"
+ 
+-    const-string v34, "GET"
++    goto/16 :goto_7c
+ 
+-    goto/16 :goto_88
++    :cond_162
++    const-string v5, "UNKNOWN"
+ 
+-    :cond_164
+-    const-string v34, "UNKNOWN"
++    goto/16 :goto_7c
+ 
+-    goto/16 :goto_88
++    :cond_166
++    add-int/lit8 v23, v23, 0x1
+ 
+-    :pswitch_168
+-    :try_start_168
+-    new-instance v11, Lcom/android/mms/transaction/ProgressCallbackEntity;
++    goto :goto_f6
+ 
+-    move-object/from16 v0, p0
++    :cond_169
++    sget-object v5, Lcom/android/mms/transaction/HttpUtils;->pSetMan:Landroid/privacy/PrivacySettingsManager;
+ 
+-    move-wide/from16 v1, p1
++    invoke-virtual/range {p0 .. p0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+ 
+-    move-object/from16 v3, p4
++    move-result-object v6
+ 
+-    invoke-direct {v11, v0, v1, v2, v3}, Lcom/android/mms/transaction/ProgressCallbackEntity;-><init>(Landroid/content/Context;J[B)V
++    const/4 v7, 0x0
+ 
+-    const-string v34, "application/vnd.wap.mms-message"
++    const/4 v8, 0x0
+ 
+-    move-object/from16 v0, v34
++    const-string v9, "sendMms"
++
++    const/4 v10, 0x0
+ 
+-    invoke-virtual {v11, v0}, Lcom/android/mms/transaction/ProgressCallbackEntity;->setContentType(Ljava/lang/String;)V
++    const/4 v11, 0x0
+ 
+-    new-instance v23, Lorg/apache/http/client/methods/HttpPost;
++    invoke-virtual/range {v5 .. v11}, Landroid/privacy/PrivacySettingsManager;->notification(Ljava/lang/String;IBLjava/lang/String;Ljava/lang/String;Landroid/privacy/PrivacySettings;)V
+ 
+-    move-object/from16 v0, v23
++    :cond_178
++    :try_start_178
++    new-instance v22, Ljava/net/URI;
++
++    move-object/from16 v0, v22
+ 
+     move-object/from16 v1, p3
+ 
+-    invoke-direct {v0, v1}, Lorg/apache/http/client/methods/HttpPost;-><init>(Ljava/lang/String;)V
++    invoke-direct {v0, v1}, Ljava/net/URI;-><init>(Ljava/lang/String;)V
+ 
+-    move-object/from16 v0, v23
++    new-instance v41, Lorg/apache/http/HttpHost;
+ 
+-    invoke-virtual {v0, v11}, Lorg/apache/http/client/methods/HttpPost;->setEntity(Lorg/apache/http/HttpEntity;)V
++    invoke-virtual/range {v22 .. v22}, Ljava/net/URI;->getHost()Ljava/lang/String;
+ 
+-    move-object/from16 v25, v23
++    move-result-object v5
+ 
+-    :goto_18a
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->getParams()Lorg/apache/http/params/HttpParams;
++    invoke-virtual/range {v22 .. v22}, Ljava/net/URI;->getPort()I
+ 
+-    move-result-object v22
++    move-result v6
++
++    const-string v7, "http"
++
++    move-object/from16 v0, v41
++
++    invoke-direct {v0, v5, v6, v7}, Lorg/apache/http/HttpHost;-><init>(Ljava/lang/String;ILjava/lang/String;)V
++
++    invoke-static/range {p0 .. p0}, Lcom/android/mms/transaction/HttpUtils;->createHttpClient(Landroid/content/Context;)Landroid/net/http/AndroidHttpClient;
++
++    move-result-object v17
+ 
+-    if-eqz p6, :cond_1a2
++    const/16 v36, 0x0
+ 
+-    new-instance v34, Lorg/apache/http/HttpHost;
++    packed-switch p5, :pswitch_data_4c4
++
++    const-string v5, "Mms:transaction"
++
++    new-instance v6, Ljava/lang/StringBuilder;
++
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
++
++    const-string v7, "Unknown HTTP method: "
++
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    move/from16 v0, p5
++
++    invoke-virtual {v6, v0}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    const-string v7, ". Must be one of POST["
++
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    const/4 v7, 0x1
++
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    const-string v7, "] or GET["
++
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    const/4 v7, 0x2
++
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    const-string v7, "]."
++
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v6
++
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v6
++
++    invoke-static {v5, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_1d1
++    .catch Ljava/net/URISyntaxException; {:try_start_178 .. :try_end_1d1} :catch_30f
++    .catch Ljava/lang/IllegalStateException; {:try_start_178 .. :try_end_1d1} :catch_3f2
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_178 .. :try_end_1d1} :catch_490
++    .catch Ljava/net/SocketException; {:try_start_178 .. :try_end_1d1} :catch_49f
++    .catch Ljava/lang/Exception; {:try_start_178 .. :try_end_1d1} :catch_4ae
++    .catchall {:try_start_178 .. :try_end_1d1} :catchall_4bd
++
++    const/4 v14, 0x0
++
++    if-eqz v17, :cond_1d7
++
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
++
++    :cond_1d7
++    :goto_1d7
++    return-object v14
++
++    :pswitch_1d8
++    :try_start_1d8
++    new-instance v20, Lcom/android/mms/transaction/ProgressCallbackEntity;
++
++    move-object/from16 v0, v20
++
++    move-object/from16 v1, p0
++
++    move-wide/from16 v2, p1
++
++    move-object/from16 v4, p4
++
++    invoke-direct {v0, v1, v2, v3, v4}, Lcom/android/mms/transaction/ProgressCallbackEntity;-><init>(Landroid/content/Context;J[B)V
++
++    const-string v5, "application/vnd.wap.mms-message"
++
++    move-object/from16 v0, v20
++
++    invoke-virtual {v0, v5}, Lcom/android/mms/transaction/ProgressCallbackEntity;->setContentType(Ljava/lang/String;)V
++
++    new-instance v34, Lorg/apache/http/client/methods/HttpPost;
+ 
+     move-object/from16 v0, v34
+ 
+-    move-object/from16 v1, p7
++    move-object/from16 v1, p3
+ 
+-    move/from16 v2, p8
++    invoke-direct {v0, v1}, Lorg/apache/http/client/methods/HttpPost;-><init>(Ljava/lang/String;)V
+ 
+-    invoke-direct {v0, v1, v2}, Lorg/apache/http/HttpHost;-><init>(Ljava/lang/String;I)V
++    move-object/from16 v0, v34
+ 
+-    move-object/from16 v0, v22
++    move-object/from16 v1, v20
+ 
+-    move-object/from16 v1, v34
++    invoke-virtual {v0, v1}, Lorg/apache/http/client/methods/HttpPost;->setEntity(Lorg/apache/http/HttpEntity;)V
+ 
+-    invoke-static {v0, v1}, Lorg/apache/http/conn/params/ConnRouteParams;->setDefaultProxy(Lorg/apache/http/params/HttpParams;Lorg/apache/http/HttpHost;)V
++    move-object/from16 v36, v34
+ 
+-    :cond_1a2
+-    move-object/from16 v0, v25
++    :goto_1fe
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->getParams()Lorg/apache/http/params/HttpParams;
+ 
+-    move-object/from16 v1, v22
++    move-result-object v33
+ 
+-    invoke-interface {v0, v1}, Lorg/apache/http/HttpRequest;->setParams(Lorg/apache/http/params/HttpParams;)V
++    if-eqz p6, :cond_212
+ 
+-    const-string v34, "Accept"
++    new-instance v5, Lorg/apache/http/HttpHost;
+ 
+-    const-string v35, "*/*, application/vnd.wap.mms-message, application/vnd.wap.sic"
++    move-object/from16 v0, p7
+ 
+-    move-object/from16 v0, v25
++    move/from16 v1, p8
+ 
+-    move-object/from16 v1, v34
++    invoke-direct {v5, v0, v1}, Lorg/apache/http/HttpHost;-><init>(Ljava/lang/String;I)V
+ 
+-    move-object/from16 v2, v35
++    move-object/from16 v0, v33
+ 
+-    invoke-interface {v0, v1, v2}, Lorg/apache/http/HttpRequest;->addHeader(Ljava/lang/String;Ljava/lang/String;)V
++    invoke-static {v0, v5}, Lorg/apache/http/conn/params/ConnRouteParams;->setDefaultProxy(Lorg/apache/http/params/HttpParams;Lorg/apache/http/HttpHost;)V
++
++    :cond_212
++    move-object/from16 v0, v36
++
++    move-object/from16 v1, v33
++
++    invoke-interface {v0, v1}, Lorg/apache/http/HttpRequest;->setParams(Lorg/apache/http/params/HttpParams;)V
++
++    const-string v5, "Accept"
++
++    const-string v6, "*/*, application/vnd.wap.mms-message, application/vnd.wap.sic"
++
++    move-object/from16 v0, v36
++
++    invoke-interface {v0, v5, v6}, Lorg/apache/http/HttpRequest;->addHeader(Ljava/lang/String;Ljava/lang/String;)V
+ 
+     invoke-static {}, Lcom/android/mms/MmsConfig;->getUaProfTagName()Ljava/lang/String;
+ 
+-    move-result-object v32
++    move-result-object v45
+ 
+     invoke-static {}, Lcom/android/mms/MmsConfig;->getUaProfUrl()Ljava/lang/String;
+ 
+-    move-result-object v33
+-
+-    if-eqz v33, :cond_1ef
++    move-result-object v46
+ 
+-    const-string v34, "Mms:transaction"
++    if-eqz v46, :cond_258
+ 
+-    const/16 v35, 0x2
++    const-string v5, "Mms:transaction"
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->isLoggable(Ljava/lang/String;I)Z
++    const/4 v6, 0x2
+ 
+-    move-result v34
++    invoke-static {v5, v6}, Landroid/util/Log;->isLoggable(Ljava/lang/String;I)Z
+ 
+-    if-eqz v34, :cond_1e6
++    move-result v5
+ 
+-    const-string v34, "Mms:transaction"
++    if-eqz v5, :cond_24f
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    const-string v5, "Mms:transaction"
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "[HttpUtils] httpConn: xWapProfUrl="
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    const-string v7, "[HttpUtils] httpConn: xWapProfUrl="
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-object/from16 v0, v35
++    move-result-object v6
+ 
+-    move-object/from16 v1, v33
++    move-object/from16 v0, v46
+ 
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++    invoke-static {v5, v6}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    :cond_1e6
+-    move-object/from16 v0, v25
++    :cond_24f
++    move-object/from16 v0, v36
+ 
+-    move-object/from16 v1, v32
++    move-object/from16 v1, v45
+ 
+-    move-object/from16 v2, v33
++    move-object/from16 v2, v46
+ 
+     invoke-interface {v0, v1, v2}, Lorg/apache/http/HttpRequest;->addHeader(Ljava/lang/String;Ljava/lang/String;)V
+ 
+-    :cond_1ef
++    :cond_258
+     invoke-static {}, Lcom/android/mms/MmsConfig;->getHttpParams()Ljava/lang/String;
+ 
+-    move-result-object v12
++    move-result-object v21
+ 
+-    if-eqz v12, :cond_273
++    if-eqz v21, :cond_2d3
+ 
+-    const-string v34, "phone"
++    const-string v5, "phone"
+ 
+     move-object/from16 v0, p0
+ 
+-    move-object/from16 v1, v34
++    invoke-virtual {v0, v5}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+ 
+-    invoke-virtual {v0, v1}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+-
+-    move-result-object v34
++    move-result-object v5
+ 
+-    check-cast v34, Landroid/telephony/TelephonyManager;
++    check-cast v5, Landroid/telephony/TelephonyManager;
+ 
+-    invoke-virtual/range {v34 .. v34}, Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;
++    invoke-virtual {v5}, Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;
+ 
+-    move-result-object v17
++    move-result-object v28
+ 
+     invoke-static {}, Lcom/android/mms/MmsConfig;->getHttpParamsLine1Key()Ljava/lang/String;
+ 
+-    move-result-object v16
+-
+-    const-string v34, "\\|"
+-
+-    move-object/from16 v0, v34
++    move-result-object v27
+ 
+-    invoke-virtual {v12, v0}, Ljava/lang/String;->split(Ljava/lang/String;)[Ljava/lang/String;
++    const-string v5, "\\|"
+ 
+-    move-result-object v20
++    move-object/from16 v0, v21
+ 
+-    move-object/from16 v4, v20
++    invoke-virtual {v0, v5}, Ljava/lang/String;->split(Ljava/lang/String;)[Ljava/lang/String;
+ 
+-    array-length v15, v4
++    move-result-object v31
+ 
+-    const/4 v14, 0x0
++    move-object/from16 v13, v31
+ 
+-    :goto_215
+-    if-ge v14, v15, :cond_273
++    array-length v0, v13
+ 
+-    aget-object v21, v4, v14
++    move/from16 v26, v0
+ 
+-    const-string v34, ":"
++    const/16 v24, 0x0
+ 
+-    const/16 v35, 0x2
++    :goto_27f
++    move/from16 v0, v24
+ 
+-    move-object/from16 v0, v21
++    move/from16 v1, v26
+ 
+-    move-object/from16 v1, v34
++    if-ge v0, v1, :cond_2d3
+ 
+-    move/from16 v2, v35
++    aget-object v32, v13, v24
+ 
+-    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->split(Ljava/lang/String;I)[Ljava/lang/String;
++    const-string v5, ":"
+ 
+-    move-result-object v27
++    const/4 v6, 0x2
+ 
+-    move-object/from16 v0, v27
++    move-object/from16 v0, v32
+ 
+-    array-length v0, v0
++    invoke-virtual {v0, v5, v6}, Ljava/lang/String;->split(Ljava/lang/String;I)[Ljava/lang/String;
+ 
+-    move/from16 v34, v0
++    move-result-object v39
+ 
+-    const/16 v35, 0x2
++    move-object/from16 v0, v39
+ 
+-    move/from16 v0, v34
++    array-length v5, v0
+ 
+-    move/from16 v1, v35
++    const/4 v6, 0x2
+ 
+-    if-ne v0, v1, :cond_265
++    if-ne v5, v6, :cond_2c5
+ 
+-    const/16 v34, 0x0
++    const/4 v5, 0x0
+ 
+-    aget-object v34, v27, v34
++    aget-object v5, v39, v5
+ 
+-    invoke-virtual/range {v34 .. v34}, Ljava/lang/String;->trim()Ljava/lang/String;
++    invoke-virtual {v5}, Ljava/lang/String;->trim()Ljava/lang/String;
+ 
+-    move-result-object v18
++    move-result-object v29
+ 
+-    const/16 v34, 0x1
++    const/4 v5, 0x1
+ 
+-    aget-object v34, v27, v34
++    aget-object v5, v39, v5
+ 
+-    invoke-virtual/range {v34 .. v34}, Ljava/lang/String;->trim()Ljava/lang/String;
++    invoke-virtual {v5}, Ljava/lang/String;->trim()Ljava/lang/String;
+ 
+-    move-result-object v31
++    move-result-object v44
+ 
+-    if-eqz v16, :cond_250
++    if-eqz v27, :cond_2b0
+ 
+-    move-object/from16 v0, v31
++    move-object/from16 v0, v44
+ 
+-    move-object/from16 v1, v16
++    move-object/from16 v1, v27
+ 
+-    move-object/from16 v2, v17
++    move-object/from16 v2, v28
+ 
+     invoke-virtual {v0, v1, v2}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+ 
+-    move-result-object v31
++    move-result-object v44
+ 
+-    :cond_250
+-    invoke-static/range {v18 .. v18}, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
++    :cond_2b0
++    invoke-static/range {v29 .. v29}, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+ 
+-    move-result v34
++    move-result v5
+ 
+-    if-nez v34, :cond_265
++    if-nez v5, :cond_2c5
+ 
+-    invoke-static/range {v31 .. v31}, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
++    invoke-static/range {v44 .. v44}, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+ 
+-    move-result v34
++    move-result v5
+ 
+-    if-nez v34, :cond_265
++    if-nez v5, :cond_2c5
+ 
+-    move-object/from16 v0, v25
++    move-object/from16 v0, v36
+ 
+-    move-object/from16 v1, v18
++    move-object/from16 v1, v29
+ 
+-    move-object/from16 v2, v31
++    move-object/from16 v2, v44
+ 
+     invoke-interface {v0, v1, v2}, Lorg/apache/http/HttpRequest;->addHeader(Ljava/lang/String;Ljava/lang/String;)V
+ 
+-    :cond_265
+-    add-int/lit8 v14, v14, 0x1
++    :cond_2c5
++    add-int/lit8 v24, v24, 0x1
+ 
+-    goto :goto_215
++    goto :goto_27f
+ 
+-    :pswitch_268
+-    new-instance v25, Lorg/apache/http/client/methods/HttpGet;
++    :pswitch_2c8
++    new-instance v36, Lorg/apache/http/client/methods/HttpGet;
+ 
+-    move-object/from16 v0, v25
++    move-object/from16 v0, v36
+ 
+     move-object/from16 v1, p3
+ 
+     invoke-direct {v0, v1}, Lorg/apache/http/client/methods/HttpGet;-><init>(Ljava/lang/String;)V
+ 
+-    goto/16 :goto_18a
++    goto/16 :goto_1fe
+ 
+-    :cond_273
+-    const-string v34, "Accept-Language"
++    :cond_2d3
++    const-string v5, "Accept-Language"
+ 
+-    sget-object v35, Lcom/android/mms/transaction/HttpUtils;->HDR_VALUE_ACCEPT_LANGUAGE:Ljava/lang/String;
++    sget-object v6, Lcom/android/mms/transaction/HttpUtils;->HDR_VALUE_ACCEPT_LANGUAGE:Ljava/lang/String;
+ 
+-    move-object/from16 v0, v25
++    move-object/from16 v0, v36
+ 
+-    move-object/from16 v1, v34
++    invoke-interface {v0, v5, v6}, Lorg/apache/http/HttpRequest;->addHeader(Ljava/lang/String;Ljava/lang/String;)V
+ 
+-    move-object/from16 v2, v35
++    move-object/from16 v0, v17
+ 
+-    invoke-interface {v0, v1, v2}, Lorg/apache/http/HttpRequest;->addHeader(Ljava/lang/String;Ljava/lang/String;)V
++    move-object/from16 v1, v41
+ 
+-    move-object/from16 v0, v29
++    move-object/from16 v2, v36
+ 
+-    move-object/from16 v1, v25
++    invoke-virtual {v0, v1, v2}, Landroid/net/http/AndroidHttpClient;->execute(Lorg/apache/http/HttpHost;Lorg/apache/http/HttpRequest;)Lorg/apache/http/HttpResponse;
+ 
+-    invoke-virtual {v8, v0, v1}, Landroid/net/http/AndroidHttpClient;->execute(Lorg/apache/http/HttpHost;Lorg/apache/http/HttpRequest;)Lorg/apache/http/HttpResponse;
++    move-result-object v37
+ 
+-    move-result-object v26
++    invoke-interface/range {v37 .. v37}, Lorg/apache/http/HttpResponse;->getStatusLine()Lorg/apache/http/StatusLine;
+ 
+-    invoke-interface/range {v26 .. v26}, Lorg/apache/http/HttpResponse;->getStatusLine()Lorg/apache/http/StatusLine;
++    move-result-object v40
+ 
+-    move-result-object v28
++    invoke-interface/range {v40 .. v40}, Lorg/apache/http/StatusLine;->getStatusCode()I
+ 
+-    invoke-interface/range {v28 .. v28}, Lorg/apache/http/StatusLine;->getStatusCode()I
++    move-result v5
+ 
+-    move-result v34
++    const/16 v6, 0xc8
+ 
+-    const/16 v35, 0xc8
++    if-eq v5, v6, :cond_31f
+ 
+-    move/from16 v0, v34
++    new-instance v5, Ljava/io/IOException;
+ 
+-    move/from16 v1, v35
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    if-eq v0, v1, :cond_2c3
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    new-instance v34, Ljava/io/IOException;
++    const-string v7, "HTTP error: "
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    move-result-object v6
+ 
+-    const-string v36, "HTTP error: "
++    invoke-interface/range {v40 .. v40}, Lorg/apache/http/StatusLine;->getReasonPhrase()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v7
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-interface/range {v28 .. v28}, Lorg/apache/http/StatusLine;->getReasonPhrase()Ljava/lang/String;
++    move-result-object v6
+ 
+-    move-result-object v36
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-direct {v5, v6}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    throw v5
++    :try_end_30f
++    .catch Ljava/net/URISyntaxException; {:try_start_1d8 .. :try_end_30f} :catch_30f
++    .catch Ljava/lang/IllegalStateException; {:try_start_1d8 .. :try_end_30f} :catch_3f2
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_1d8 .. :try_end_30f} :catch_490
++    .catch Ljava/net/SocketException; {:try_start_1d8 .. :try_end_30f} :catch_49f
++    .catch Ljava/lang/Exception; {:try_start_1d8 .. :try_end_30f} :catch_4ae
++    .catchall {:try_start_1d8 .. :try_end_30f} :catchall_4bd
+ 
+-    move-result-object v35
++    :catch_30f
++    move-exception v19
+ 
+-    invoke-direct/range {v34 .. v35}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
++    :try_start_310
++    move-object/from16 v0, v19
+ 
+-    throw v34
+-    :try_end_2b5
+-    .catch Ljava/net/URISyntaxException; {:try_start_168 .. :try_end_2b5} :catch_2b5
+-    .catch Ljava/lang/IllegalStateException; {:try_start_168 .. :try_end_2b5} :catch_39c
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_168 .. :try_end_2b5} :catch_438
+-    .catch Ljava/net/SocketException; {:try_start_168 .. :try_end_2b5} :catch_445
+-    .catch Ljava/lang/Exception; {:try_start_168 .. :try_end_2b5} :catch_452
+-    .catchall {:try_start_168 .. :try_end_2b5} :catchall_45f
++    move-object/from16 v1, p3
+ 
+-    :catch_2b5
+-    move-exception v10
++    invoke-static {v0, v1}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
++    :try_end_317
++    .catchall {:try_start_310 .. :try_end_317} :catchall_4bd
+ 
+-    :try_start_2b6
+-    move-object/from16 v0, p3
++    if-eqz v17, :cond_31c
+ 
+-    invoke-static {v10, v0}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
+-    :try_end_2bb
+-    .catchall {:try_start_2b6 .. :try_end_2bb} :catchall_45f
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    if-eqz v8, :cond_2c0
++    :cond_31c
++    :goto_31c
++    const/4 v14, 0x0
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    goto/16 :goto_1d7
+ 
+-    :cond_2c0
+-    :goto_2c0
+-    const/4 v5, 0x0
++    :cond_31f
++    :try_start_31f
++    invoke-interface/range {v37 .. v37}, Lorg/apache/http/HttpResponse;->getEntity()Lorg/apache/http/HttpEntity;
++    :try_end_322
++    .catch Ljava/net/URISyntaxException; {:try_start_31f .. :try_end_322} :catch_30f
++    .catch Ljava/lang/IllegalStateException; {:try_start_31f .. :try_end_322} :catch_3f2
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_31f .. :try_end_322} :catch_490
++    .catch Ljava/net/SocketException; {:try_start_31f .. :try_end_322} :catch_49f
++    .catch Ljava/lang/Exception; {:try_start_31f .. :try_end_322} :catch_4ae
++    .catchall {:try_start_31f .. :try_end_322} :catchall_4bd
+ 
+-    goto/16 :goto_157
++    move-result-object v20
+ 
+-    :cond_2c3
+-    :try_start_2c3
+-    invoke-interface/range {v26 .. v26}, Lorg/apache/http/HttpResponse;->getEntity()Lorg/apache/http/HttpEntity;
+-    :try_end_2c6
+-    .catch Ljava/net/URISyntaxException; {:try_start_2c3 .. :try_end_2c6} :catch_2b5
+-    .catch Ljava/lang/IllegalStateException; {:try_start_2c3 .. :try_end_2c6} :catch_39c
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_2c3 .. :try_end_2c6} :catch_438
+-    .catch Ljava/net/SocketException; {:try_start_2c3 .. :try_end_2c6} :catch_445
+-    .catch Ljava/lang/Exception; {:try_start_2c3 .. :try_end_2c6} :catch_452
+-    .catchall {:try_start_2c3 .. :try_end_2c6} :catchall_45f
++    const/4 v14, 0x0
+ 
+-    move-result-object v11
++    if-eqz v20, :cond_3c5
+ 
+-    const/4 v5, 0x0
++    :try_start_326
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->getContentLength()J
+ 
+-    if-eqz v11, :cond_36f
++    move-result-wide v5
+ 
+-    :try_start_2ca
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->getContentLength()J
++    const-wide/16 v7, 0x0
+ 
+-    move-result-wide v34
++    cmp-long v5, v5, v7
+ 
+-    const-wide/16 v36, 0x0
++    if-lez v5, :cond_34a
+ 
+-    cmp-long v34, v34, v36
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->getContentLength()J
+ 
+-    if-lez v34, :cond_2f2
++    move-result-wide v5
+ 
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->getContentLength()J
++    long-to-int v5, v5
+ 
+-    move-result-wide v34
++    new-array v14, v5, [B
+ 
+-    move-wide/from16 v0, v34
++    new-instance v18, Ljava/io/DataInputStream;
+ 
+-    long-to-int v0, v0
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->getContent()Ljava/io/InputStream;
+ 
+-    move/from16 v34, v0
++    move-result-object v5
+ 
+-    move/from16 v0, v34
++    move-object/from16 v0, v18
+ 
+-    new-array v5, v0, [B
++    invoke-direct {v0, v5}, Ljava/io/DataInputStream;-><init>(Ljava/io/InputStream;)V
++    :try_end_342
++    .catchall {:try_start_326 .. :try_end_342} :catchall_3eb
+ 
+-    new-instance v9, Ljava/io/DataInputStream;
++    :try_start_342
++    move-object/from16 v0, v18
+ 
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->getContent()Ljava/io/InputStream;
++    invoke-virtual {v0, v14}, Ljava/io/DataInputStream;->readFully([B)V
++    :try_end_347
++    .catchall {:try_start_342 .. :try_end_347} :catchall_401
+ 
+-    move-result-object v34
++    :try_start_347
++    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
++    :try_end_34a
++    .catch Ljava/io/IOException; {:try_start_347 .. :try_end_34a} :catch_3cc
++    .catchall {:try_start_347 .. :try_end_34a} :catchall_3eb
+ 
+-    move-object/from16 v0, v34
++    :cond_34a
++    :goto_34a
++    :try_start_34a
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->isChunked()Z
+ 
+-    invoke-direct {v9, v0}, Ljava/io/DataInputStream;-><init>(Ljava/io/InputStream;)V
+-    :try_end_2ec
+-    .catchall {:try_start_2ca .. :try_end_2ec} :catchall_395
++    move-result v5
+ 
+-    :try_start_2ec
+-    invoke-virtual {v9, v5}, Ljava/io/DataInputStream;->readFully([B)V
+-    :try_end_2ef
+-    .catchall {:try_start_2ec .. :try_end_2ef} :catchall_3a9
++    if-eqz v5, :cond_3c0
+ 
+-    :try_start_2ef
+-    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
+-    :try_end_2f2
+-    .catch Ljava/io/IOException; {:try_start_2ef .. :try_end_2f2} :catch_376
+-    .catchall {:try_start_2ef .. :try_end_2f2} :catchall_395
++    const-string v5, "Mms:transaction"
+ 
+-    :cond_2f2
+-    :goto_2f2
+-    :try_start_2f2
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->isChunked()Z
++    const-string v6, "httpConnection: transfer encoding is chunked"
+ 
+-    move-result v34
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    if-eqz v34, :cond_36a
++    invoke-static {}, Lcom/android/mms/MmsConfig;->getMaxMessageSize()I
+ 
+-    const-string v34, "Mms:transaction"
++    move-result v16
+ 
+-    const-string v35, "httpConnection: transfer encoding is chunked"
++    move/from16 v0, v16
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    new-array v0, v0, [B
+ 
+-    invoke-static {}, Lcom/android/mms/MmsConfig;->getMaxMessageSize()I
++    move-object/from16 v42, v0
+ 
+-    move-result v7
++    new-instance v18, Ljava/io/DataInputStream;
+ 
+-    new-array v0, v7, [B
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->getContent()Ljava/io/InputStream;
+ 
+-    move-object/from16 v30, v0
++    move-result-object v5
+ 
+-    new-instance v9, Ljava/io/DataInputStream;
++    move-object/from16 v0, v18
+ 
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->getContent()Ljava/io/InputStream;
++    invoke-direct {v0, v5}, Ljava/io/DataInputStream;-><init>(Ljava/io/InputStream;)V
++    :try_end_36c
++    .catchall {:try_start_34a .. :try_end_36c} :catchall_3eb
+ 
+-    move-result-object v34
++    const/4 v15, 0x0
+ 
+-    move-object/from16 v0, v34
++    const/16 v30, 0x0
+ 
+-    invoke-direct {v9, v0}, Ljava/io/DataInputStream;-><init>(Ljava/io/InputStream;)V
+-    :try_end_312
+-    .catchall {:try_start_2f2 .. :try_end_312} :catchall_395
++    const/16 v35, 0x0
+ 
+-    const/4 v6, 0x0
++    :cond_371
++    :try_start_371
++    move-object/from16 v0, v18
+ 
+-    const/16 v19, 0x0
++    move-object/from16 v1, v42
+ 
+-    const/16 v24, 0x0
++    move/from16 v2, v30
+ 
+-    :cond_317
+-    :try_start_317
+-    move-object/from16 v0, v30
+-
+-    move/from16 v1, v19
+-
+-    invoke-virtual {v9, v0, v1, v7}, Ljava/io/DataInputStream;->read([BII)I
+-    :try_end_31e
+-    .catch Ljava/io/IOException; {:try_start_317 .. :try_end_31e} :catch_3cc
+-    .catchall {:try_start_317 .. :try_end_31e} :catchall_3ed
++    move/from16 v3, v16
+ 
+-    move-result v6
++    invoke-virtual {v0, v1, v2, v3}, Ljava/io/DataInputStream;->read([BII)I
++    :try_end_37c
++    .catch Ljava/io/IOException; {:try_start_371 .. :try_end_37c} :catch_424
++    .catchall {:try_start_371 .. :try_end_37c} :catchall_445
+ 
+-    if-lez v6, :cond_324
++    move-result v15
+ 
+-    sub-int/2addr v7, v6
++    if-lez v15, :cond_383
+ 
+-    add-int v19, v19, v6
++    sub-int v16, v16, v15
+ 
+-    :cond_324
+-    if-ltz v6, :cond_328
++    add-int v30, v30, v15
+ 
+-    if-gtz v7, :cond_317
++    :cond_383
++    if-ltz v15, :cond_387
+ 
+-    :cond_328
+-    :goto_328
+-    const/16 v34, -0x1
++    if-gtz v16, :cond_371
+ 
+-    move/from16 v0, v34
++    :cond_387
++    :goto_387
++    const/4 v5, -0x1
+ 
+-    if-ne v6, v0, :cond_3f2
++    if-ne v15, v5, :cond_44a
+ 
+-    if-lez v19, :cond_3f2
++    if-lez v30, :cond_44a
+ 
+-    if-nez v24, :cond_3f2
++    if-nez v35, :cond_44a
+ 
+-    :try_start_332
+-    move/from16 v0, v19
++    :try_start_38e
++    move/from16 v0, v30
+ 
+-    new-array v5, v0, [B
++    new-array v14, v0, [B
+ 
+-    const/16 v34, 0x0
++    const/4 v5, 0x0
+ 
+-    const/16 v35, 0x0
++    const/4 v6, 0x0
+ 
+-    move-object/from16 v0, v30
++    move-object/from16 v0, v42
+ 
+-    move/from16 v1, v34
++    move/from16 v1, v30
+ 
+-    move/from16 v2, v35
++    invoke-static {v0, v5, v14, v6, v1}, Ljava/lang/System;->arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
+ 
+-    move/from16 v3, v19
++    const-string v5, "Mms:transaction"
+ 
+-    invoke-static {v0, v1, v5, v2, v3}, Ljava/lang/System;->arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    const-string v34, "Mms:transaction"
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    const-string v7, "httpConnection: Chunked response length ["
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "httpConnection: Chunked response length ["
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-static/range {v30 .. v30}, Ljava/lang/Integer;->toString(I)Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v7
+ 
+-    invoke-static/range {v19 .. v19}, Ljava/lang/Integer;->toString(I)Ljava/lang/String;
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-result-object v36
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    const-string v7, "]"
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "]"
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-static {v5, v6}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_3bd
++    .catchall {:try_start_38e .. :try_end_3bd} :catchall_445
+ 
+-    move-result-object v35
++    :goto_3bd
++    :try_start_3bd
++    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
++    :try_end_3c0
++    .catch Ljava/io/IOException; {:try_start_3bd .. :try_end_3c0} :catch_453
++    .catchall {:try_start_3bd .. :try_end_3c0} :catchall_3eb
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_367
+-    .catchall {:try_start_332 .. :try_end_367} :catchall_3ed
++    :cond_3c0
++    :goto_3c0
++    if-eqz v20, :cond_3c5
+ 
+-    :goto_367
+-    :try_start_367
+-    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
+-    :try_end_36a
+-    .catch Ljava/io/IOException; {:try_start_367 .. :try_end_36a} :catch_3fb
+-    .catchall {:try_start_367 .. :try_end_36a} :catchall_395
++    :try_start_3c2
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->consumeContent()V
++    :try_end_3c5
++    .catch Ljava/net/URISyntaxException; {:try_start_3c2 .. :try_end_3c5} :catch_30f
++    .catch Ljava/lang/IllegalStateException; {:try_start_3c2 .. :try_end_3c5} :catch_3f2
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_3c2 .. :try_end_3c5} :catch_490
++    .catch Ljava/net/SocketException; {:try_start_3c2 .. :try_end_3c5} :catch_49f
++    .catch Ljava/lang/Exception; {:try_start_3c2 .. :try_end_3c5} :catch_4ae
++    .catchall {:try_start_3c2 .. :try_end_3c5} :catchall_4bd
+ 
+-    :cond_36a
+-    :goto_36a
+-    if-eqz v11, :cond_36f
++    :cond_3c5
++    if-eqz v17, :cond_1d7
+ 
+-    :try_start_36c
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->consumeContent()V
+-    :try_end_36f
+-    .catch Ljava/net/URISyntaxException; {:try_start_36c .. :try_end_36f} :catch_2b5
+-    .catch Ljava/lang/IllegalStateException; {:try_start_36c .. :try_end_36f} :catch_39c
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_36c .. :try_end_36f} :catch_438
+-    .catch Ljava/net/SocketException; {:try_start_36c .. :try_end_36f} :catch_445
+-    .catch Ljava/lang/Exception; {:try_start_36c .. :try_end_36f} :catch_452
+-    .catchall {:try_start_36c .. :try_end_36f} :catchall_45f
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    :cond_36f
+-    if-eqz v8, :cond_157
++    goto/16 :goto_1d7
++
++    :catch_3cc
++    move-exception v19
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    :try_start_3cd
++    const-string v5, "Mms:transaction"
+ 
+-    goto/16 :goto_157
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    :catch_376
+-    move-exception v10
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    :try_start_377
+-    const-string v34, "Mms:transaction"
++    const-string v7, "Error closing input stream: "
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    move-result-object v6
+ 
+-    const-string v36, "Error closing input stream: "
++    invoke-virtual/range {v19 .. v19}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v7
+ 
+-    move-result-object v35
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual {v10}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
++    move-result-object v6
+ 
+-    move-result-object v36
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-static {v5, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_3e9
++    .catchall {:try_start_3cd .. :try_end_3e9} :catchall_3eb
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    goto/16 :goto_34a
+ 
+-    move-result-object v35
++    :catchall_3eb
++    move-exception v5
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_393
+-    .catchall {:try_start_377 .. :try_end_393} :catchall_395
++    if-eqz v20, :cond_3f1
+ 
+-    goto/16 :goto_2f2
++    :try_start_3ee
++    invoke-interface/range {v20 .. v20}, Lorg/apache/http/HttpEntity;->consumeContent()V
+ 
+-    :catchall_395
+-    move-exception v34
++    :cond_3f1
++    throw v5
++    :try_end_3f2
++    .catch Ljava/net/URISyntaxException; {:try_start_3ee .. :try_end_3f2} :catch_30f
++    .catch Ljava/lang/IllegalStateException; {:try_start_3ee .. :try_end_3f2} :catch_3f2
++    .catch Ljava/lang/IllegalArgumentException; {:try_start_3ee .. :try_end_3f2} :catch_490
++    .catch Ljava/net/SocketException; {:try_start_3ee .. :try_end_3f2} :catch_49f
++    .catch Ljava/lang/Exception; {:try_start_3ee .. :try_end_3f2} :catch_4ae
++    .catchall {:try_start_3ee .. :try_end_3f2} :catchall_4bd
+ 
+-    if-eqz v11, :cond_39b
++    :catch_3f2
++    move-exception v19
+ 
+-    :try_start_398
+-    invoke-interface {v11}, Lorg/apache/http/HttpEntity;->consumeContent()V
++    :try_start_3f3
++    move-object/from16 v0, v19
+ 
+-    :cond_39b
+-    throw v34
+-    :try_end_39c
+-    .catch Ljava/net/URISyntaxException; {:try_start_398 .. :try_end_39c} :catch_2b5
+-    .catch Ljava/lang/IllegalStateException; {:try_start_398 .. :try_end_39c} :catch_39c
+-    .catch Ljava/lang/IllegalArgumentException; {:try_start_398 .. :try_end_39c} :catch_438
+-    .catch Ljava/net/SocketException; {:try_start_398 .. :try_end_39c} :catch_445
+-    .catch Ljava/lang/Exception; {:try_start_398 .. :try_end_39c} :catch_452
+-    .catchall {:try_start_398 .. :try_end_39c} :catchall_45f
++    move-object/from16 v1, p3
+ 
+-    :catch_39c
+-    move-exception v10
++    invoke-static {v0, v1}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
++    :try_end_3fa
++    .catchall {:try_start_3f3 .. :try_end_3fa} :catchall_4bd
+ 
+-    :try_start_39d
+-    move-object/from16 v0, p3
++    if-eqz v17, :cond_31c
+ 
+-    invoke-static {v10, v0}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
+-    :try_end_3a2
+-    .catchall {:try_start_39d .. :try_end_3a2} :catchall_45f
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    if-eqz v8, :cond_2c0
++    goto/16 :goto_31c
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    :catchall_401
++    move-exception v5
+ 
+-    goto/16 :goto_2c0
++    :try_start_402
++    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
++    :try_end_405
++    .catch Ljava/io/IOException; {:try_start_402 .. :try_end_405} :catch_406
++    .catchall {:try_start_402 .. :try_end_405} :catchall_3eb
+ 
+-    :catchall_3a9
+-    move-exception v34
++    :goto_405
++    :try_start_405
++    throw v5
+ 
+-    :try_start_3aa
+-    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
+-    :try_end_3ad
+-    .catch Ljava/io/IOException; {:try_start_3aa .. :try_end_3ad} :catch_3ae
+-    .catchall {:try_start_3aa .. :try_end_3ad} :catchall_395
++    :catch_406
++    move-exception v19
+ 
+-    :goto_3ad
+-    :try_start_3ad
+-    throw v34
++    const-string v6, "Mms:transaction"
+ 
+-    :catch_3ae
+-    move-exception v10
++    new-instance v7, Ljava/lang/StringBuilder;
+ 
+-    const-string v35, "Mms:transaction"
++    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    new-instance v36, Ljava/lang/StringBuilder;
++    const-string v8, "Error closing input stream: "
+ 
+-    invoke-direct/range {v36 .. v36}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-virtual {v7, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string v37, "Error closing input stream: "
++    move-result-object v7
+ 
+-    invoke-virtual/range {v36 .. v37}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual/range {v19 .. v19}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
+ 
+-    move-result-object v36
++    move-result-object v8
+ 
+-    invoke-virtual {v10}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
++    invoke-virtual {v7, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-result-object v37
++    move-result-object v7
+ 
+-    invoke-virtual/range {v36 .. v37}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v36
++    move-result-object v7
+ 
+-    invoke-virtual/range {v36 .. v36}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-static {v6, v7}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_423
++    .catchall {:try_start_405 .. :try_end_423} :catchall_3eb
+ 
+-    move-result-object v36
++    goto :goto_405
+ 
+-    invoke-static/range {v35 .. v36}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_3cb
+-    .catchall {:try_start_3ad .. :try_end_3cb} :catchall_395
++    :catch_424
++    move-exception v19
+ 
+-    goto :goto_3ad
++    const/16 v35, 0x1
+ 
+-    :catch_3cc
+-    move-exception v10
++    :try_start_427
++    const-string v5, "Mms:transaction"
+ 
+-    const/16 v24, 0x1
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    :try_start_3cf
+-    const-string v34, "Mms:transaction"
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    const-string v7, "httpConnection: error reading input stream"
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string v36, "httpConnection: error reading input stream"
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual/range {v19 .. v19}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v7
+ 
+-    invoke-virtual {v10}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    move-result-object v36
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v35
++    move-result-object v6
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    invoke-static {v5, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_443
++    .catchall {:try_start_427 .. :try_end_443} :catchall_445
+ 
+-    move-result-object v35
++    goto/16 :goto_387
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_3eb
+-    .catchall {:try_start_3cf .. :try_end_3eb} :catchall_3ed
++    :catchall_445
++    move-exception v5
+ 
+-    goto/16 :goto_328
++    :try_start_446
++    invoke-virtual/range {v18 .. v18}, Ljava/io/DataInputStream;->close()V
++    :try_end_449
++    .catch Ljava/io/IOException; {:try_start_446 .. :try_end_449} :catch_472
++    .catchall {:try_start_446 .. :try_end_449} :catchall_3eb
+ 
+-    :catchall_3ed
+-    move-exception v34
++    :goto_449
++    :try_start_449
++    throw v5
++    :try_end_44a
++    .catchall {:try_start_449 .. :try_end_44a} :catchall_3eb
+ 
+-    :try_start_3ee
+-    invoke-virtual {v9}, Ljava/io/DataInputStream;->close()V
+-    :try_end_3f1
+-    .catch Ljava/io/IOException; {:try_start_3ee .. :try_end_3f1} :catch_41a
+-    .catchall {:try_start_3ee .. :try_end_3f1} :catchall_395
+-
+-    :goto_3f1
+-    :try_start_3f1
+-    throw v34
+-    :try_end_3f2
+-    .catchall {:try_start_3f1 .. :try_end_3f2} :catchall_395
++    :cond_44a
++    :try_start_44a
++    const-string v5, "Mms:transaction"
+ 
+-    :cond_3f2
+-    :try_start_3f2
+-    const-string v34, "Mms:transaction"
++    const-string v6, "httpConnection: Response entity too large or empty"
+ 
+-    const-string v35, "httpConnection: Response entity too large or empty"
++    invoke-static {v5, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_451
++    .catchall {:try_start_44a .. :try_end_451} :catchall_445
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_3f9
+-    .catchall {:try_start_3f2 .. :try_end_3f9} :catchall_3ed
++    goto/16 :goto_3bd
+ 
+-    goto/16 :goto_367
++    :catch_453
++    move-exception v19
+ 
+-    :catch_3fb
+-    move-exception v10
++    :try_start_454
++    const-string v5, "Mms:transaction"
+ 
+-    :try_start_3fc
+-    const-string v34, "Mms:transaction"
++    new-instance v6, Ljava/lang/StringBuilder;
+ 
+-    new-instance v35, Ljava/lang/StringBuilder;
++    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-direct/range {v35 .. v35}, Ljava/lang/StringBuilder;-><init>()V
++    const-string v7, "Error closing input stream: "
+ 
+-    const-string v36, "Error closing input stream: "
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-virtual/range {v19 .. v19}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
+ 
+-    invoke-virtual {v10}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
++    move-result-object v7
+ 
+-    move-result-object v36
++    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v35 .. v36}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v35 .. v35}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    move-result-object v6
+ 
+-    move-result-object v35
++    invoke-static {v5, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-static/range {v34 .. v35}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    goto/16 :goto_3c0
+ 
+-    goto/16 :goto_36a
++    :catch_472
++    move-exception v19
+ 
+-    :catch_41a
+-    move-exception v10
++    const-string v6, "Mms:transaction"
+ 
+-    const-string v35, "Mms:transaction"
++    new-instance v7, Ljava/lang/StringBuilder;
+ 
+-    new-instance v36, Ljava/lang/StringBuilder;
++    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
+ 
+-    invoke-direct/range {v36 .. v36}, Ljava/lang/StringBuilder;-><init>()V
++    const-string v8, "Error closing input stream: "
+ 
+-    const-string v37, "Error closing input stream: "
++    invoke-virtual {v7, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v36 .. v37}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v7
+ 
+-    move-result-object v36
++    invoke-virtual/range {v19 .. v19}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
+ 
+-    invoke-virtual {v10}, Ljava/io/IOException;->getMessage()Ljava/lang/String;
++    move-result-object v8
+ 
+-    move-result-object v37
++    invoke-virtual {v7, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    invoke-virtual/range {v36 .. v37}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    move-result-object v7
+ 
+-    move-result-object v36
++    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    invoke-virtual/range {v36 .. v36}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++    move-result-object v7
+ 
+-    move-result-object v36
++    invoke-static {v6, v7}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_48f
++    .catchall {:try_start_454 .. :try_end_48f} :catchall_3eb
+ 
+-    invoke-static/range {v35 .. v36}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-    :try_end_437
+-    .catchall {:try_start_3fc .. :try_end_437} :catchall_395
++    goto :goto_449
+ 
+-    goto :goto_3f1
++    :catch_490
++    move-exception v19
+ 
+-    :catch_438
+-    move-exception v10
++    :try_start_491
++    move-object/from16 v0, v19
+ 
+-    :try_start_439
+-    move-object/from16 v0, p3
++    move-object/from16 v1, p3
+ 
+-    invoke-static {v10, v0}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
+-    :try_end_43e
+-    .catchall {:try_start_439 .. :try_end_43e} :catchall_45f
++    invoke-static {v0, v1}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
++    :try_end_498
++    .catchall {:try_start_491 .. :try_end_498} :catchall_4bd
+ 
+-    if-eqz v8, :cond_2c0
++    if-eqz v17, :cond_31c
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    goto/16 :goto_2c0
++    goto/16 :goto_31c
+ 
+-    :catch_445
+-    move-exception v10
++    :catch_49f
++    move-exception v19
+ 
+-    :try_start_446
+-    move-object/from16 v0, p3
++    :try_start_4a0
++    move-object/from16 v0, v19
++
++    move-object/from16 v1, p3
+ 
+-    invoke-static {v10, v0}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
+-    :try_end_44b
+-    .catchall {:try_start_446 .. :try_end_44b} :catchall_45f
++    invoke-static {v0, v1}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
++    :try_end_4a7
++    .catchall {:try_start_4a0 .. :try_end_4a7} :catchall_4bd
+ 
+-    if-eqz v8, :cond_2c0
++    if-eqz v17, :cond_31c
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    goto/16 :goto_2c0
++    goto/16 :goto_31c
+ 
+-    :catch_452
+-    move-exception v10
++    :catch_4ae
++    move-exception v19
+ 
+-    :try_start_453
+-    move-object/from16 v0, p3
++    :try_start_4af
++    move-object/from16 v0, v19
++
++    move-object/from16 v1, p3
+ 
+-    invoke-static {v10, v0}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
+-    :try_end_458
+-    .catchall {:try_start_453 .. :try_end_458} :catchall_45f
++    invoke-static {v0, v1}, Lcom/android/mms/transaction/HttpUtils;->handleHttpConnectionException(Ljava/lang/Exception;Ljava/lang/String;)V
++    :try_end_4b6
++    .catchall {:try_start_4af .. :try_end_4b6} :catchall_4bd
+ 
+-    if-eqz v8, :cond_2c0
++    if-eqz v17, :cond_31c
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    goto/16 :goto_2c0
++    goto/16 :goto_31c
+ 
+-    :catchall_45f
+-    move-exception v34
++    :catchall_4bd
++    move-exception v5
+ 
+-    if-eqz v8, :cond_465
++    if-eqz v17, :cond_4c3
+ 
+-    invoke-virtual {v8}, Landroid/net/http/AndroidHttpClient;->close()V
++    invoke-virtual/range {v17 .. v17}, Landroid/net/http/AndroidHttpClient;->close()V
+ 
+-    :cond_465
+-    throw v34
++    :cond_4c3
++    throw v5
+ 
+-    :pswitch_data_466
++    :pswitch_data_4c4
+     .packed-switch 0x1
+-        :pswitch_168
+-        :pswitch_268
++        :pswitch_1d8
++        :pswitch_2c8
+     .end packed-switch
+ .end method
