@@ -273,9 +273,11 @@ brief_help () {
      echo ""
      echo "Use ./auto_patcher -h for the help menu"
      echo ""
-     printtask "  If your deodexed rom is not on the supported list and you want it added:"
-     printtask "\t- Upload your log and a link to the rom's source code (mandatory)"
-     printtask "\t   and be patient, please!"
+     printtask "After long and hard thought I have discontinued support for OpenPDroid."
+     printtask "I was not going to port to Android 4.5 but a recent breakage pushed the deadline forward."
+     echo ""
+     printtask "You can read more at the OpenPDroid XDA thread."
+     printtask "http://forum.xda-developers.com/showpost.php?p=50160845&postcount=509"
      echo ""
      cleanup
      exit
@@ -688,6 +690,8 @@ mods_info () {
           ;;
      openpdroid)
           FLOOR=4.1.2
+          CEILING=4.4.2
+          EXPIRATION=20140120
           DESC="A fork of the open-source PDroid and Pdroid2.0 framework."
           DEV="CollegeDev/FFU5y/wbedard/mateor/Community"
           DEPENDENCY="PDroidManager(opensource)"
@@ -731,6 +735,7 @@ mods_info () {
      tabletUI)
           FLOOR=4.1.0
           CEILING=4.3.1
+          EXPIRATION=20131205
           if [[ $ANDR == "4.3" ]]; then
                ROM_CONFLICTS=(.aosp-slim .aosp-ever aokp pa)
           elif [[ $ANDR == "4.2" ]]; then
@@ -1204,6 +1209,11 @@ else
           ;;
      esac
 fi
+# Check if there is an EXPIRATION date, which only works for the mods ceiling. This is generally the date that support has ended.
+# This works on a per-mod basis, as all mods go through the build)query function individually.
+     if ( [[ ${COMPATC} == ${NVID} ]] && [[ ${BDID} -gt $EXPIRATION ]] ); then
+          print_error "Sorry, $PID is only available for Android $ANDR builds before $EXPIRATION"
+     fi
 }
 
 proberil () {
